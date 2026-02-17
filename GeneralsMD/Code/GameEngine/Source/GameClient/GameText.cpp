@@ -291,6 +291,9 @@ void GameTextManager::init( void )
 	csfFile.format(g_csfFile, GetRegistryLanguage().str());
 	Int format;
 
+	// GeneralsX @bugfix BenderAI 16/02/2026 - Debug CSF init
+	fprintf(stderr, "[CSF] init() - START\n");
+
 	if ( m_initialized )
 	{
 		return;
@@ -313,10 +316,12 @@ void GameTextManager::init( void )
 	}
 	else if ( getCSFInfo ( csfFile.str() ) )
 	{
+		fprintf(stderr, "[CSF] init() - getCSFInfo OK, textCount=%d\n", m_textCount);
 		format = CSF_FILE;
 	}
 	else
 	{
+		fprintf(stderr, "[CSF] init() - getCSFInfo FAILED\n");
 		return;
 	}
 
@@ -345,11 +350,14 @@ void GameTextManager::init( void )
 	}
 	else
 	{
+		fprintf(stderr, "[CSF] init() - Calling parseCSF()...\n");
 		if ( !parseCSF ( csfFile.str() ) )
 		{
+			fprintf(stderr, "[CSF] init() - parseCSF FAILED\n");
 			deinit();
 			return;
 		}
+		fprintf(stderr, "[CSF] init() - parseCSF SUCCESS\n");
 	}
 
 	m_stringLUT = NEW StringLookUp[m_textCount];
@@ -889,17 +897,37 @@ Bool GameTextManager::parseCSF( const Char *filename )
 	Bool ok = FALSE;
 	CSFHeader header;
 
+	// GeneralsX @bugfix BenderAI 16/02/2026 - Debug parseCSF
+	fprintf(stderr, "[CSF] parseCSF() - START filename='%s'\n", filename);
+
 	file = TheFileSystem->openFile(filename, File::READ | File::BINARY);
 
 	if ( file == nullptr )
 	{
+		fprintf(stderr, "[CSF] parseCSF() - openFile FAILED\n");
 		return FALSE;
 	}
 
+	fprintf(stderr, "[CSF] parseCSF() - File opened\n");
+
 	if (  file->read ( &header, sizeof ( CSFHeader)) != sizeof ( CSFHeader) )
 	{
+		fprintf(stderr, "[CSF] parseCSF() - read header FAILED\n");
 		return FALSE;
 	}
+
+	// GeneralsX @bugfix BenderAI 17/02/2026 - Log header for debugging
+	fprintf(stderr, "[CSF] parseCSF() - Header: id=%#x version=%d num_labels=%d num_strings=%d skip=%d langid=%d\n",
+		header.id, header.version, header.num_labels, header.num_strings, header.skip, header.langid);
+
+	// GeneralsX @bugfix BenderAI 17/02/2026 - Skip extra bytes after header
+	// The 'skip' field indicates how many bytes to advance before reading first label
+	if (header.skip > 0) {
+		fprintf(stderr, "[CSF] parseCSF() - Skipping %d bytes as indicated by header.skip\n", header.skip);
+		file->seek(header.skip, File::CURRENT);
+	}
+
+	fprintf(stderr, "[CSF] parseCSF() - Starting main loop (textCount=%d)...\n", m_textCount);
 
 	while( file->read ( &id, sizeof (id)) == sizeof ( id) )
 	{
@@ -908,6 +936,7 @@ Bool GameTextManager::parseCSF( const Char *filename )
 
 		if ( id != CSF_LABEL )
 		{
+			fprintf(stderr, "[CSF] parseCSF() - ERROR: Expected CSF_LABEL (%#x), got %#x at label %d\n", CSF_LABEL, id, listCount);
 			goto quit;
 		}
 
@@ -938,6 +967,8 @@ Bool GameTextManager::parseCSF( const Char *filename )
 
 			if ( id != CSF_STRING && id != CSF_STRINGWITHWAVE )
 			{
+				fprintf(stderr, "[CSF] parseCSF() - ERROR: Expected CSF_STRING (%#x) or CSF_STRINGWITHWAVE (%#x), got %#x at label %d, string %d\n", 
+					CSF_STRING, CSF_STRINGWITHWAVE, id, listCount, num);
 				goto quit;
 			}
 
@@ -945,7 +976,18 @@ Bool GameTextManager::parseCSF( const Char *filename )
 
 			if ( len )
 			{
+				// GeneralsX @bugfix BenderAI 17/02/2026 Linux wchar_t compatibility
+				// CSF files store 16-bit wide chars (UCS-2), but Linux wchar_t is 32-bit (UCS-4)
+#ifdef _WIN32
 				file->read ( m_tbuffer, len*sizeof(WideChar) );
+#else
+				uint16_t convert_buffer[MAX_UITEXT_LENGTH*2];
+				file->read ( convert_buffer, len*sizeof(uint16_t) );
+				for (int i = 0; i < len; i++)
+				{
+					m_tbuffer[i] = convert_buffer[i];
+				}
+#endif
 			}
 
 			if ( num == 0 )
@@ -960,7 +1002,13 @@ Bool GameTextManager::parseCSF( const Char *filename )
 
 					while ( *ptr )
 					{
+						// GeneralsX @bugfix BenderAI 17/02/2026 Bitwise NOT for 16-bit values only
+#ifdef _WIN32
 						*ptr = ~*ptr;
+#else
+						// only negate the lower 16 bits (32-bit widechar on Linux)
+						*ptr = ~*ptr & 0x0000FFFF;
+#endif
 						ptr++;
 					}
 				}
@@ -990,11 +1038,20 @@ Bool GameTextManager::parseCSF( const Char *filename )
 		}
 
 		listCount++;
+		
+		// GeneralsX @bugfix BenderAI 17/02/2026 Progress logging every 500 labels
+		if (listCount % 500 == 0) {
+			fprintf(stderr, "[CSF] parseCSF() - Progress: %d/%d labels processed\n", listCount, m_textCount);
+		}
 	}
 
+	fprintf(stderr, "[CSF] parseCSF() - Main loop complete! Processed %d/%d labels\n", listCount, m_textCount);
 	ok = TRUE;
 
 quit:
+
+	fprintf(stderr, "[CSF] parseCSF() - Reached quit label: ok=%s, listCount=%d/%d\n", 
+		ok ? "TRUE" : "FALSE", listCount, m_textCount);
 
 	file->close();
 	file = nullptr;
