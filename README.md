@@ -9,7 +9,7 @@ is the real 2003 engine compiled for ARM64, rendering DirectX 8 →
 
 Built on EA's GPL v3 source release via [fbraz3/GeneralsX](https://github.com/fbraz3/GeneralsX)
 (which did the heavy lifting of the macOS/Linux port — this fork adds the iOS/iPadOS
-port and a set of engine fixes). The original GeneralsX README lives on the `main` branch.
+port and a set of engine fixes). The original GeneralsX README lives on the `upstream-main` branch.
 
 **No game assets are included or distributed.** You need your own copy
 ([Steam](https://store.steampowered.com/app/2732960/), ~$5 on sale).
@@ -35,7 +35,7 @@ export VULKAN_SDK=$HOME/VulkanSDK/<version>/macOS   # add to your shell profile
 Clone, build, get assets, play:
 
 ```sh
-git clone -b ios-port https://github.com/ammaarreshi/GeneralsX-apple.git GeneralsX
+git clone https://github.com/ammaarreshi/GeneralsX-apple.git GeneralsX
 cd GeneralsX
 ./scripts/build/macos/build-macos-zh.sh     # checks deps, configures, builds
 ./scripts/build/macos/deploy-macos-zh.sh    # creates ~/GeneralsX/GeneralsZH + run.sh
