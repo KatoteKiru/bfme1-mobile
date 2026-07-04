@@ -289,6 +289,10 @@ if(RTS_BUILD_OPTION_FFMPEG)
             Source/VideoDevice/FFmpeg/FFmpegVideoPlayer.cpp
         )
         target_include_directories(corei_gameenginedevice_private INTERFACE ${FFMPEG_INCLUDE_DIRS})
+
+        include(${CMAKE_SOURCE_DIR}/cmake/ffmpeg_framework_fix.cmake)
+        sage_fix_ffmpeg_framework_flags()
+
         target_link_libraries(corei_gameenginedevice_private INTERFACE PkgConfig::FFMPEG)
         target_compile_definitions(corei_gameenginedevice_public INTERFACE RTS_HAS_FFMPEG)
     endif()

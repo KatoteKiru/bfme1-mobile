@@ -142,6 +142,18 @@ if(APPLE AND SAGE_USE_MOLTENVK)
     
     target_compile_definitions(core_config INTERFACE SAGE_USE_MOLTENVK)
     target_link_libraries(core_config INTERFACE Vulkan::Vulkan)
+    if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+        # On iOS, MoltenVK links as a STATIC library, so its framework dependencies
+        # must be linked by the consumer (the macOS dylib resolved these itself).
+        target_link_libraries(core_config INTERFACE
+            "-framework Metal"
+            "-framework IOSurface"
+            "-framework CoreGraphics"
+            "-framework QuartzCore"
+            "-framework Foundation"
+            "-framework UIKit"
+        )
+    endif()
     message(STATUS "MoltenVK (Vulkan on macOS) detected and enabled")
     message(STATUS "  Vulkan SDK: ${Vulkan_INCLUDE_DIRS}")
     message(STATUS "  MoltenVK: Will translate Vulkan to Metal")

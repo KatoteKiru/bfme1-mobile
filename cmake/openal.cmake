@@ -49,6 +49,17 @@ if(SAGE_USE_OPENAL)
 
     FetchContent_MakeAvailable(openal_soft)
 
+    # Force the vendored fmt 11.1.1 headers ahead of any system include dirs.
+    # A Homebrew fmt (e.g. 12.x at /opt/homebrew/include) earlier on the include
+    # path makes openal sources compile against fmt::v12 inline-namespace headers
+    # while linking the vendored v11 static lib -> unresolved fmt::v12 symbols.
+    foreach(_alsoft_tgt OpenAL alsoft.common alsoft.excommon)
+        if(TARGET ${_alsoft_tgt})
+            target_include_directories(${_alsoft_tgt} BEFORE PRIVATE
+                "${openal_soft_SOURCE_DIR}/fmt-11.1.1/include")
+        endif()
+    endforeach()
+
     # openal-soft FetchContent creates the OpenAL::OpenAL imported target
     message(STATUS "OpenAL Soft configured: target OpenAL::OpenAL available")
 endif()

@@ -59,6 +59,12 @@ if(SAGE_USE_SDL3)
         find_library(PNG_LIBRARY NAMES png16 png NO_CMAKE_PATH NO_CMAKE_FIND_ROOT_PATH)
         find_path(PNG_PNG_INCLUDE_DIR png.h PATH_SUFFIXES libpng16 NO_CMAKE_PATH NO_CMAKE_FIND_ROOT_PATH)
         find_package(PNG REQUIRED MODULE)
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+        # iOS: no shared libpng exists for the target and SDL3_image rejects a static
+        # one. Disable its libpng backend entirely — PNG decoding still works through
+        # the stb and Apple ImageIO backends that SDL3_image enables on Apple platforms.
+        set(SDLIMAGE_PNG_LIBPNG OFF CACHE BOOL "No libpng on iOS; stb/ImageIO decode PNG" FORCE)
+        set(SDLIMAGE_PNG_SHARED OFF CACHE BOOL "No shared libpng on iOS" FORCE)
     else()
         # macOS: Force Homebrew's dynamic libpng, bypassing vcpkg's static .a
         # GeneralsX @build BenderAI 24/02/2026 - Phase 5 macOS port
