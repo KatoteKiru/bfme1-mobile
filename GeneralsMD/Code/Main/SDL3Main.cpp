@@ -264,7 +264,12 @@ int main(int argc, char* argv[])
 		const char *diagHome = getenv("HOME");
 		if (diagHome != nullptr) {
 			char diagPath[1024];
+			char prevPath[1024];
 			snprintf(diagPath, sizeof(diagPath), "%s/Library/Caches/generals-stderr.log", diagHome);
+			// Keep the previous session's log: a session that ends in a memory kill
+			// leaves no OS crash report, so the prior log is often the only evidence.
+			snprintf(prevPath, sizeof(prevPath), "%s/Library/Caches/generals-stderr-prev.log", diagHome);
+			rename(diagPath, prevPath);
 			freopen(diagPath, "w", stderr);
 			setvbuf(stderr, nullptr, _IOLBF, 0);  // line-buffered so a crash still flushes recent lines
 		}

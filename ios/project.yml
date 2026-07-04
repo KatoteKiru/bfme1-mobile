@@ -5,6 +5,9 @@
 # (file sharing for assets, landscape-only, fullscreen). The packaging script
 # (package-ios.sh) then replaces the stub executable with the real z_generals
 # engine binary, embeds the runtime dylibs, and re-signs everything.
+# NOTE: the bundle id and development team below are defaults; the packaging
+# script overrides them at build time via GX_BUNDLE_ID / GX_TEAM_ID, so point
+# those at your own Apple Developer account rather than editing this file.
 name: GeneralsXZH
 options:
   bundleIdPrefix: me.ammaar

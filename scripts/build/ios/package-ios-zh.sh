@@ -21,7 +21,12 @@ IOS_DIR="${PROJECT_ROOT}/ios"
 DERIVED="${IOS_DIR}/build"
 OUT_DIR="${PROJECT_ROOT}/build/ios-package"
 APP_NAME="GeneralsXZH"
-IDENTITY="Apple Development"
+IDENTITY="${GX_SIGN_IDENTITY:-Apple Development}"
+
+# Signing/bundle identity — override for your own Apple Developer account:
+#   GX_TEAM_ID=ABCDE12345 GX_BUNDLE_ID=com.you.generalszh ./package-ios-zh.sh --install
+TEAM_ID="${GX_TEAM_ID:-7S264298H8}"
+BUNDLE_ID="${GX_BUNDLE_ID:-me.ammaar.generalszh}"
 
 GAME_BIN="${BUILD_DIR}/GeneralsMD/GeneralsXZH.app/GeneralsXZH"
 DXVK_BUILD="${BUILD_DIR}/_deps/dxvk-build-macos"
@@ -39,6 +44,8 @@ xcodebuild -project "${IOS_DIR}/${APP_NAME}.xcodeproj" \
     -scheme "${APP_NAME}" -configuration Release \
     -destination 'generic/platform=iOS' \
     -derivedDataPath "${DERIVED}" \
+    DEVELOPMENT_TEAM="${TEAM_ID}" \
+    PRODUCT_BUNDLE_IDENTIFIER="${BUNDLE_ID}" \
     -allowProvisioningUpdates build | tail -3
 
 SHELL_APP="${DERIVED}/Build/Products/Release-iphoneos/${APP_NAME}.app"
@@ -90,9 +97,9 @@ fi
 # Game assets inside the bundle (iOS-sanctioned home for read-only resources):
 # the app is fully self-contained, nothing lives in Documents. Skip with --dev
 # for fast code-only iterations (the engine falls back to Documents assets).
-GAME_DATA_SRC="${HOME}/GeneralsX/GeneralsZH"
-FONTS_SRC="${HOME}/GeneralsX/ios-staging/fonts"
-CONFIG_SRC="${HOME}/GeneralsX/ios-staging-config"
+GAME_DATA_SRC="${GX_GAME_DATA:-${HOME}/GeneralsX/GeneralsZH}"
+FONTS_SRC="${GX_FONTS:-${HOME}/GeneralsX/ios-staging/fonts}"
+CONFIG_SRC="${GX_CONFIG:-${HOME}/GeneralsX/ios-staging-config}"
 if [[ "${1:-}" != "--dev" ]]; then
     echo "==> Bundling game assets into the app"
     mkdir -p "${APP}/GameData"
