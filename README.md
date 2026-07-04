@@ -69,7 +69,7 @@ iteration.
 
 | Path | What it is |
 |---|---|
-| `docs/port/PORTING_PLAYBOOK.md` | The complete engineering log of this port: every failure mode, root cause, fix |
+| [`docs/port/PORTING_PLAYBOOK.md`](docs/port/PORTING_PLAYBOOK.md) | The complete engineering log of this port: every failure mode, root cause, fix — start with [§8, the bug archaeology](docs/port/PORTING_PLAYBOOK.md#8-post-ship-bug-hunts-junejuly-2026--the-archaeology-section): the black minimap, the silent EVA lines, and the chirp |
 | `docs/port/PORTING_PATTERNS.md` | Generalized methodology for porting classic Windows games to Apple platforms |
 | `docs/port/RELEASE_CHECKLIST.md` | Gate for public release |
 | `scripts/get-assets.sh` | Steam asset fetcher (your own copy; app 2732960) |
