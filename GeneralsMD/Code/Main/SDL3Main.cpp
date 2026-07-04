@@ -40,6 +40,7 @@
 #include <SDL3/SDL_main.h>
 #include <cerrno>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <filesystem>
 #include <string>
 #endif
@@ -261,6 +262,11 @@ int main(int argc, char* argv[])
 	// only the user can reproduce. Pull with: devicectl ... copy from
 	// Library/Caches/generals-stderr.log. Remove once the relevant bugs are fixed.
 	{
+		// Quiet DXVK at the source: the d3d8 layer's per-call warns (e.g. an
+		// unimplemented render state set every frame) wrote hundreds of MB per
+		// long session. The shipped dxvk.conf also sets logLevel=none; the env
+		// covers modules that read it before the config.
+		setenv("DXVK_LOG_LEVEL", "none", 0);
 		const char *diagHome = getenv("HOME");
 		if (diagHome != nullptr) {
 			char diagPath[1024];
@@ -273,8 +279,37 @@ int main(int argc, char* argv[])
 			// leaves no OS crash report, so the prior log is often the only evidence.
 			snprintf(prevPath, sizeof(prevPath), "%s/Documents/generals-stderr-prev.log", diagHome);
 			rename(diagPath, prevPath);
-			freopen(diagPath, "w", stderr);
-			setvbuf(stderr, nullptr, _IOLBF, 0);  // line-buffered so a crash still flushes recent lines
+			// Filtered + capped sink instead of a raw freopen: per-frame debug spam
+			// (upstream [GX-ISSUE144] font traces, [INI] loader traces, residual DXVK
+			// warns) is dropped, and the file stops growing at 8 MB so a marathon
+			// session cannot eat device storage. funopen() is fine here: this is
+			// Darwin-only code.
+			static int s_logFd = -1;
+			s_logFd = open(diagPath, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+			if (s_logFd >= 0) {
+				static size_t s_logWritten = 0;
+				FILE *sink = funopen(nullptr,
+					nullptr,
+					[](void *, const char *buf, int len) -> int {
+						static const size_t kLogCap = 8u * 1024u * 1024u;
+						if (s_logFd < 0) return len;
+						if (len > 13 &&
+						    (memcmp(buf, "[GX-ISSUE144]", 13) == 0 ||
+						     memcmp(buf, "[INI] ", 6) == 0 ||
+						     memcmp(buf, "warn:  D3D8De", 13) == 0)) {
+							return len;  // drop known per-frame spam, report consumed
+						}
+						if (s_logWritten >= kLogCap) return len;
+						ssize_t w = write(s_logFd, buf, (size_t)len);
+						if (w > 0) s_logWritten += (size_t)w;
+						return len;
+					},
+					nullptr, nullptr);
+				if (sink != nullptr) {
+					*stderr = *sink;  // classic Darwin stderr swap; stderr is a FILE, not a macro here
+					setvbuf(stderr, nullptr, _IOLBF, 0);  // line-buffered so a crash still flushes recent lines
+				}
+			}
 		}
 	}
 
