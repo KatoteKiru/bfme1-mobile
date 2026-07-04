@@ -265,10 +265,13 @@ int main(int argc, char* argv[])
 		if (diagHome != nullptr) {
 			char diagPath[1024];
 			char prevPath[1024];
-			snprintf(diagPath, sizeof(diagPath), "%s/Library/Caches/generals-stderr.log", diagHome);
+			// Documents, not Library/Caches: Caches is purgeable (a device restart or
+			// storage pressure can empty it), and Documents is user-reachable via the
+			// Files app since the bundle enables UIFileSharingEnabled.
+			snprintf(diagPath, sizeof(diagPath), "%s/Documents/generals-stderr.log", diagHome);
 			// Keep the previous session's log: a session that ends in a memory kill
 			// leaves no OS crash report, so the prior log is often the only evidence.
-			snprintf(prevPath, sizeof(prevPath), "%s/Library/Caches/generals-stderr-prev.log", diagHome);
+			snprintf(prevPath, sizeof(prevPath), "%s/Documents/generals-stderr-prev.log", diagHome);
 			rename(diagPath, prevPath);
 			freopen(diagPath, "w", stderr);
 			setvbuf(stderr, nullptr, _IOLBF, 0);  // line-buffered so a crash still flushes recent lines
