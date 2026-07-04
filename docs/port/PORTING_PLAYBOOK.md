@@ -226,3 +226,79 @@ Architecture: translate touch → synthetic SDL mouse events injected through th
 **Host-side:** `~/GeneralsX/GeneralsZH` (game files + native macOS build), `~/GeneralsX/get-assets.sh` (SteamCMD fetch), `~/GeneralsX/ios-staging-config/{Options.ini,dxvk.conf}`, `~/GeneralsX/ios-staging/fonts/` (Liberation fonts renamed), `~/vcpkg`, `~/VulkanSDK/1.4.350.0`, `~/GeneralsX/MoltenVK` (dynamic framework — staged by `scripts/build/ios/fetch-moltenvk.sh`).
 
 **Rebuild-from-scratch order:** macOS preset build → deploy script → verify with assets → `cmake --preset ios-vulkan` → `--target z_generals` → `package-ios-zh.sh` → `devicectl install`. Memory file `generals-ios-port-plan.md` (agent memory) holds current state + this file's location.
+
+---
+
+## §8 Post-ship bug hunts (June–July 2026) — the archaeology section
+
+Three bugs found by playing on real devices after the port "worked". Each one is a
+2003-era assumption meeting a 2026 platform. Failure mode → root cause → fix.
+
+### 8.1 The black minimap (Generals Challenge only)
+
+**Symptom:** minimap solid black — but only in Generals Challenge; skirmish fine.
+
+**Root cause:** the engine queries D3D for a supported radar texture format and
+falls back when the preference list all fails. On iOS, MoltenVK's caps query
+reports NO radar format as supported, so **all three** radar textures (terrain,
+overlay, shroud) take the fallback — which always returned `X8R8G8B8`, a format
+with **no alpha channel**. The shroud (fog-of-war) layer must be transparent where
+explored; opaque, it paints solid black over the whole map. Challenge matches
+start fully shrouded, which is why only that mode showed it.
+
+**Fix (`Core/.../W3DRadar.cpp`):** `findFormat()` takes a per-caller fallback —
+`X8R8G8B8` for the opaque terrain layer, `A8R8G8B8` (alpha) for overlay and
+shroud. Both universally supported on Vulkan-capable GPUs.
+
+**Lesson:** when a modern translation layer fails a caps query wholesale, EVERY
+texture in a subsystem rides the fallback path — a fallback written for one
+"weird format" case becomes the main path, and its hidden assumptions (like
+"nobody needs alpha here") become the bug.
+
+### 8.2 The silent taunts / EVA lines (intermittent, mode-agnostic)
+
+**Symptom (first report):** Challenge enemy taunts play once, then never again.
+**Symptom (second report, weeks later):** EVA ("unit lost") silent in skirmish but
+fine in Challenge — same build. Intermittent across sessions.
+
+**Root cause, layer 1:** "uninterruptible" streamed speech sets a global
+`disallowSpeech` flag so a speaker doesn't talk over himself, cleared when the
+stream is detected stopped. A finished one-shot stream could linger "not stopped"
+forever (layer 2), so the flag stuck and every later speech event was rejected
+with `AHSV_NoSound`. Debug log from a real session: 65 speech events dispatched
+at full volume, zero audible — while 17 music streams on the same code path
+played fine (music never sets the flag).
+
+**Root cause, layer 2 (the real one):** a drained OpenAL stream whose FFmpeg
+decoder finished was restarted by the underrun-recovery guard, endlessly. The
+stream never reached a stable AL_STOPPED, so the per-stream flag clear never
+fired. Fixes landed in stages: report true EOF from the decoder
+(`FFmpegFile::isAtEof`), latch `m_endOfData` so a finished stream is allowed to
+stop, and a 15s backstop that force-clears a stuck flag.
+
+**Lesson:** a global mutex-like flag cleared by "the audio stopped" inherits every
+bug in stop-detection. Instrument the *dispatch* level (did the event fire, at
+what volume) separately from the *device* level (did samples reach the mixer) —
+the gap between them is where this class of bug lives.
+
+### 8.3 The chirp (audible bug, found by ear)
+
+**Symptom:** after an EVA line, a repeating "chirp" in the background, forever.
+Reported by the player, not by any log.
+
+**Root cause:** the §8.2 EOF latch had a hole. The latch relied on the decoder
+reporting `isAtEof()` — but a decoder can fail *without* clean EOF (bad packet,
+priming, non-audio frame). In that case the callback reported "more data coming"
+forever, no data ever arrived, and the restart guard replayed the stream's
+already-played buffer queue in a loop: the chirp. Same zombie stream also held
+`disallowSpeech` (§8.2), so the chirp and the silence were one bug.
+
+**Fix (`OpenALAudioStream.cpp`):** decode is synchronous — if a probe produces no
+queue growth, waiting cannot help. Three *consecutive* no-growth probes latch
+EOF (counter resets on any healthy refill, so transient hiccups over a long
+track can never accumulate into a false stop).
+
+**Lesson:** "end of stream" has two independent signals — what the decoder says
+and what the buffer queue does. Trust their agreement; treat their disagreement
+as termination with a bounded retry, never as "wait forever." And: a human ear
+in the loop catches what logs structurally cannot — nothing logs a *sound*.
