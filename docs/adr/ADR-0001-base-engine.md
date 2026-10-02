@@ -2,8 +2,8 @@
 
 - **Статус:** Принято, 02.10.2026
 - **Автор:** Лид движка (c5172cc3-b570-4f73-8762-66fbfe36e726)
-- **Связано:** PLAN.md §1, §5; RESEARCH.md §3, §6; ADR-0002-target-devices.md; ADR-0003-determinism.md (черновик Геймплея); docs/E1-BACKLOG.md; docs/formats/BFME1_vs_ZH.md
-- **Изменено:** 02.10.2026 после ревью Android-платформы и Форматов (раздел в конце).
+- **Связано:** PLAN.md §1, §5; RESEARCH.md §3, §6; ADR-0002-target-devices.md; ADR-0003-determinism.md (черновик Геймплея); docs/E1-BACKLOG.md; docs/formats/BFME1_vs_ZH.md; [docs/UPSTREAM-PATCHES.md](../UPSTREAM-PATCHES.md) (реестр наших правок в коде апстрима; файл приходит с PR E1-21)
+- **Изменено:** 02.10.2026 после ревью Android-платформы и Форматов; 02.10.2026, раунд 2: детерминизм, реестр модулей, решения Оркестратора (разделы в конце).
 - **Источник фактов о форке:** удалённое чтение `gh api` 02.10.2026 16:45–17:30 МСК (аккаунт KatoteKiru). Ссылки на файлы ведут на коммит `8ef2349`: `B = https://github.com/MYSOREZ/GeneralsZH-Android-Port/blob/8ef2349`.
 
 ---
@@ -38,8 +38,8 @@
 | Платформа | SDL3 3.4.2 (FetchContent) + SDLActivity, OpenAL Soft, FFmpeg 8.1.1, FreeType, GameNetworkingSockets 1.6.0 (vcpkg) | B/cmake/sdl3.cmake#L22, B/vcpkg.json |
 | Рендер | по умолчанию свой D3D8→GLES 3.0 `Core/Libraries/Source/d3d8gles`, портированный из Lolendor/Generals-WebAssembly. **Собирается только под Android** (`if(NOT ANDROID) return()`). Через явный выбор доступны ANGLE (готовый `libGLESv2_angle.so` лежит в репо) и Vulkan через DXVK 2.6 | B/Core/Libraries/Source/d3d8gles/CMakeLists.txt, d3d8gles.cpp#L96-L126 |
 | Десктоп | пресет `linux64-deploy`: DXVK/SDL3/OpenAL, рендер **через DXVK→Vulkan, не через d3d8gles** | B/CMakePresets.json |
-| BIG | `StdBIGFileSystem` принимает только сигнатуру `"BIGF"`, а у BFME1 `BIG4` (наши `ini.big` и `maps.big`). В заголовке `BIG4` поле размера архива little-endian, число файлов и смещение первого файла big-endian. Все 115 карт в `maps.big` сжаты RefPack (`EAR\0`) (Форматы, `tools/oracle`, E1-20) | B/Core/GameEngineDevice/Source/StdDevice/Common/StdBIGFileSystem.cpp#L58 |
-| Детерминизм | интегрирована GameMath на основе fdlibm (TSH PR #2670). Кросс-платформенный детерминизм с Windows «remains unverified». **[Уточнить:** по ADR-0003 §1 п. 4 готовой GameMath в форке нет: `SAGE_USE_DETERMINISTIC_MATH` по умолчанию OFF, ветки в `wwmath.h` — заглушки**]** | B/CMakeLists.txt (gamemath.cmake), B/docs/port/ANDROID_PORT.md §6 |
+| BIG | `StdBIGFileSystem` принимает только сигнатуру `"BIGF"`, а у BFME1 `BIG4` (наши `ini.big` и `maps.big`). В заголовке `BIG4` поле размера архива little-endian, число файлов и смещение первого файла big-endian. Все 115 карт в `maps.big` сжаты RefPack (`EAR\0`) (Форматы, `tools/oracle`, E1-20). RefPack распаковывает штатный `CompressionManager` ZH, свой не нужен: все 115 карт распаковываются побайтно как в OpenSAGE. `BIG4` принимается правкой `StdBIGFileSystem.cpp` `openArchiveFile` (+6/−1, `// BFME:`), наш слой — `formats/vfs/` (E1-21 реализована, на ревью; подключение в игре — E1-21b) | B/Core/GameEngineDevice/Source/StdDevice/Common/StdBIGFileSystem.cpp#L58 |
+| Детерминизм | **детерминированной математики в форке нет.** `cmake/gamemath.cmake` (опция `SAGE_USE_DETERMINISTIC_MATH`, по умолчанию OFF) подтягивает через FetchContent каталог `Core/GameMath` из TSH на коммите `838f9d0f` (PR #2670), но такого каталога там нет. В `wwmath.h` ветки `USE_DETERMINISTIC_MATH` — заглушки `TODO` с откатом на CRT. Кросс-платформенный детерминизм с Windows «remains unverified». Наше решение — §3 п. 9 | B/cmake/gamemath.cmake, B/Core/Libraries/Source/WWVegas/WWMath/wwmath.h, B/docs/port/ANDROID_PORT.md §6; ADR-0003 §1 п. 4 |
 | Разработка | коммиты в основном от «Claude» (Claude Code), всё ещё активна: 25 звёзд, 20 форков, 16 открытых issue | `gh api` |
 
 Локальный клон `src/GeneralsZH-Android-Port` на боксе неглубокий (`depth 1`, HEAD `8ef2349`). Для импорта с историей он не подходит.
@@ -92,7 +92,7 @@
 | `docs/adr/` | Лид | решения |
 | `android/`, `ci/`, `docker/` | Android-платформа | оболочка, CI, образ сборки |
 
-   Правки в коде апстрима (`Core/`, `GeneralsMD/`, `cmake/`) допускаются только минимальные: точки расширения, хуки, `#if`. Каждая правка помечается `// BFME:` и вносится в `docs/UPSTREAM-PATCHES.md`.
+   Правки в коде апстрима (`Core/`, `GeneralsMD/`, `cmake/`) допускаются только минимальные: точки расширения, хуки, `#if`. Каждая правка помечается `// BFME:` и вносится в [`docs/UPSTREAM-PATCHES.md`](../UPSTREAM-PATCHES.md) (файл, причина, как убрать; приходит с PR E1-21). Любая правка апстрима проходит ревью Лида, в том числе в областях других владельцев: например, `ModifierList` и weapon nuggets принадлежат Геймплею и подключаются через хуки `// BFME:`.
 4. **Схемы INI и форматы BFME1 описываем и реализуем сами** (C++, наш код в `formats/`). **Код OpenSAGE в движок не переносим:** OpenSAGE распространяется под GPL-3.0, и на код, взятый из Generals, у него есть дополнительные условия EA (`LICENSE-EA.md`). OpenSAGE используем только как **внешний оракул** для сверки (`tools/oracle/` на OpenSAGE `588ac47`, .NET 8, без GPU, E1-20) и как **справочник**: в документах и комментариях ссылаемся на его файлы как на источник сведений о формате. Что читать: `src/OpenSage.FileFormats.Big/BigArchive.cs` (BIGF и BIG4), `src/OpenSage.Game/Data/Map/{MapFile,HeightMapData,BlendTileData}.cs`, `src/OpenSage.FileFormats.W3d/`, `src/OpenSage.Game/Data/Ini/`. Эталон для C++-реализации `datacheck` — Python-прототип `tools/datacheck` от Форматов. Различия форматов BFME1 и ZH сведены в `docs/formats/BFME1_vs_ZH.md`.
 5. **Импорт истории без переписывания** (решение Оркестратора, 02.10.2026). Смысл: сохранить общую базу с апстримом для обычных `git merge`.
    - История ~14,3 ГиБ превышает лимит одного push на GitHub в 2 ГиБ, поэтому пушим **порциями** по диапазонам коммитов, каждая заведомо < 2 ГиБ (https://docs.github.com/en/get-started/using-git/troubleshooting-the-2-gb-push-limit).
@@ -101,11 +101,13 @@
 6. **Ресурсы EA** (BIG, W3D, DDS/TGA, map, STR/CSF и производные от них, включая перекодированные текстуры и кэши) **никогда не попадают в git, APK, на сервер или в открытый доступ**. В APK можно класть только метаданные: манифест имён, размеров и хешей (`docs/game-files-access.md` §4).
 7. **Интерфейс APT не переносим**, делаем свой мобильный HUD (PLAN §1).
 8. **Точка «идём или откатываемся»** стоит в конце Э1 (≤ 5 недель от старта Э1). Если карта BFME1 не открывается на Pixel 8 Pro по критериям Э1 из PLAN §4, откатываемся на **путь (а)** OpenSAGE + .NET Android. Решение фиксируем в ADR-0004 (ADR-0003 занят под детерминизм логики).
+9. **Детерминированная математика — своя** (решение Лида 02.10.2026, правила в ADR-0003, задача E1-49). Пишем GameMath на libm из **musl** (MIT, совместима с GPL v3) в `Core/Libraries/Source/GameMath/`. `cmake/gamemath.cmake` переводим с FetchContent на `add_subdirectory`. Пока GameMath не готова, опция `SAGE_USE_DETERMINISTIC_MATH` остаётся **OFF**: FetchContent форка ссылается на несуществующий `Core/GameMath` TSH. Флаги компилятора `-ffp-contract=off -fno-strict-aliasing -fwrapv` действуют сразу: они уже стоят в `cmake/compilers.cmake` форка, E1-10 проверяет их в Android-сборке. Оценка E1-49 — 5–7 р. д. Каталог лежит в дереве апстрима, поэтому это исключение из п. 3: правку `gamemath.cmake` и новый каталог вносим в [`docs/UPSTREAM-PATCHES.md`](../UPSTREAM-PATCHES.md) с пометкой `// BFME:`.
+10. **Реестры модулей BFME** (решение Лида 02.10.2026, E1-50). Логические модули: явный реестр всех 123 имён через `BfmeModuleRegistry::registerAll` из `ModuleFactory::init` (код в `engine/bfme/`, владелец Геймплей). Дубли имён ломают сборку, намеренная замена модуля ZH только через явный список `overrides`, мягкий режим `BFME_SOFT_MODULES` только в dev. Модули отрисовки получают **отдельный реестр в `GameEngineDevice`, владелец Лид**; в Э1 они мапятся на `W3DModelDraw` (E1-34).
 
 ## 4. Последствия
 
 - **Плюсы:** Э1 сводится к форматам и рендеру террейна поверх уже работающей платформы. Логика, lockstep и реплеи достаются сразу.
-- **Обязательства по GPL v3:** тем, кому передаём APK, даём исходники. Сохраняем `LICENSE.md` с дополнительными условиями EA. В названии и иконке не используем товарные знаки EA и Tolkien. README пишем без логотипов.
+- **Обязательства по GPL v3:** тем, кому передаём APK, даём исходники. Сохраняем `LICENSE.md` с дополнительными условиями EA, а для кода из musl в GameMath — уведомление MIT. В названии и иконке не используем товарные знаки EA и Tolkien. README пишем без логотипов.
 - **Клон весит ~15 ГБ.** В CI и Docker используем `--filter=blob:none` или `--depth` для сборочных задач. Полный клон нужен только для слияний с апстримом, его держим на боксе в `/workspace/bfme-mobile/repo` **[оценка: 15 ГБ из 84 ГБ свободных]**.
 - **Сторонние бинарники и данные апстрима** (GeneralsOnlineRelease, ANGLE prebuilt `.so`, `GroupPanel.wnd`) проходят проверку происхождения. ANGLE (BSD) оставляем как диагностический бэкенд, `GroupPanel.wnd` проверяют «Форматы и данные» (E1-BACKLOG).
 - **Код GeneralsOnline** (`GeneralsMD/Code/GameEngine/.../GeneralsOnline`, NGMP) по умолчанию не считаем пригодным, пока «Сеть и сервер» не проверят его лицензию (E1-BACKLOG). Наша сеть строится на транспорте GNS и своём сервере (NET-DESIGN.md).
@@ -139,7 +141,7 @@ ADR пересматривается, если наступит одно из с
 1. **Точка «идём или откатываемся»** (конец Э1): не выполнен хотя бы один из критериев Э1 PLAN §4 (1–3) и нет плана закрыть его за ≤ 1 неделю **[оценка]**. Тогда откат на путь (а).
 2. **Расхождения форматов:** чтобы рендерить террейн BFME1, приходится переписать больше половины `W3DDevice/GameClient` (HeightMap, TerrainTex, W3DWater, W3DRoadBuffer) **[порог-оценка]**. Тогда сравниваем с (а) и OpenSAGE-рендером.
 3. **Апстрим:** MYSOREZ без коммитов > 60 дней, сменил лицензию, закрыл репозиторий или влил то, что ломает GLES на Mali/PowerVR без исправления > 30 дней. Тогда переходим на (б′) или (б″), перенеся d3d8gles к себе.
-4. **GitHub ограничил репозиторий из-за размера.** Тогда вариант: переписать историю `git filter-repo` с удалением `apk/` и `GeneralsOnlineRelease/`, детерминированно применяя ту же фильтрацию к каждому новому снимку апстрима **[не проверено]**. Это решает Оркестратор.
+4. **GitHub ограничил репозиторий из-за размера.** Решение Оркестратора 02.10.2026: историю (~14,4 ГБ) оставляем, `filter-repo` не делаем. Если GitHub всё же ограничит репозиторий, вариант с `git filter-repo` (удаление `apk/` и `GeneralsOnlineRelease/` с той же детерминированной фильтрацией каждого нового снимка апстрима **[не проверено]**) снова выносится на решение Оркестратора.
 5. **Open-BFME-1** собирается полностью и юридический вопрос решён (решение Андрея). Тогда пересматриваем его роль как справочника.
 
 ---
@@ -153,3 +155,20 @@ ADR пересматривается, если наступит одно из с
 5. **§3 п. 8:** решение «идём или откатываемся» фиксируем в **ADR-0004**, а не в ADR-0003. ADR-0003 теперь про детерминизм логики (черновик Геймплея).
 6. **§4, последний пункт:** перенос d3d8gles на Linux (E1-17) стоит перед рендером террейна (E1-32). Добавлено правило про Mesa и Mali: в CI принудительный CPU-декод, точность шейдеров проверяем только на устройстве.
 7. **Шапка:** добавлены ссылки на ADR-0003-determinism.md и docs/formats/BFME1_vs_ZH.md.
+
+---
+
+## Изменения 02.10.2026, раунд 2
+
+Пункты 8–10 внесены в 18:00 МСК, пункты 11–16 — в 21:30 МСК.
+
+
+8. **§1.1, строка «Детерминизм», переписана.** Утверждение «интегрирована GameMath на основе fdlibm» было неверным. Новый факт: `cmake/gamemath.cmake` подтягивает `Core/GameMath` из TSH `838f9d0f` (PR #2670), но такого каталога там нет, а в `wwmath.h` стоят заглушки `TODO`. Пометка «уточнить» из п. 4 снята.
+9. **Новый §3 п. 9:** своя GameMath на libm из musl (MIT) в `Core/Libraries/Source/GameMath/`, `gamemath.cmake` переходит на `add_subdirectory`. `SAGE_USE_DETERMINISTIC_MATH` остаётся OFF до готовности GameMath, флаги компилятора включены сразу. Записано как исключение из §3 п. 3, потому что каталог лежит в дереве апстрима.
+10. **§4:** в обязательства добавлено уведомление MIT для кода из musl.
+11. **Шапка и §3 п. 3:** добавлена ссылка на [`docs/UPSTREAM-PATCHES.md`](../UPSTREAM-PATCHES.md). Сам файл приходит с PR E1-21 (в ветке `e1-21-vfs-big4` он уже есть), в этом коммите его нет.
+12. **§3 п. 9 уточнён:** `SAGE_USE_DETERMINISTIC_MATH` остаётся OFF, потому что FetchContent форка ссылается на несуществующий `Core/GameMath` TSH. Флаги `-ffp-contract=off -fno-strict-aliasing -fwrapv` уже есть в `cmake/compilers.cmake`, E1-10 только проверяет, что они действуют в Android-сборке. E1-49 — 5–7 р. д. вместо 3–4.
+13. **Новый §3 п. 10:** реестры модулей. Логика — `BfmeModuleRegistry::registerAll` из `ModuleFactory::init` на все 123 имени, дубли ломают сборку, замена только через `overrides`, `BFME_SOFT_MODULES` только в dev. Отрисовка — отдельный реестр в `GameEngineDevice` (владелец Лид), в Э1 мапится на `W3DModelDraw`.
+14. **§3 п. 3:** любая правка апстрима проходит ревью Лида; `ModifierList` и weapon nuggets принадлежат Геймплею через хуки `// BFME:`.
+15. **§1.1, строка BIG:** RefPack идёт через штатный `CompressionManager` ZH, проверено на всех 115 картах в E1-21. Правка `StdBIGFileSystem.cpp` +6/−1 для `BIG4` на ревью, подключение в игре — отдельный PR E1-21b.
+16. **§7 п. 4:** решение Оркестратора 02.10.2026 — историю репозитория (~14,4 ГБ) оставляем, `filter-repo` не делаем.
