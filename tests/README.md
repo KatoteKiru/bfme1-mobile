@@ -7,3 +7,6 @@
 
 Фикстуры (`*.w3d` и т. п.) здесь допустимы, только если они самодельные или синтетические.
 Файлы игры EA в репозиторий не кладём никогда.
+
+`tests/replay/crclog.py` читает логи `bfme-crclog/1` (опция движка `-gxCrcLog`), stderr форка и CRC из `.rep`.
+Проверка парсера: `cd tests/replay && python3 -m unittest test_crclog`.

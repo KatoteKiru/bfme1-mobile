@@ -33,6 +33,7 @@ Common command line parameters for `GeneralsX` (Generals) and `GeneralsXZH` (Zer
 | `-replay <file>` | Play a replay file | `./GeneralsXZH -replay match.rep` |
 | `-jobs <count>` | Number of parallel replay jobs | `./GeneralsXZH -jobs 4 -replay *.rep` |
 | `-headless` | Run without graphics (replay testing) | `./GeneralsXZH -headless -replay *.rep` |
+| `-gxCrcLog <path>` | Write every logic-frame CRC, plus per-section running CRCs, to a `bfme-crclog/1` file. Off by default. Does not enable the network trace and does not change simulation. The file actually written is `<stem>.<replay>.<pid><ext>` (stderr: `[BFME-QA] crc log ...`). **Use `-jobs 1`.** | `./GeneralsXZH -headless -replay match.rep -gxCrcLog /tmp/out.crclog -jobs 1` |
 
 ## Common Combinations
 
@@ -47,6 +48,12 @@ Launch in windowed mode, skip intro.
 ./GeneralsXZH -jobs 4 -headless -replay subfolder/*.rep
 ```
 Test multiple replays in parallel without graphics (requires optimized VC6 build with `RTS_BUILD_OPTION_DEBUG=OFF`).
+
+### QA per-frame CRC log
+```bash
+./GeneralsXZH -headless -replay match.rep -gxCrcLog /tmp/out.crclog -jobs 1
+```
+`-jobs 1` is the recommended invocation. `-jobs N` with N greater than 1 starts one worker per replay, and each worker writes its own `<stem>.<replay>.<pid>.crclog`, so a runner that expects a single path will not see every frame in one file. Omitting `-jobs` simulates every `-replay` in this process, and those replays share one log opened on the first frame. The option is off unless passed. CRC comes from `getCRC(CRC_RECALC)` in Xfer CRC mode, which only reads state; the logic seed is a local copy and is only read. The header line `# logic_hz=` is `LOGICFRAMES_PER_SECOND` (30 unless the 60 Hz build is on). The replay file does not record the tick rate. Parser: `tests/replay/crclog.py`. On the first headless run, the final CRC and gamestats of the same replay should match a run without `-gxCrcLog`. CRCs stored in the replay appear on frames 1, 101, 201, … (suspected +1 frame offset against the logic frame that computed them).
 
 ### High Resolution Testing
 ```bash

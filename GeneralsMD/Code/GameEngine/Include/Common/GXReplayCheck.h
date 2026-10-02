@@ -35,6 +35,14 @@
 //                       writes these into a copy of the replay (header C=001), and the
 //                       PC client, playing that copy, stops at the first frame where it
 //                       disagrees with this device
+//   -gxCrcLog <path>    BFME: QA 02/10/2026 write that same per-frame CRC, plus the
+//                       running CRC after each section, to a bfme-crclog/1 text file.
+//                       Off unless the option is passed. Does not enable GX_NET_TRACE
+//                       and does not change the simulation: the CRC is getCRC(CRC_RECALC)
+//                       through XferCRC, which only reads, and the logic seed is a local
+//                       copy that is only read. The file actually opened is
+//                       "<stem>.<replay>.<pid><ext>" so -jobs workers do not share one
+//                       path. -jobs 1 is the recommended QA invocation.
 //
 // Fast-forward runs extra logic frames between rendered ones, exactly what the
 // engine's headless replay simulation does per frame (particles, then logic), so
@@ -79,4 +87,22 @@ namespace GXReplayCheck
 
 	// RecorderClass, at every compared checkpoint.
 	void noteCheckpoint( UnsignedInt frame, Bool matched, UnsignedInt ours, UnsignedInt recorded );
+
+	// BFME: QA 02/10/2026 Machine-readable CRC of every logic frame for the replay tests
+	// (tests/replay/crclog.py, docs/REPLAY-TESTS.md). "-gxCrcLog <path>" writes
+	// "bfme-crclog/1": one line per frame "<frame> <crc> Objects=.. Partition=..
+	// PlayerList=.. AI=..", independent of GX_NET_TRACE, line-buffered so a crash keeps
+	// every finished frame. The header carries "# logic_hz=<LOGICFRAMES_PER_SECOND>"
+	// (30 unless the 60 Hz build is on); the replay header does not record the tick rate.
+	// The real file is "<path stem>.<replay>.<pid><ext>" so -jobs workers never share it.
+	// Use -jobs 1. Off by default.
+	void setCrcLogPath( const char *path );
+	Bool crcLogEnabled();
+	// GameLogic::getCRC, after each section: the running CRC (same values as "crc parts").
+	void noteCrcPart( const char *section, UnsignedInt runningCrc );
+	void writeCrcLog( UnsignedInt frame, UnsignedInt crc );
+	// status is "match", "mismatch" (replay-check finish) or "exit" (atexit). The footer
+	// is "frames=<s_lastFrame + 1>" from the last line written, not TheGameLogic->getFrame():
+	// atexit runs after GameLogic has been destroyed.
+	void closeCrcLog( const char *status );
 }

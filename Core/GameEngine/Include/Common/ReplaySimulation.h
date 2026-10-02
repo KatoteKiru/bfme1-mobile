@@ -30,6 +30,10 @@ public:
 
 	static void stop() { s_isRunning = false; }
 
+	// BFME: QA 02/10/2026 Remember -gxCrcLog so -jobs workers are started with it.
+	// The parent only spawns and does not simulate; its argv is not copied.
+	static void setCrcLogPath(const char *path);
+
 	static Bool isRunning() { return s_isRunning; }
 	static UnsignedInt getCurrentReplayIndex() { return s_replayIndex; }
 	static UnsignedInt getReplayCount() { return s_replayCount; }

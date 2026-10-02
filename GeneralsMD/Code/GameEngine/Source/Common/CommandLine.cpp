@@ -469,6 +469,18 @@ Int parseGxCrcEveryFrame(char *args[], int num)
 	return 1;
 }
 
+// BFME: QA 02/10/2026 -gxCrcLog <path>: per-frame CRC file for tests/replay.
+// Off unless this option is passed. See GXReplayCheck::setCrcLogPath.
+Int parseGxCrcLog(char *args[], int num)
+{
+	if (num > 1)
+	{
+		GXReplayCheck::setCrcLogPath(args[1]);
+		return 2;
+	}
+	return 1;
+}
+
 Int parseReplay(char *args[], int num)
 {
 	if (num > 1)
@@ -1206,6 +1218,7 @@ static CommandLineParam paramsForStartup[] =
 	{ "-gxFastTo", parseGxFastTo },
 	{ "-gxAutoQuit", parseGxAutoQuit },
 	{ "-gxCrcEveryFrame", parseGxCrcEveryFrame },
+	{ "-gxCrcLog", parseGxCrcLog }, // BFME: QA 02/10/2026
 	{ "-gxSafeInsets", parseGxSafeInsets },
 };
 

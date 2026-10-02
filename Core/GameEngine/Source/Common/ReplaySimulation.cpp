@@ -42,6 +42,18 @@ Bool ReplaySimulation::s_isRunning = false;
 UnsignedInt ReplaySimulation::s_replayIndex = 0;
 UnsignedInt ReplaySimulation::s_replayCount = 0;
 
+// BFME: QA 02/10/2026 Path from -gxCrcLog, forwarded to each -jobs worker.
+namespace
+{
+AsciiString s_bfmeCrcLogPath;
+}
+
+void ReplaySimulation::setCrcLogPath(const char *path)
+{
+	if (path != nullptr)
+		s_bfmeCrcLogPath = path;
+}
+
 namespace
 {
 int countProcessesRunning(const std::vector<WorkerProcess>& processes)
@@ -207,10 +219,21 @@ int ReplaySimulation::simulateReplaysInWorkerProcesses(const std::vector<AsciiSt
 			UnicodeString filenameWide;
 			filenameWide.translate(filenames[filenamePositionStarted]);
 			UnicodeString command;
-			command.format(L"\"%s\"%s%s -replay \"%s\"",
+			// BFME: QA 02/10/2026 Workers would otherwise drop -gxCrcLog and, if several
+			// were pointed at one path, overwrite it. Each still opens
+			// "<stem>.<replay>.<pid><ext>". -jobs 1 is the recommended QA invocation.
+			UnicodeString crcLogArg;
+			if (!s_bfmeCrcLogPath.isEmpty())
+			{
+				UnicodeString crcLogWide;
+				crcLogWide.translate(s_bfmeCrcLogPath);
+				crcLogArg.format(L" -gxCrcLog \"%s\"", crcLogWide.str());
+			}
+			command.format(L"\"%s\"%s%s%s -replay \"%s\"",
 				exePath,
 				TheGlobalData->m_windowed ? L" -win" : L"",
 				TheGlobalData->m_headless ? L" -headless" : L"",
+				crcLogArg.str(),
 				filenameWide.str());
 
 			processes.push_back(WorkerProcess());

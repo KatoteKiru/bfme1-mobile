@@ -12,7 +12,7 @@
 - **Как:** headless-движок (E1-43) проигрывает `.rep`, на каждом кадре логики пишет CRC состояния игры
   (и бегущие CRC секций), раннер сравнивает с эталоном (golden) и выдаёт первый расходящийся кадр и секцию.
 - **Работает уже сейчас** с форком MYSOREZ (`-gxCrcEveryFrame` + `GX_NET_TRACE=1`, разбор stderr).
-  Предложен хук `-gxCrcLog` (отдельный файл, без трейса) — `tests/replay/engine-hooks/`.
+  Хук `-gxCrcLog` пишет тот же CRC в отдельный файл без сетевого трейса (§8). Парсер — `tests/replay/crclog.py`.
 - **Данные EA** в CI-облако не уходят никогда: джобы с реальными реплеями идут только на self-hosted
   раннере на боксе. На каждый PR — самопроверка раннера на фейковом движке (без данных).
 - Нужно от других: headless-бинарник и раннер (Android-платформа), принятие хука и ответы по `-replay`
@@ -29,6 +29,7 @@
 | `-headless -replay <file>` (ReplaySimulation) | TSH/форк, работает не только на Windows | основа E1-43 |
 | `GXReplayCheck`: `-gxFastTo`, `-gxAutoQuit`, `-gxCrcEveryFrame` (или маркер `gx_crc_every_frame.txt`), итог в `gx_replay_check_result.txt` | форк `Common/GXReplayCheck.{h,cpp}`, `CommandLine.cpp` | выход по концу реплея, CRC каждого кадра |
 | `[GX-NET] crc every frame N: X`, `crc parts frame N: afterObjects=… seed=…`, `afterPartition`, `afterPlayerList`, `afterAI` | `GameLogic.cpp` ~4232 и в `getCRC`, только при `GX_NET_TRACE` | режим `gx-stderr` раннера |
+| `-gxCrcLog <path>`: файл `bfme-crclog/1`, CRC каждого кадра и бегущие CRC секций, без `GX_NET_TRACE` | `GXReplayCheck`, `CommandLine.cpp`, `GameLogic.cpp`; воркерам `-jobs` путь пробрасывает `ReplaySimulation` | режим `crclog`; **рекомендуется `-jobs 1`** |
 | `ReplayCheckActivity`, `scripts/tooling/replay/rep_crc_every_frame.py`, `compare_gamestats.py` | форк | экран «Replay check» на телефоне — для прогона на устройстве (§5.3) |
 
 Фиксы MYSOREZ по сдвигу первого чекпоинта (Recorder.cpp:122, `m_skippedOne`) — обязательны и для нас
@@ -53,6 +54,7 @@
 
 ```
 # bfme-crclog/1
+# logic_hz=30              (кадров логики в секунду; в заголовке .rep частоты нет. 30, если сборка не 60 Гц)
 # source=engine            (engine | gx-stderr | rep-recorded | golden)
 # replay=e2-two-battalions-10min.rep
 # replay_sha256=…          # engine_build_id=…  # arch=linux-x86_64  # ini_crc=…  # exe_crc=…
@@ -148,13 +150,42 @@ QA сам не включает).
 - PR из чужих форков на self-hosted не запускаются (репозиторий приватный, но правило в YAML есть).
 - Время: реплей 18 000 кадров headless — оценка единицы минут на кейс **[замерить на E1-43]**.
 
-## 8. Хук движка `-gxCrcLog` (предложение)
+## 8. Хук движка `-gxCrcLog`
 
-`tests/replay/engine-hooks/0001-bfme-qa-crc-frame-log.patch` против форка @ 8ef2349 (4 файла, пометки
-`// BFME: QA`). Описание, что проверить Лиду (побочные эффекты и стоимость `getCRC` каждый кадр) — в
-`tests/replay/engine-hooks/README.md`. Статус: `git apply --check` проходит, новый код собран отдельно на
-заглушках; в составе движка не собирался. Владелец решения — Лид; при принятии — запись в
-`docs/UPSTREAM-PATCHES.md`.
+Опция в движке, выключена по умолчанию. Симуляцию не меняет: CRC — тот же `getCRC(CRC_RECALC)` через
+`XferCRC` (`XFER_CRC`), он только читает состояние. Seed — локальная копия `GetGameLogicRandomSeedCRC()`,
+в поток CRC попадает чтением (`XferCRC::xferImplementation`).
+
+Файлы (пометки `// BFME:`), реестр — `docs/UPSTREAM-PATCHES.md`:
+
+- `GeneralsMD/Code/GameEngine/Include/Common/GXReplayCheck.h`
+- `GeneralsMD/Code/GameEngine/Source/Common/GXReplayCheck.cpp`
+- `GeneralsMD/Code/GameEngine/Source/Common/CommandLine.cpp`
+- `GeneralsMD/Code/GameEngine/Source/GameLogic/System/GameLogic.cpp`
+- `Core/GameEngine/Include/Common/ReplaySimulation.h` и `Source/Common/ReplaySimulation.cpp` — проброс
+  `-gxCrcLog` в воркеры `-jobs` (родитель только порождает процессы и сам файл не создаёт)
+
+Формат `bfme-crclog/1` (§3), плюс `# logic_hz=<LOGICFRAMES_PER_SECOND>` (30, если сборка не `SAGE_HIGH_FPS_SIM`).
+Парсер: `tests/replay/crclog.py`.
+
+Файл на диске — не аргумент опции, а `<stem>.<имя реплея>.<pid><ext>`
+(`out/x.crclog` → `out/x.e2-battle.12345.crclog`), чтобы воркеры не писали в один путь. Фактический путь
+печатается в stderr: `[BFME-QA] crc log ...`.
+
+**Рекомендуется `-jobs 1`.** При `-jobs N>1` каждый воркер пишет свой файл, и раннер, который ждёт один
+путь, не соберёт все кадры. Без `-jobs` несколько `-replay` идут в одном процессе и попадают в один файл
+(он открывается на первом кадре).
+
+Подвал `# end frames=<последний записанный кадр + 1> status=...` не читает `TheGameLogic->getFrame()`:
+`atexit` срабатывает после уничтожения `GameLogic`, номер кадра помнит `s_lastFrame`. Кадры с нуля, CRC
+пишется до инкремента `m_frame`, поэтому `frames` совпадает с тем, что `getFrame()` вернул бы на обычном
+выходе. `status=exit`, если лог закрыл `atexit` (headless-цикл `ReplaySimulation` не вызывает
+`GXReplayCheck::update`, поэтому `finish()` не бежит). `status=match` или `mismatch` — если `finish()`
+закрыл лог раньше.
+
+На первом headless-прогоне один и тот же реплей гоняется с `-gxCrcLog` и без него: итоговый CRC
+(чекпоинты `MSG_LOGIC_CRC`, код выхода) и gamestats, если прогон их пишет, должны совпасть. Записанные
+в `.rep` CRC стоят на кадрах 1, 101, 201, … — подозреваемый сдвиг +1 (§2), его проверяют там же.
 
 ## 9. Кейсы (план)
 
@@ -170,9 +201,10 @@ QA сам не включает).
 
 - **Android-платформа:** headless-бинарник Linux (E1-43) в Docker-образе; self-hosted раннер на боксе с
   `$BFME_GAMEDATA`/`$BFME_REPLAYS` (регистрация раннера — решение Андрея через Оркестратора); включение YAML.
-- **Лид:** принять/переделать хук 0001; ответ, принимает ли `-replay` абсолютный путь на Linux (в TSH имя
-  относительно папки Replays — иначе раннер копирует файл туда); побочные эффекты `getCRC` каждый кадр;
-  частота логики (30/5 Гц); флаги детерминизма (E1-45).
+- **Лид:** хук `-gxCrcLog` в движке (§8), на ревью. На первом headless-прогоне сверить итоговый CRC и
+  gamestats с прогоном без флага и подтвердить сдвиг +1 (§2). Открыто: принимает ли `-replay` абсолютный
+  путь на Linux (в TSH имя относительно папки Replays — иначе раннер копирует файл туда); частота логики
+  (30/5 Гц); флаги детерминизма (E1-45).
 - **Геймплей:** реплей Э2 (два батальона, 10 минут) с фиксированным seed.
 - **Андрей:** можно ли хранить `.rep` BFME1 в приватном git (только журнал команд) или только на боксе.
 - QA: замерить стоимость `getCRC(CRC_RECALC)` на Pixel 8 Pro (просьба NET-DESIGN §3.2) — в perf-run

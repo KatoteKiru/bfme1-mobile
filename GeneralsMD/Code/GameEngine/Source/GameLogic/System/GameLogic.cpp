@@ -4230,10 +4230,13 @@ void GameLogic::update()
 	// frame-exact comparison with the PC (see Common/GXReplayCheck.h). Computed at the
 	// same instant as the recorded ones, printed only; nothing is sent or compared.
 	// Multiplayer recordings too: those are the ones compared with the PC.
-	if ((isSoloGameOrReplay || isMPGameOrReplay) && GXReplayCheck::crcEveryFrame())
+	// BFME: QA 02/10/2026 also for -gxCrcLog (tests/replay), written to its own file.
+	// Off unless the option is set. getCRC(CRC_RECALC) uses XferCRC, which only reads.
+	if ((isSoloGameOrReplay || isMPGameOrReplay) && (GXReplayCheck::crcEveryFrame() || GXReplayCheck::crcLogEnabled()))
 	{
 		const UnsignedInt gxFrameCRC = (generateForSolo || generateForMP) ? m_CRC : getCRC( CRC_RECALC );
 		GX_NET_TRACE("crc every frame %u: %08X\n", (unsigned)m_frame, (unsigned)gxFrameCRC);
+		GXReplayCheck::writeCrcLog(m_frame, gxFrameCRC); // BFME: QA
 	}
 
 	// GeneralsX @feature Android port 24/09/2026 See GXGameLogicRandomSeedCRCAfter().
@@ -4841,9 +4844,13 @@ UnsignedInt GameLogic::getCRC( Int mode, AsciiString deepCRCFileName )
 	GXCrcStream::mark("logic random seed");
 	if (xferCRC->getXferMode() == XFER_CRC)
 	{
+		// BFME: QA 02/10/2026 `seed` is a local copy of GetGameLogicRandomSeedCRC().
+		// XferCRC::xferImplementation only reads those bytes into the checksum.
 		xferCRC->xferUnsignedInt( &seed );
 	}
-	const Bool gxTraceParts = GXTrace::isNetEnabled() && isInGameLogicUpdate()
+	// BFME: QA 02/10/2026 parts are also collected for -gxCrcLog; the GX_NET_TRACE
+	// lines below stay gated by the net-trace marker inside the macro.
+	const Bool gxTraceParts = (GXTrace::isNetEnabled() || GXReplayCheck::crcLogEnabled()) && isInGameLogicUpdate()
 		&& xferCRC->getXferMode() == XFER_CRC;
 	if (gxTraceParts)
 	{
@@ -4856,6 +4863,7 @@ UnsignedInt GameLogic::getCRC( Int mode, AsciiString deepCRCFileName )
 		// the gx_net_trace.txt marker present.
 		GX_NET_TRACE("crc parts frame %u: afterObjects=%08X seed=%08X\n",
 			(unsigned)m_frame, (unsigned)xferCRC->getCRC(), (unsigned)seed);
+		GXReplayCheck::noteCrcPart("Objects", xferCRC->getCRC()); // BFME: QA
 
 		// The seed above is one number: it says the two streams parted, never who
 		// drew. This names the call sites that consumed logic randomness since the
@@ -4890,6 +4898,7 @@ UnsignedInt GameLogic::getCRC( Int mode, AsciiString deepCRCFileName )
 	{
 		GX_NET_TRACE("crc parts frame %u: afterPartition=%08X\n",
 			(unsigned)m_frame, (unsigned)xferCRC->getCRC());
+		GXReplayCheck::noteCrcPart("Partition", xferCRC->getCRC()); // BFME: QA
 	}
 
 	// GeneralsX @feature Android port 21/09/2026 Name the players once per checkpoint.
@@ -4929,6 +4938,7 @@ UnsignedInt GameLogic::getCRC( Int mode, AsciiString deepCRCFileName )
 	{
 		GX_NET_TRACE("crc parts frame %u: afterPlayerList=%08X\n",
 			(unsigned)m_frame, (unsigned)xferCRC->getCRC());
+		GXReplayCheck::noteCrcPart("PlayerList", xferCRC->getCRC()); // BFME: QA
 	}
 
 	GXCrcStream::mark("TheAI");
@@ -4986,6 +4996,7 @@ UnsignedInt GameLogic::getCRC( Int mode, AsciiString deepCRCFileName )
 	{
 		GX_NET_TRACE("crc parts frame %u: afterAI=%08X  (objects counted: %d)\n",
 			(unsigned)m_frame, (unsigned)xferCRC->getCRC(), (int)objectCountForTrace);
+		GXReplayCheck::noteCrcPart("AI", xferCRC->getCRC()); // BFME: QA
 	}
 
 	xferCRC->close();

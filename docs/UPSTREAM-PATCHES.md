@@ -17,6 +17,11 @@
 | `GeneralsMD/Code/GameEngineDevice/Source/W3DDevice/GameClient/Shadow/W3DVolumetricShadow.cpp` | тип `data`; debug-assert `(Real)K_MAX_HEIGHT*MAP_HEIGHT_SCALE` | u16 | E1-25 | — |
 | `GeneralsMD/Code/GameEngineDevice/Source/W3DDevice/GameLogic/W3DTerrainLogic.cpp` | `Short` → `Int` | u16 не влезает в `Short` | E1-25 | — |
 | `GeneralsMD/Code/GameEngine/Source/GameLogic/Object/Update/TensileFormationUpdate.cpp` | локальный `#define MAP_HEIGHT_SCALE` приведён к `/256` (в файле не используется) | согласованность с `MapObject.h` | E1-25 | — |
+| `GeneralsMD/Code/GameEngine/Include/Common/GXReplayCheck.h` | объявления `-gxCrcLog` | CRC каждого кадра логики в файл `bfme-crclog/1`, без `GX_NET_TRACE`; выключено по умолчанию | QA | удалить объявления `// BFME: QA` |
+| `GeneralsMD/Code/GameEngine/Source/Common/GXReplayCheck.cpp` | запись лога; имя `<stem>.<replay>.<pid><ext>`; подвал по `s_lastFrame`; строка `# logic_hz=` | `atexit` после уничтожения `GameLogic`; воркеры `-jobs` не пишут в один путь | QA | удалить блок `// BFME: QA` и вызов `closeCrcLog` в `finish()` |
+| `GeneralsMD/Code/GameEngine/Source/Common/CommandLine.cpp` | `parseGxCrcLog` | опция командной строки | QA | удалить парсер и строку в `paramsForStartup` |
+| `GeneralsMD/Code/GameEngine/Source/GameLogic/System/GameLogic.cpp` | при `-gxCrcLog` — `getCRC(CRC_RECALC)` каждый кадр и `noteCrcPart` по секциям | тесты реплеев; Xfer в режиме CRC только читает, seed — локальная копия | QA | удалить строки `// BFME: QA`; `gxTraceParts` снова только `GXTrace::isNetEnabled()` |
+| `Core/GameEngine/Include/Common/ReplaySimulation.h`, `Core/GameEngine/Source/Common/ReplaySimulation.cpp` | проброс `-gxCrcLog` в команду воркера | родитель `-jobs` не копирует argv и сам файл не создаёт; каждый воркер открывает свой путь. Для QA рекомендуется `-jobs 1` | QA | удалить `setCrcLogPath` и `crcLogArg` в команде воркера |
 
 E1-25: полный аудит (94 места) в `docs/formats/e1-25-heights-audit.md`. Не портировано: WorldBuilder
 (`GeneralsMD/Code/Tools/WorldBuilder`, пишет `HeightMapData` v4 u8, после правки не собирается) и vanilla Generals (`Generals/`).
