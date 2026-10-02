@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+# BFME1 Mobile: узкая обёртка над docker для self-hosted раннера (ставится в /usr/local/sbin, root:root 0755,
+# вызывается только через sudoers: `ghrunner ALL=(root) NOPASSWD: /usr/local/sbin/bfme-ci-docker`).
+#
+# Зачем: членство в группе docker = root на боксе (docker run -v /:/host). Раннер исполняет код из PR,
+# поэтому ему дан не сокет, а ровно те вызовы, которые делает tools/build-apk.sh:
+#   bfme-ci-docker info
+#   bfme-ci-docker image inspect bfme-android-build:<12 hex>
+#   bfme-ci-docker build --network host -f docker/android-build.Dockerfile --build-arg UBUNTU_IMAGE=<ubuntu:..@sha256:..> -t <tag> .
+#   bfme-ci-docker run --rm --network host --memory=N --memory-swap=N -u <uid>:<gid> [-e K=V]... [-v SRC:DST]... -w DIR <tag> CMD...
+# Ограничения:
+#   - образ только bfme-android-build:<12 hex>; -u только uid:gid вызывающего (SUDO_UID:SUDO_GID);
+#   - контейнер всегда --cap-drop=ALL --security-opt=no-new-privileges --pids-limit, без --privileged/--device;
+#   - источники -v только внутри CI_ROOT/{actions-runner/_work,cache,secrets}. Путь открывается по компонентам
+#     с O_NOFOLLOW и монтируется через /proc/self/fd в каталог root, так что подмена каталога симлинком
+#     между проверкой и docker run ничего не даёт (нет TOCTOU);
+#   - контекст build: обёртка сама копирует 5 файлов (Dockerfile, versions.env, apt-packages.txt,
+#     install-toolchain.sh, .dockerignore) в свой временный каталог, docker не читает дерево раннера.
+import ctypes, os, re, secrets, shutil, signal, stat, subprocess, sys
+
+CI_ROOT = "/workspace/bfme-mobile/ci"
+ALLOWED = ("actions-runner/_work", "cache", "secrets")
+RUN_DIR = "/run/bfme-ci"
+DOCKER = "/usr/bin/docker"
+RUNNER_USER = "ghrunner"
+TAG_RE = re.compile(r"^bfme-android-build:[0-9a-f]{12}$")
+UBUNTU_RE = re.compile(r"^ubuntu:[0-9.]+@sha256:[0-9a-f]{64}$")
+MEM_RE = re.compile(r"^[0-9]{1,6}[kmg]?$")
+ENV_RE = re.compile(r"^[A-Z_][A-Z0-9_]{0,63}=", re.S)
+DST_RE = re.compile(r"^/[A-Za-z0-9._/-]{0,200}$")
+CTX_FILES = ("docker/android-build.Dockerfile", "docker/versions.env", "docker/apt-packages.txt",
+             "tools/install-toolchain.sh", ".dockerignore")
+MS_BIND, MS_REMOUNT, MS_NOSUID, MS_NODEV, MNT_DETACH = 4096, 32, 2, 4, 2
+libc = ctypes.CDLL(None, use_errno=True)
+
+def die(msg):
+    print(f"bfme-ci-docker: {msg}", file=sys.stderr); sys.exit(2)
+
+def caller():
+    import pwd
+    uid, gid = os.environ.get("SUDO_UID"), os.environ.get("SUDO_GID")
+    if os.geteuid() != 0 or not uid or not gid:
+        die("запускать только через sudo")
+    if pwd.getpwuid(int(uid)).pw_name != RUNNER_USER:
+        die(f"разрешено только пользователю {RUNNER_USER}")
+    return uid, gid
+
+def open_under_root(path, want_dir=True):
+    """Открыть path, лежащий в CI_ROOT/<ALLOWED>, по компонентам с O_NOFOLLOW. Вернуть fd."""
+    # realpath только для проверки префикса; дальше путь открывается по компонентам с O_NOFOLLOW,
+    # так что подмена любого компонента после этой строки приводит к отказу, а не к выходу за CI_ROOT.
+    ap = os.path.realpath(os.path.join(os.getcwd(), path))
+    if not ap.startswith(CI_ROOT + "/"):
+        die(f"путь вне {CI_ROOT}: {path}")
+    rel = ap[len(CI_ROOT) + 1:]
+    if not any(rel == a or rel.startswith(a + "/") for a in ALLOWED):
+        die(f"путь не в {ALLOWED}: {path}")
+    fd = os.open(CI_ROOT, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    parts = rel.split("/")
+    for i, p in enumerate(parts):
+        if p in ("", ".", ".."):
+            os.close(fd); die(f"недопустимый компонент пути: {path}")
+        last = i == len(parts) - 1
+        flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | (os.O_DIRECTORY if (want_dir or not last) else 0)
+        try:
+            nfd = os.open(p, flags, dir_fd=fd)
+        except OSError as e:
+            os.close(fd); die(f"не открыть {path}: {e.strerror} (симлинк или нет файла)")
+        os.close(fd); fd = nfd
+    return fd
+
+def cmd_build(args, uid, gid):
+    exp = ["--network", "host", "-f", "docker/android-build.Dockerfile"]
+    if args[:4] != exp or len(args) != 9 or args[4] != "--build-arg" or args[6] != "-t" or args[8] != ".":
+        die("build: разрешена только команда из tools/build-apk.sh")
+    ba, tag = args[5], args[7]
+    if not ba.startswith("UBUNTU_IMAGE=") or not UBUNTU_RE.match(ba.split("=", 1)[1]):
+        die("build: UBUNTU_IMAGE должен быть ubuntu:<версия>@sha256:<digest>")
+    if not TAG_RE.match(tag):
+        die("build: недопустимый тег")
+    os.makedirs(RUN_DIR, mode=0o700, exist_ok=True)
+    ctx = os.path.join(RUN_DIR, "ctx-" + secrets.token_hex(6))
+    os.makedirs(ctx, mode=0o700)
+    try:
+        for rel in CTX_FILES:
+            fd = open_under_root(rel, want_dir=False)
+            st = os.fstat(fd)
+            if not stat.S_ISREG(st.st_mode) or st.st_size > 1 << 20:
+                die(f"build: {rel} не обычный файл или больше 1 МБ")
+            dst = os.path.join(ctx, rel); os.makedirs(os.path.dirname(dst), exist_ok=True)
+            with os.fdopen(fd, "rb") as src, open(dst, "wb") as out:
+                shutil.copyfileobj(src, out)
+            os.chmod(dst, 0o755 if st.st_mode & 0o111 else 0o644)
+        return subprocess.call([DOCKER, "build", "--network", "host", "-f", os.path.join(ctx, CTX_FILES[0]),
+                                "--build-arg", ba, "-t", tag, ctx])
+    finally:
+        shutil.rmtree(ctx, ignore_errors=True)
+
+def cmd_run(args, uid, gid):
+    opts, mounts, i = ["--rm", "--network", "host"], [], 0
+    if args[:3] != ["--rm", "--network", "host"]:
+        die("run: команда должна начинаться с --rm --network host")
+    i = 3; image = None
+    while i < len(args):
+        a = args[i]
+        if a.startswith("--memory=") or a.startswith("--memory-swap="):
+            if not MEM_RE.match(a.split("=", 1)[1]): die(f"run: {a}")
+            opts.append(a); i += 1
+        elif a == "-u":
+            if args[i + 1] != f"{uid}:{gid}": die("run: -u только uid:gid вызывающего")
+            opts += ["-u", args[i + 1]]; i += 2
+        elif a == "-e":
+            if not ENV_RE.match(args[i + 1]): die(f"run: недопустимая переменная {args[i+1][:40]}")
+            opts += ["-e", args[i + 1]]; i += 2
+        elif a == "-v":
+            src, _, dst = args[i + 1].rpartition(":")
+            if not src or not DST_RE.match(dst): die(f"run: недопустимый -v {args[i+1]}")
+            mounts.append((src, dst)); i += 2
+        elif a == "-w":
+            if not DST_RE.match(args[i + 1]): die("run: -w")
+            opts += ["-w", args[i + 1]]; i += 2
+        elif a.startswith("-"):
+            die(f"run: опция {a} не разрешена")
+        else:
+            image = a; cmd = args[i + 1:]; break
+    if not image or not TAG_RE.match(image):
+        die("run: образ только bfme-android-build:<12 hex>")
+    os.makedirs(RUN_DIR, mode=0o700, exist_ok=True)
+    mdir = os.path.join(RUN_DIR, "mnt-" + secrets.token_hex(6)); os.makedirs(mdir, mode=0o700)
+    done, name = [], f"bfme-ci-{os.getpid()}"
+    def cleanup(*_):
+        subprocess.call([DOCKER, "rm", "-f", name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        for t in reversed(done):
+            libc.umount2(t.encode(), MNT_DETACH)
+            try: os.rmdir(t)
+            except OSError: pass
+        try: os.rmdir(mdir)
+        except OSError: pass
+    try:
+        for n, (src, dst) in enumerate(mounts):
+            fd = open_under_root(src)
+            t = os.path.join(mdir, str(n)); os.mkdir(t, 0o700)
+            if libc.mount(f"/proc/self/fd/{fd}".encode(), t.encode(), None, MS_BIND, None) != 0:
+                die(f"mount {src}: {os.strerror(ctypes.get_errno())}")
+            done.append(t); os.close(fd)
+            libc.mount(None, t.encode(), None, MS_REMOUNT | MS_BIND | MS_NOSUID | MS_NODEV, None)
+            opts += ["-v", f"{t}:{dst}"]
+        for s in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+            signal.signal(s, lambda *_: (cleanup(), sys.exit(143)))
+        return subprocess.call([DOCKER, "run", "--name", name, "--cap-drop=ALL",
+                                "--security-opt=no-new-privileges", "--pids-limit=8192"] + opts + [image] + cmd)
+    finally:
+        cleanup()
+
+def main():
+    uid, gid = caller()
+    a = sys.argv[1:]
+    if a == ["info"]:
+        return subprocess.call([DOCKER, "info"])
+    if len(a) == 3 and a[:2] == ["image", "inspect"] and TAG_RE.match(a[2]):
+        return subprocess.call([DOCKER, "image", "inspect", a[2]])
+    if a[:1] == ["build"]:
+        return cmd_build(a[1:], uid, gid)
+    if a[:1] == ["run"]:
+        return cmd_run(a[1:], uid, gid)
+    die("разрешены только: info | image inspect <tag> | build ... | run ...")
+
+if __name__ == "__main__":
+    sys.exit(main())

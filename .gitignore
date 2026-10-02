@@ -144,3 +144,15 @@ android-staging/
 # Сборки APK — в артефакты CI, не в git (история апстрима и так весит ~15 ГБ из-за apk/)
 *.apk
 *.aab
+
+# BFME1 Mobile: ключи подписи и секреты никогда не попадают в git
+*.keystore
+*.jks
+/secrets/
+/out/
+/logs/
+*.apks
+/cache/
+.docker-data/
+*.keystore.pass
+keystore.pass

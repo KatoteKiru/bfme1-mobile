@@ -32,8 +32,9 @@ c_args = ['-fPIC']
 # vulkan_beta.h behind this define. Harmless on Android — the extension is
 # simply never reported by the driver, so the code paths stay dormant.
 cpp_args = ['-fPIC', '-DVK_ENABLE_BETA_EXTENSIONS']
-c_link_args = []
-cpp_link_args = ['-static-libstdc++']
+# BFME1 Mobile: 16 KB page alignment (Android 15+), see root CMakeLists.txt.
+c_link_args = ['-Wl,-z,max-page-size=16384', '-Wl,-z,common-page-size=16384']
+cpp_link_args = ['-static-libstdc++', '-Wl,-z,max-page-size=16384', '-Wl,-z,common-page-size=16384']
 
 [properties]
 # Host-machine pkg-config lookup dir for the generated SDL3.pc. Env vars

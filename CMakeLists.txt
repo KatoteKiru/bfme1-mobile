@@ -52,6 +52,16 @@ include(cmake/debug_strip.cmake)
 
 include(FetchContent)
 
+# BFME1 Mobile @build Android 02/10/2026 16 KB page size (Android 15+ / Pixel):
+# every ELF LOAD segment of every .so we build (libmain, SDL3, openal, gamespy,
+# adrenotools hooks...) must be aligned to 16 KiB. Placed before any FetchContent /
+# add_subdirectory so it reaches all targets. DXVK (meson) gets the same flags via
+# cmake/meson-arm64-android-cross.ini.in; vcpkg deps via cmake/triplets/arm64-android.cmake.
+# Checked after the build by tools/build-apk.sh (llvm-objdump -p, zipalign -c -P 16).
+if(ANDROID)
+    add_link_options("LINKER:-z,max-page-size=16384" "LINKER:-z,common-page-size=16384")
+endif()
+
 # MinGW-w64 specific configuration
 if(MINGW)
     include(cmake/mingw.cmake)

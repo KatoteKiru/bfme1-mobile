@@ -1,0 +1,85 @@
+# BFME1 Mobile: сборка APK (arm64-v8a) на self-hosted раннере бокса в каноническом Docker-образе
+# docker/android-build.Dockerfile. Та же команда, что вручную на боксе: tools/build-apk.sh.
+#
+# Раннер: tools/ci/setup-runner.sh (пользователь ghrunner, метки self-hosted, Linux, X64, bfme, android-build).
+# Окружение задаёт .env раннера, а не GitHub Secrets:
+#   BFME_DOCKER    = sudo -n /usr/local/sbin/bfme-ci-docker   (узкая обёртка вместо группы docker)
+#   BFME_SECRETS   = /workspace/bfme-mobile/ci/secrets        (отладочный ключ подписи, вне git и вне GitHub)
+#   BFME_CACHE     = /workspace/bfme-mobile/ci/cache          (ccache, бинарный кэш vcpkg, Gradle; переживает задания)
+#   BFME_REQUIRE_KEYSTORE=1, BFME_JOBS=4, BFME_MEM_LIMIT=7g
+name: BFME Android APK
+
+on:
+  push:
+    branches: [bfme]
+  pull_request:
+    branches: [bfme]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bfme-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    # Только PR из этого же репозитория: код из чужих форков на бокс не пускаем.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, linux, bfme]
+    timeout-minutes: 180
+    env:
+      BFME_BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - name: Окружение раннера
+        run: |
+          test -n "${BFME_DOCKER:-}" && test -n "${BFME_SECRETS:-}" && test -n "${BFME_CACHE:-}" \
+            || { echo "::error::Нет BFME_DOCKER/BFME_SECRETS/BFME_CACHE в .env раннера (tools/ci/setup-runner.sh)"; exit 1; }
+          test -f "$BFME_SECRETS/bfme-debug.keystore" || { echo "::error::Нет ключа $BFME_SECRETS/bfme-debug.keystore"; exit 1; }
+          df -h "$GITHUB_WORKSPACE" "$BFME_CACHE" | tail -n +1
+          free -m | head -2
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          # История репозитория ~15 ГБ (наследие форка, apk/ в истории): только последний коммит.
+          fetch-depth: 1
+          lfs: false
+
+      - name: DXVK submodule (+ nested)
+        run: |
+          git submodule update --init --depth 1 references/fbraz3-dxvk
+          git -C references/fbraz3-dxvk submodule update --init --depth 1
+
+      - name: Build APK (tools/build-apk.sh)
+        run: tools/build-apk.sh
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: bfme-zh-apk-${{ github.run_number }}
+          path: |
+            out/*.apk
+            out/*.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload symbols
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bfme-zh-symbols-${{ github.run_number }}
+          path: out/symbols/
+          retention-days: 90
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bfme-zh-build-log-${{ github.run_number }}
+          path: |
+            logs/
+            build/android-vulkan/vcpkg-manifest-install.log
+          if-no-files-found: ignore
+          retention-days: 14

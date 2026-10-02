@@ -1,0 +1,15 @@
+{
+  "_comment": "T5 docs/fpcr-audit.md: разрешённое FP-поведение .so из APK (снято с APK e29eade, 02.10.2026). Меняется только с обоснованием в PR. Библиотеки, которых здесь нет, не должны иметь ни MSR FPCR, ни импортов fesetenv/fesetround/feholdexcept/feupdateenv/fesetexceptflag/feenableexcept/fedisableexcept.",
+  "libs": {
+    "libmain.so": {
+      "msr_fpcr": 0, "mrs_fpcr": 1, "msr_fpsr": 1,
+      "fe_setters": ["fesetenv", "fesetround", "fesetexceptflag"],
+      "why": "setFPMode() в GameLogic.cpp (fesetenv(FE_DFL_ENV) + fesetround(FE_TONEAREST): сброс FPCR=0 в начале тика) и трассировка FP-флагов форка (fesetexceptflag, ~L4400); compiler-rt (soft fp128): __fe_getround читает FPCR, __fe_raise_inexact пишет FPSR"
+    },
+    "libSDL3.so": {
+      "msr_fpcr": 0, "mrs_fpcr": 0, "msr_fpsr": 0,
+      "fe_setters": ["feholdexcept", "fesetenv"],
+      "why": "SDL 3.4.2 src/audio/SDL_audiotypecvt.c, NEON-конвертеры звука: пара feholdexcept/fesetenv (сохранить/восстановить). SDL-аудио форк не использует"
+    }
+  }
+}

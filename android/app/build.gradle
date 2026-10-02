@@ -5,24 +5,28 @@ plugins {
 android {
     namespace 'com.generalsx.zerohour'
     compileSdk 35
+    // BFME1 Mobile: pinned to the build-tools baked into the image (docker/versions.env);
+    // AGP 8.5.2 would otherwise ask for 34.0.0 and try to download it at build time.
+    buildToolsVersion '35.0.0'
 
-    // A fixed, committed debug keystore (android/app/debug.keystore) — NOT the
-    // machine-local ~/.android/debug.keystore that Android tooling
-    // auto-generates with a random key on first use. That default is fine on
-    // a dev workstation but fatal on CI: a fresh GitHub Actions runner has no
-    // ~/.android/debug.keystore, generates a NEW random key every run, and
-    // every build then has a different signature — Android refuses to
-    // install an update over the previous APK ("signatures don't match",
-    // requires an uninstall first). Signing every build with the same
-    // in-repo key makes CI builds installable as updates over each other.
-    // This is a debug-only key with a well-known password; never use it to
-    // sign anything meant for a store listing.
+    // BFME1 Mobile @build Android 02/10/2026 Signing key lives OUTSIDE git.
+    // tools/build-apk.sh generates it once (box: /workspace/bfme-mobile/secrets/,
+    // CI: decoded from the BFME_DEBUG_KEYSTORE_B64 secret) and passes it in via
+    // environment variables. The fork's committed debug.keystore is not used.
+    // A stable key keeps consecutive builds installable as updates.
     signingConfigs {
-        debug {
-            storeFile file('debug.keystore')
-            storePassword 'android'
-            keyAlias 'androiddebugkey'
-            keyPassword 'android'
+        bfmeDebug {
+            def ks = System.getenv('BFME_KEYSTORE_FILE')
+            if (ks == null || !file(ks).exists()) {
+                throw new GradleException("BFME_KEYSTORE_FILE is not set or missing; run tools/build-apk.sh (it creates/loads the key outside git)")
+            }
+            storeFile file(ks)
+            storePassword System.getenv('BFME_KEYSTORE_PASSWORD')
+            keyAlias (System.getenv('BFME_KEY_ALIAS') ?: 'bfmedebug')
+            keyPassword (System.getenv('BFME_KEY_PASSWORD') ?: System.getenv('BFME_KEYSTORE_PASSWORD'))
+            enableV1Signing false
+            enableV2Signing true
+            enableV3Signing true
         }
     }
 
@@ -59,7 +63,7 @@ android {
         // The launcher UI is written to the API 24 surface regardless, so if
         // both of the above are ever resolved, this line is the only change
         // needed here.
-        minSdk 28
+        minSdk 29
         targetSdk 35
         // GeneralsX @feature Android port 08/07/2026 Version numbers are
         // manually managed from here on -- CI no longer auto-bumps versionCode
@@ -102,14 +106,14 @@ android {
         debug {
             // Explicit: overrides AGP's implicit per-machine debug signingConfig
             // with the fixed in-repo key above.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.bfmeDebug
         }
         release {
             minifyEnabled false
             // Sideload builds sign with the same fixed debug key; Play
             // distribution is out of scope for a GPL port of a game whose
             // assets the user must own.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.bfmeDebug
         }
     }
 
