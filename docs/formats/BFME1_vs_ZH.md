@@ -173,6 +173,8 @@ read blends, (v>=6) threeWay, (v>=5) cliff  as idxBits[N] -> Int arrays;
 
 Сейчас массивы — члены класса `WorldHeightMap`. При лимитах BFME их надо вынести в кучу (`std::vector`), иначе объект занимает десятки МБ.
 
+**Сделано в E1-25 (blend):** лимиты подняты до 4 096 / 65 536 / 131 072. Таблицы вынесены в кучу и размеряются по счётчикам карты, индексы клеток стали `Int`, а выход за лимит отвергается как порча чанка. Атлас 2 048 px остаётся задачей E1-32/E1-51. Тесты лежат в `tests/blend`.
+
 ### 2.5 HeightMapData v4 → v5: кратко
 
 ZH: `WorldHeightMap::ParseHeightMapData`, `WorldHeightMap.cpp:857-910` @ `e29eade`. BFME1: OpenSAGE `HeightMapData.cs` (эталон). Проверено на 115/115.

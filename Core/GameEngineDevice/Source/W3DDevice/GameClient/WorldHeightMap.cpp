@@ -400,11 +400,9 @@ WorldHeightMap::~WorldHeightMap()
 	delete[](m_cellCliffState);
 	m_cellCliffState = nullptr;
 
+	freeTileTables();	// BFME: E1-25 heap tables and v10+ masks
+
 	int i;
-	for (i=0; i<NUM_SOURCE_TILES; i++) {
-		REF_PTR_RELEASE(m_sourceTiles[i]);
-		REF_PTR_RELEASE(m_edgeTiles[i]);
-	}
 	for (i=0; i<NUM_ALPHA_TILES; i++) {
 		REF_PTR_RELEASE(m_alphaTiles[i]);
 	}
@@ -421,6 +419,49 @@ void WorldHeightMap::freeListOfMapObjects()
 		MapObject::TheMapObjectListPtr = nullptr;
 	}
 	MapObject::getWorldDict()->clear();
+}
+
+// BFME: E1-25 the tile / blend / cliff tables were fixed member arrays upstream (NUM_SOURCE_TILES,
+// NUM_BLEND_TILES, NUM_CLIFF_INFO); they are allocated per map from the BlendTileData counts.
+// Entries are zeroed like the old arrays of a fresh object; customBlendEdgeClass of the unused
+// blend entry 0 is -1 (alpha).
+void WorldHeightMap::freeTileTables()
+{
+	Int i;
+	for (i=0; i<m_tileCapacity; i++) {
+		REF_PTR_RELEASE(m_sourceTiles[i]);
+		REF_PTR_RELEASE(m_edgeTiles[i]);
+	}
+	delete[] m_sourceTiles;
+	m_sourceTiles = nullptr;
+	delete[] m_edgeTiles;
+	m_edgeTiles = nullptr;
+	m_tileCapacity = 0;
+	delete[] m_blendedTiles;
+	m_blendedTiles = nullptr;
+	m_blendedTileCapacity = 0;
+	delete[] m_cliffInfo;
+	m_cliffInfo = nullptr;
+	m_cliffInfoCapacity = 0;
+	for (i=0; i<BLEND_MASK_COUNT; i++) {
+		delete[] m_passabilityMasks[i];
+		m_passabilityMasks[i] = nullptr;
+	}
+}
+
+void WorldHeightMap::allocateTileTables(Int tileCapacity, Int numBlendedTiles, Int numCliffInfo)
+{
+	if (tileCapacity < 1) tileCapacity = 1;
+	if (numBlendedTiles < 1) numBlendedTiles = 1;
+	if (numCliffInfo < 1) numCliffInfo = 1;
+	m_sourceTiles = MSGNEW("WorldHeightMap_TileTables") TileData*[tileCapacity]();
+	m_edgeTiles = MSGNEW("WorldHeightMap_TileTables") TileData*[tileCapacity]();
+	m_tileCapacity = tileCapacity;
+	m_blendedTiles = MSGNEW("WorldHeightMap_TileTables") TBlendTileInfo[numBlendedTiles]();
+	m_blendedTiles[0].customBlendEdgeClass = -1;
+	m_blendedTileCapacity = numBlendedTiles;
+	m_cliffInfo = MSGNEW("WorldHeightMap_TileTables") TCliffInfo[numCliffInfo]();
+	m_cliffInfoCapacity = numCliffInfo;
 }
 
 
@@ -440,13 +481,18 @@ WorldHeightMap::WorldHeightMap():
 	m_tileMode(TILE_4x4),
 #endif
 	m_numCliffInfo(1),
-	m_terrainTex(nullptr), m_alphaTerrainTex(nullptr), m_numBitmapTiles(0), m_numBlendedTiles(1)
+	m_terrainTex(nullptr), m_alphaTerrainTex(nullptr), m_numBitmapTiles(0), m_numBlendedTiles(1),
+	// BFME: E1-25 heap tables, allocated by ParseBlendTileData
+	m_sourceTiles(nullptr), m_edgeTiles(nullptr), m_tileCapacity(0),
+	m_blendedTiles(nullptr), m_blendedTileCapacity(0), m_cliffInfo(nullptr), m_cliffInfoCapacity(0)
 {
 	Int i;
-	for (i=0; i<NUM_SOURCE_TILES; i++) {
-		m_sourceTiles[i] = nullptr;
-		m_edgeTiles[i] = nullptr;
+	for (i=0; i<BLEND_MASK_COUNT; i++) {	// BFME: E1-25
+		m_passabilityMasks[i] = nullptr;
 	}
+	memset(&m_blendStats, 0, sizeof(m_blendStats));	// BFME: E1-25
+	m_blendStats.version = -1;
+	memset(&m_objectsZStats, 0, sizeof(m_objectsZStats));
 
 	TheSidesList->validateSides();
 	setupAlphaTiles();
@@ -479,14 +525,19 @@ WorldHeightMap::WorldHeightMap(ChunkInputStream *pStrm, Bool logicalDataOnly):
 	m_tileMode(TILE_4x4),
 #endif
 	m_numCliffInfo(1),
-	m_terrainTex(nullptr), m_alphaTerrainTex(nullptr), m_numBitmapTiles(0), m_numBlendedTiles(1)
+	m_terrainTex(nullptr), m_alphaTerrainTex(nullptr), m_numBitmapTiles(0), m_numBlendedTiles(1),
+	// BFME: E1-25 heap tables, allocated by ParseBlendTileData
+	m_sourceTiles(nullptr), m_edgeTiles(nullptr), m_tileCapacity(0),
+	m_blendedTiles(nullptr), m_blendedTileCapacity(0), m_cliffInfo(nullptr), m_cliffInfoCapacity(0)
 {
 
 	int i;
-	for (i=0; i<NUM_SOURCE_TILES; i++) {
-		m_sourceTiles[i]=nullptr;
-		m_edgeTiles[i]=nullptr;
+	for (i=0; i<BLEND_MASK_COUNT; i++) {	// BFME: E1-25
+		m_passabilityMasks[i] = nullptr;
 	}
+	memset(&m_blendStats, 0, sizeof(m_blendStats));	// BFME: E1-25
+	m_blendStats.version = -1;
+	memset(&m_objectsZStats, 0, sizeof(m_objectsZStats));
 	if (TheGlobalData && TheGlobalData->m_stretchTerrain) {
 		m_drawWidthX=STRETCH_DRAW_WIDTH;
 		m_drawHeightY=STRETCH_DRAW_HEIGHT;
@@ -831,7 +882,13 @@ Bool WorldHeightMap::ParseObjectsDataChunk(DataChunkInput &file, DataChunkInfo *
 {
 	file.m_currentObject = nullptr;
 	file.registerParser( "Object", info->label, ParseObjectDataChunk );
-	return (file.parse(userData));
+	// BFME: E1-25 count the objects ParseObjectData removes for their z, with a per-map summary.
+	WorldHeightMap *pThis = (WorldHeightMap *)userData;
+	memset(&pThis->m_objectsZStats, 0, sizeof(pThis->m_objectsZStats));
+	Bool ok = file.parse(userData);
+	DEBUG_LOG(("ObjectsList: %d objects, removed for z: %d above maxZ, %d below minZ",
+		pThis->m_objectsZStats.objects, pThis->m_objectsZStats.removedAbove, pThis->m_objectsZStats.removedBelow));
+	return ok;
 }
 
 /**
@@ -1048,24 +1105,74 @@ void WorldHeightMap::readTexClass(TXTextureClass *texClass, TileData **tileData)
 	}
 }
 
+// BFME: E1-25 one per-cell index array of BlendTileData (blend / 3-way / cliff) into Int: 16-bit and
+// sign-extended as the upstream Short arrays, or u32 for v14..v23 (BFME1).
+static void readCellIndexArray(DataChunkInput &file, Int *dst, Int count, Bool wide)
+{
+	if (wide) {
+		file.readArrayOfBytes((char*)dst, count*sizeof(Int));
+		return;
+	}
+	Short *tmp = MSGNEW("WorldHeightMap_ParseBlendTileData") Short[count];
+	file.readArrayOfBytes((char*)tmp, count*sizeof(Short));
+	for (Int i=0; i<count; i++) {
+		dst[i] = tmp[i];
+	}
+	delete[] tmp;
+}
+
+// BFME: E1-25 texture class header sanity (upstream only asserted the counts); also returns the number
+// of tile table entries the class touches: readTexClass writes up to numTiles tiles from firstTile,
+// updateTileTexturePositions up to width*width.
+static Bool textureClassEnd(const TXTextureClass &tc, Int *end)
+{
+	if (tc.firstTile < 0 || tc.numTiles < 0 || tc.width < 0 || tc.width > 64) return false;
+	Int n = MAX(tc.numTiles, tc.width*tc.width);
+	if (n > NUM_SOURCE_TILES || tc.firstTile > NUM_SOURCE_TILES - n) return false;
+	*end = tc.firstTile + n;
+	return true;
+}
+
 /**
 * WorldHeightMap::ParseBlendTileData - read a blend tile info chunk.
 * Format is the newer CHUNKY format.
 *	See WHeightMapEdit.cpp for the writer.
 *	Input: DataChunkInput
 *
+* BFME: E1-25 also BlendTileData v9..v15 of BFME1 (docs/formats/BFME1_vs_ZH.md §2.4.3): u32 blend / 3-way /
+* cliff indices from v14, the v10+ masks (stored only), v16+ rejected. Tile, blend and cliff tables are
+* sized from the map counts. Dangling tile indices are clamped, `inverted` is masked &0x3, a
+* customBlendEdgeClass without such an edge class becomes -1; each case is counted (m_blendStats) and logged.
 */
 Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
 	int i, j;
+	// BFME: E1-25 hard version check.
+	if (info->version > K_BLEND_TILE_VERSION_MAX) {
+		DEBUG_LOG(("BlendTileData: unsupported version v%d (newest supported v%d)", info->version, K_BLEND_TILE_VERSION_MAX));
+		throw ERROR_CORRUPT_FILE_FORMAT;
+	}
+	memset(&m_blendStats, 0, sizeof(m_blendStats));
+	m_blendStats.version = info->version;
+	const Bool wideIndices = info->version >= K_BLEND_TILE_VERSION_14 && info->version < K_BLEND_TILE_VERSION_24;
+
 	Int len = file.readInt();
 	if (m_dataSize != len) {
 		throw ERROR_CORRUPT_FILE_FORMAT	;
 	}
+	// BFME: E1-25 a second BlendTileData chunk replaces the first one (upstream leaked it).
+	delete[] m_tileNdxes;
+	delete[] m_cliffInfoNdxes;
+	delete[] m_blendTileNdxes;
+	delete[] m_extraBlendTileNdxes;
+	delete[] m_cellFlipState;
+	delete[] m_cellCliffState;
+	freeTileTables();
+
 	m_tileNdxes = MSGNEW("WorldHeightMap_ParseBlendTileData") Short[m_dataSize];
-	m_cliffInfoNdxes = MSGNEW("WorldHeightMap_ParseBlendTileData") Short[m_dataSize];
-	m_blendTileNdxes = MSGNEW("WorldHeightMap_ParseBlendTileData") Short[m_dataSize];
-	m_extraBlendTileNdxes = MSGNEW("WorldHeightMap_ParseBlendTileData") Short[m_dataSize];
+	m_cliffInfoNdxes = MSGNEW("WorldHeightMap_ParseBlendTileData") Int[m_dataSize]();	// BFME: Int, zeroed (v < 5 has none)
+	m_blendTileNdxes = MSGNEW("WorldHeightMap_ParseBlendTileData") Int[m_dataSize];
+	m_extraBlendTileNdxes = MSGNEW("WorldHeightMap_ParseBlendTileData") Int[m_dataSize]();	// BFME: Int, zeroed (v < 6 has none)
 	// Note - we have one less cell than the width & height. But for paranoia, allocate
 	// extra row. jba.
 	//
@@ -1080,16 +1187,13 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 	memset(m_cellCliffState,0,numBytesX*numBytesY);	//clear all flags
 
 	file.readArrayOfBytes((char*)m_tileNdxes, m_dataSize*sizeof(Short));
-	file.readArrayOfBytes((char*)m_blendTileNdxes, m_dataSize*sizeof(Short));
+	readCellIndexArray(file, m_blendTileNdxes, m_dataSize, wideIndices);	// BFME: u32 from v14
 	if (info->version >= K_BLEND_TILE_VERSION_6) {
-		file.readArrayOfBytes((char*)m_extraBlendTileNdxes, m_dataSize*sizeof(Short));
-		//Allow clearing of extra blend tiles via ini and resaving of map.
-		//Useful for flushing out initial maps made with buggy 3-way blending.
-		if (!TheGlobalData->m_use3WayTerrainBlends)
-			memset(m_extraBlendTileNdxes,0,m_dataSize*sizeof(Short));
+		readCellIndexArray(file, m_extraBlendTileNdxes, m_dataSize, wideIndices);	// BFME: u32 from v14
+		// BFME: the m_use3WayTerrainBlends reset is applied below, after the dangling index count.
 	}
 	if (info->version >= K_BLEND_TILE_VERSION_5) {
-		file.readArrayOfBytes((char*)m_cliffInfoNdxes, m_dataSize*sizeof(Short));
+		readCellIndexArray(file, m_cliffInfoNdxes, m_dataSize, wideIndices);	// BFME: u32 from v14
 	}
 	if (info->version >= K_BLEND_TILE_VERSION_7) {
 		if (info->version==K_BLEND_TILE_VERSION_7) {
@@ -1101,14 +1205,29 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 					m_cellCliffState[j*m_flipStateWidth + i] = data[j*byteWidth + i];
 				}
 			}
+			delete[] data;	// BFME: upstream leaked it
 		} else {
 			file.readArrayOfBytes((char*)m_cellCliffState, m_height*m_flipStateWidth);
 		}
 	} else {
 		initCliffFlagsFromHeights();
 	}
+	// BFME: E1-25 masks of v10+, in this order, same layout as m_cellCliffState. Stored only.
+	{
+		const Bool present[BLEND_MASK_COUNT] = {
+			info->version >= K_BLEND_TILE_VERSION_10,
+			info->version >= K_BLEND_TILE_VERSION_11,
+			info->version >= K_BLEND_TILE_VERSION_14 && info->version < K_BLEND_TILE_VERSION_25,
+			info->version >= K_BLEND_TILE_VERSION_15,
+		};
+		for (i=0; i<BLEND_MASK_COUNT; i++) {
+			if (!present[i]) continue;
+			m_passabilityMasks[i] = MSGNEW("WorldHeightMap_ParseBlendTileData") UnsignedByte[numBytesX*numBytesY];
+			file.readArrayOfBytes((char*)m_passabilityMasks[i], numBytesX*numBytesY);
+		}
+	}
 	m_numBitmapTiles = file.readInt();
-	DEBUG_ASSERTCRASH(m_numBitmapTiles>0 && m_numBitmapTiles<2048, ("Unlikely numBitmapTiles."));
+	DEBUG_ASSERTCRASH(m_numBitmapTiles>0 && m_numBitmapTiles<=NUM_SOURCE_TILES, ("Unlikely numBitmapTiles."));
 	m_numBlendedTiles = file.readInt();
 	DEBUG_ASSERTCRASH(m_numBlendedTiles>0 && m_numBlendedTiles<NUM_BLEND_TILES+1, ("Unlikely numBlendedTiles."));
 	if (info->version >= K_BLEND_TILE_VERSION_5) {
@@ -1116,9 +1235,34 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 	} else {
 		m_numCliffInfo = 1;	// cliffInfo[0] is the default info.
 	}
+	// BFME: E1-25 the counts size heap tables now, so they are checked in release builds too.
+	if (m_numBitmapTiles < 0 || m_numBitmapTiles > NUM_SOURCE_TILES ||
+			m_numBlendedTiles < 0 || m_numBlendedTiles > NUM_BLEND_TILES ||
+			m_numCliffInfo < 0 || m_numCliffInfo > NUM_CLIFF_INFO) {
+		DEBUG_LOG(("BlendTileData: counts out of range: numBitmapTiles %d, numBlendedTiles %d, numCliffInfo %d",
+			m_numBitmapTiles, m_numBlendedTiles, m_numCliffInfo));
+		throw ERROR_CORRUPT_FILE_FORMAT;
+	}
+	// BFME: E1-25 clamp dangling tile indices (tile >> 2 >= numBitmapTiles; BFME1 "map mp rhun",
+	// "map sps good rhun": 711 cells each) to the last bitmap tile, keeping the quadrant bits.
+	for (i=0; i<m_dataSize; i++) {
+		const Int tile = (UnsignedShort)m_tileNdxes[i];
+		if ((tile >> 2) < m_numBitmapTiles) continue;
+		const Int clamped = (MAX(m_numBitmapTiles, 1) - 1) << 2 | (tile & 3);
+		m_blendStats.danglingTiles++;
+		DEBUG_LOG(("BlendTileData: dangling tile #%d at cell (%d,%d): tile %d (>>2 = %d) >= numBitmapTiles %d, clamped to %d",
+			m_blendStats.danglingTiles, i % m_width, i / m_width, tile, tile >> 2, m_numBitmapTiles, clamped));
+		m_tileNdxes[i] = (Short)clamped;
+	}
 // --> file loading here
 	m_numTextureClasses	= file.readInt();
 	DEBUG_ASSERTCRASH(m_numTextureClasses>0 && m_numTextureClasses<200, ("Unlikely m_numTextureClasses."));
+	if (m_numTextureClasses < 0 || m_numTextureClasses > NUM_TEXTURE_CLASSES) {	// BFME: E1-25 fixed array
+		DEBUG_LOG(("BlendTileData: numTextureClasses %d out of range", m_numTextureClasses));
+		throw ERROR_CORRUPT_FILE_FORMAT;
+	}
+	// BFME: E1-25 table size from the counts: every tile index a class or the renderer can touch.
+	Int tileCapacity = m_numBitmapTiles;
 	for (i=0; i<m_numTextureClasses; i++) {
 		m_textureClasses[i].globalTextureClass = -1;
 		m_textureClasses[i].firstTile = file.readInt();
@@ -1130,21 +1274,51 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 	/*	Int legacy = */ file.readInt();
 
 		m_textureClasses[i].name = file.readAsciiString();
-		readTexClass(&m_textureClasses[i], m_sourceTiles);
+		// BFME: E1-25 readTexClass moved below, after the tile tables are allocated.
+		Int classEnd;
+		if (!textureClassEnd(m_textureClasses[i], &classEnd)) {
+			DEBUG_LOG(("BlendTileData: bad texture class %d: firstTile %d, numTiles %d, width %d", i,
+				m_textureClasses[i].firstTile, m_textureClasses[i].numTiles, m_textureClasses[i].width));
+			throw ERROR_CORRUPT_FILE_FORMAT;
+		}
+		tileCapacity = MAX(tileCapacity, classEnd);
 	}
 	m_numEdgeTextureClasses = 0;
 	m_numEdgeTiles = 0;
 	if (info->version >= K_BLEND_TILE_VERSION_4) {
 		m_numEdgeTiles	= file.readInt();
 		m_numEdgeTextureClasses	= file.readInt();
+		// BFME: E1-25 fixed array / table size checks.
+		if (m_numEdgeTiles < 0 || m_numEdgeTiles > NUM_SOURCE_TILES ||
+				m_numEdgeTextureClasses < 0 || m_numEdgeTextureClasses > NUM_TEXTURE_CLASSES) {
+			DEBUG_LOG(("BlendTileData: numEdgeTiles %d / numEdgeTextureClasses %d out of range", m_numEdgeTiles, m_numEdgeTextureClasses));
+			throw ERROR_CORRUPT_FILE_FORMAT;
+		}
+		tileCapacity = MAX(tileCapacity, m_numEdgeTiles);
 		for (i=0; i<m_numEdgeTextureClasses; i++) {
 			m_edgeTextureClasses[i].globalTextureClass = -1;
 			m_edgeTextureClasses[i].firstTile = file.readInt();
 			m_edgeTextureClasses[i].numTiles = file.readInt();
 			m_edgeTextureClasses[i].width = file.readInt();
 			m_edgeTextureClasses[i].name = file.readAsciiString();
-			readTexClass(&m_edgeTextureClasses[i], m_edgeTiles);
+			// BFME: E1-25 readTexClass moved below, after the tile tables are allocated.
+			Int classEnd;
+			if (!textureClassEnd(m_edgeTextureClasses[i], &classEnd)) {
+				DEBUG_LOG(("BlendTileData: bad edge texture class %d: firstTile %d, numTiles %d, width %d", i,
+					m_edgeTextureClasses[i].firstTile, m_edgeTextureClasses[i].numTiles, m_edgeTextureClasses[i].width));
+				throw ERROR_CORRUPT_FILE_FORMAT;
+			}
+			tileCapacity = MAX(tileCapacity, classEnd);
 		}
+	}
+	// BFME: E1-25 heap tables; then the tiles of each class in the upstream order (readTexClass reads
+	// texture files, not the chunk).
+	allocateTileTables(tileCapacity, m_numBlendedTiles, m_numCliffInfo);
+	for (i=0; i<m_numTextureClasses; i++) {
+		readTexClass(&m_textureClasses[i], m_sourceTiles);
+	}
+	for (i=0; i<m_numEdgeTextureClasses; i++) {
+		readTexClass(&m_edgeTextureClasses[i], m_edgeTiles);
 	}
 	for (i=1; i<m_numBlendedTiles; i++) {
 		Int flag;
@@ -1154,6 +1328,16 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 		m_blendedTiles[i].rightDiagonal = file.readByte();
 		m_blendedTiles[i].leftDiagonal = file.readByte();
 		m_blendedTiles[i].inverted = file.readByte();
+		// BFME: E1-25 only INVERTED_MASK | FLIPPED_MASK have a meaning (BFME1 Central Ithilien: 8..61).
+		if (m_blendedTiles[i].inverted & ~(INVERTED_MASK|FLIPPED_MASK)) {
+			m_blendStats.flagsOutside0x3++;
+			DEBUG_LOG(("BlendTileData: blend %d flags 0x%02X outside &0x3 (#%d), masked to %d", i, m_blendedTiles[i].inverted,
+				m_blendStats.flagsOutside0x3, m_blendedTiles[i].inverted & (INVERTED_MASK|FLIPPED_MASK)));
+			m_blendedTiles[i].inverted &= (INVERTED_MASK|FLIPPED_MASK);
+		}
+		if ((m_blendedTiles[i].horiz | m_blendedTiles[i].vert | m_blendedTiles[i].rightDiagonal | m_blendedTiles[i].leftDiagonal) > 1) {
+			m_blendStats.dirBytesNot01++;	// BFME: E1-25 counted only, used as booleans as upstream
+		}
 		//Allow clearing of extra blend tiles via ini and resaving of map.
 		//Useful for flushing out initial maps made with buggy 3-way blending.
 		if (!TheGlobalData->m_use3WayTerrainBlends)
@@ -1167,6 +1351,15 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 		if (info->version >= K_BLEND_TILE_VERSION_4) {
 			m_blendedTiles[i].customBlendEdgeClass = file.readInt();
 		} else {
+			m_blendedTiles[i].customBlendEdgeClass = -1;
+		}
+		// BFME: E1-25 an edge class that does not exist means alpha blending (-1); BFME1 Central Ithilien
+		// has 43 such descriptions per map with numEdgeTextureClasses == 0.
+		if (m_blendedTiles[i].customBlendEdgeClass >= m_numEdgeTextureClasses) {
+			if (m_numEdgeTextureClasses == 0) m_blendStats.edgeClassWithoutClasses++;
+			m_blendStats.edgeClassOutOfRange++;
+			DEBUG_LOG(("BlendTileData: blend %d customBlendEdgeClass %d with %d edge classes (#%d), set to -1", i,
+				m_blendedTiles[i].customBlendEdgeClass, m_numEdgeTextureClasses, m_blendStats.edgeClassOutOfRange));
 			m_blendedTiles[i].customBlendEdgeClass = -1;
 		}
 
@@ -1191,6 +1384,18 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 			m_cliffInfo[i].mutant = file.readByte();
 		}
 	}
+	// BFME: E1-25 count indices outside the tables (the constructor resets them to 0, as upstream).
+	for (i=0; i<m_dataSize; i++) {
+		if (m_blendTileNdxes[i] && (m_blendTileNdxes[i] < 0 || m_blendTileNdxes[i] >= m_numBlendedTiles)) m_blendStats.danglingBlend++;
+		if (m_extraBlendTileNdxes[i] && (m_extraBlendTileNdxes[i] < 0 || m_extraBlendTileNdxes[i] >= m_numBlendedTiles)) m_blendStats.dangling3Way++;
+		if (m_cliffInfoNdxes[i] && (m_cliffInfoNdxes[i] < 0 || m_cliffInfoNdxes[i] >= m_numCliffInfo)) m_blendStats.danglingCliff++;
+	}
+	if (info->version >= K_BLEND_TILE_VERSION_6) {
+		//Allow clearing of extra blend tiles via ini and resaving of map.
+		//Useful for flushing out initial maps made with buggy 3-way blending.
+		if (!TheGlobalData->m_use3WayTerrainBlends)
+			memset(m_extraBlendTileNdxes,0,m_dataSize*sizeof(Int));	// BFME: Int
+	}
 	// Resize me.
 	if (info->version == K_BLEND_TILE_VERSION_1) {
 		Int newWidth = (m_width+1)/2;
@@ -1210,6 +1415,14 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 		m_height = newHeight;
 		m_dataSize = m_width*m_height;
 	}
+	// BFME: E1-25 per-map summary.
+	DEBUG_LOG(("BlendTileData v%d %dx%d: bitmap tiles %d, blends %d, cliffs %d, texture classes %d, edge classes %d; "
+		"dangling tiles %d (clamped), flags outside &0x3 %d (masked), customBlendEdgeClass without edge classes %d / out of range %d (-> -1), "
+		"direction bytes not 0/1 %d, dangling blend/3-way/cliff %d/%d/%d",
+		m_blendStats.version, m_width, m_height, m_numBitmapTiles, m_numBlendedTiles, m_numCliffInfo, m_numTextureClasses,
+		m_numEdgeTextureClasses, m_blendStats.danglingTiles, m_blendStats.flagsOutside0x3, m_blendStats.edgeClassWithoutClasses,
+		m_blendStats.edgeClassOutOfRange, m_blendStats.dirBytesNot01, m_blendStats.danglingBlend, m_blendStats.dangling3Way,
+		m_blendStats.danglingCliff));
 	DEBUG_ASSERTCRASH(file.atEndOfChunk(), ("Unexpected data left over."));
 	return true;
 }
@@ -1224,7 +1437,9 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 */
 Bool WorldHeightMap::ParseObjectDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
-	WorldHeightMap *pThis = (WorldHeightMap *)file.m_userData;
+	// BFME: E1-25 userData is the map (parse(this)); upstream used file.m_userData, which is never set, so
+	// ParseObjectData ran with this == nullptr. It now updates m_objectsZStats.
+	WorldHeightMap *pThis = (WorldHeightMap *)userData;
 	return pThis->ParseObjectData(file, info, userData, info->version >= K_OBJECTS_VERSION_2);
 }
 
@@ -1260,8 +1475,11 @@ Bool WorldHeightMap::ParseObjectData(DataChunkInput &file, DataChunkInfo *info, 
 		d = file.readDict();
 	}
 
+	m_objectsZStats.objects++;	// BFME: E1-25 counters (maxZ kept: no BFME1 object above it on 115 maps)
 	if (loc.z<minZ || loc.z>maxZ) {
-		DEBUG_LOG(("Removing object at z height %f", loc.z));
+		if (loc.z>maxZ) m_objectsZStats.removedAbove++; else m_objectsZStats.removedBelow++;
+		DEBUG_LOG(("Removing object at z height %f (#%d above maxZ %f, #%d below minZ %f)", loc.z,
+			m_objectsZStats.removedAbove, maxZ, m_objectsZStats.removedBelow, minZ));
 		return true;
 	}
 
@@ -1600,7 +1818,7 @@ Int WorldHeightMap::updateTileTexturePositions(Int *edgeHeight)
 void WorldHeightMap::getUVForNdx(Int tileNdx, float *minU, float *minV, float *maxU, float*maxV)
 {
 	Short baseNdx = tileNdx>>2;
-	if (m_sourceTiles[baseNdx] == nullptr) {
+	if (baseNdx < 0 || baseNdx >= m_tileCapacity || m_sourceTiles[baseNdx] == nullptr) {	// BFME: E1-25 heap table bound
 		// Missing texture.
 		*minU = *minV = *maxU = *maxV = 0.0f;
 		return;
@@ -1965,7 +2183,7 @@ Bool WorldHeightMap::getExtraAlphaUVData(Int xIndex, Int yIndex, float U[4], flo
 	*cliff = FALSE;
 
 	if ( (ndx>=0) && (ndx<m_dataSize) && m_tileNdxes) {
-		Short blendNdx = m_extraBlendTileNdxes[ndx];
+		Int blendNdx = m_extraBlendTileNdxes[ndx];	// BFME: E1-25 Int (was Short)
 		if (blendNdx == 0) {
 			return FALSE;
 		} else {
@@ -2051,7 +2269,7 @@ void WorldHeightMap::getAlphaUVData(Int xIndex, Int yIndex, float U[4], float V[
 	Bool needFlip = false;
 
 	if ((ndx<m_dataSize) && m_tileNdxes) {
-		Short blendNdx = m_blendTileNdxes[ndx];
+		Int blendNdx = m_blendTileNdxes[ndx];	// BFME: E1-25 Int (was Short)
 		if (blendNdx == 0) {
 			stretchedForCliff = getUVForTileIndex(ndx, m_tileNdxes[ndx], U, V);
 			alpha[0] = alpha[1] = alpha[2] = alpha[3] = 0;
@@ -2423,8 +2641,8 @@ UnsignedByte * WorldHeightMap::getPointerToTileData(Int xIndex, Int yIndex, Int 
 	TBlendTileInfo *pBlend = nullptr;
 	Short tileNdx = m_tileNdxes[ndx];
 	if (getRawTileData(tileNdx, width, s_buffer, DATA_LEN_BYTES)) {
-		Short blendTileNdx = m_blendTileNdxes[ndx];
-		if (blendTileNdx>0 && blendTileNdx < NUM_BLEND_TILES) {
+		Int blendTileNdx = m_blendTileNdxes[ndx];	// BFME: E1-25 Int, bound by the heap table (was Short, NUM_BLEND_TILES)
+		if (blendTileNdx>0 && blendTileNdx < m_blendedTileCapacity) {
 			pBlend = &m_blendedTiles[blendTileNdx];
 			if (getRawTileData(pBlend->blendNdx, width, s_blendBuffer, DATA_LEN_BYTES)) {
 				UnsignedByte *pAlpha = getRGBAlphaDataForWidth(width, pBlend);
@@ -2553,7 +2771,7 @@ Bool  WorldHeightMap::getRawTileData(Short tileNdx, Int width,
 																				 UnsignedByte *buffer, Int bufLen)
 {
 	TileData *pSrc = nullptr;
-	if (tileNdx/4 < NUM_SOURCE_TILES) {
+	if (tileNdx >= 0 && tileNdx/4 < m_tileCapacity) {	// BFME: E1-25 heap table bound (was NUM_SOURCE_TILES)
 		pSrc = m_sourceTiles[tileNdx/4];
 	}
 	if (bufLen < (width*width*TILE_BYTES_PER_PIXEL)) {

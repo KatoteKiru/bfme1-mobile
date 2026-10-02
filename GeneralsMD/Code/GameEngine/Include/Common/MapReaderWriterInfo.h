@@ -41,6 +41,15 @@
 #define K_BLEND_TILE_VERSION_6	6	// Added extra blend layer for 3 textures in cell.
 #define K_BLEND_TILE_VERSION_7	7	// Added flag for painting passable/impassable to cells.
 #define K_BLEND_TILE_VERSION_8	8	// Added flag for painting passable/impassable to cells.
+// BFME: E1-25 BlendTileData versions of BFME1 (docs/formats/BFME1_vs_ZH.md §2.4.2). v14 and v15 are the
+// ones in the data; v16+ (BFME2, C&C3) is rejected.
+#define K_BLEND_TILE_VERSION_10	10	// BFME: + impassabilityToPlayers mask.
+#define K_BLEND_TILE_VERSION_11	11	// BFME: + passageWidths mask.
+#define K_BLEND_TILE_VERSION_14	14	// BFME: + taintability mask; blend / 3-way / cliff indices are u32.
+#define K_BLEND_TILE_VERSION_15	15	// BFME: + extraPassability mask.
+#define K_BLEND_TILE_VERSION_24	24	// BFME: (not supported) indices are 16-bit again from here.
+#define K_BLEND_TILE_VERSION_25	25	// BFME: (not supported) no taintability mask from here.
+#define K_BLEND_TILE_VERSION_MAX	K_BLEND_TILE_VERSION_15	// BFME: newest version the parser reads.
 #define K_OBJECTS_VERSION_1			1	// no dict
 #define K_OBJECTS_VERSION_2			2	// includes dict
 #define K_OBJECTS_VERSION_3			3	// includes dict

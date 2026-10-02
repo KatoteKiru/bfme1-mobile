@@ -77,6 +77,20 @@ Real heightMapHeight(const Sample d[12], float fx, float fy, Real scale, Coord3D
 	return height;
 }
 
+// TerrainLogic::flattenTerrain: rawDataHeight (rounded) and centerHeight (floor), upstream and E1-25.
+Int flattenRawOld(Real avgHeight) { return REAL_TO_INT_FLOOR(0.5f + avgHeight/ZH_SCALE); }
+Int flattenRawNew(Real avgHeight) { return REAL_TO_INT_FLOOR(0.5f + avgHeight/MAP_HEIGHT_SCALE_ZH)*MAP_HEIGHT_ZH_STEP; }
+Int flattenCenterOld(Real avgHeight) { return REAL_TO_INT_FLOOR(avgHeight/ZH_SCALE); }
+Int flattenCenterNew(Real avgHeight) { return REAL_TO_INT_FLOOR(avgHeight/MAP_HEIGHT_SCALE_ZH)*MAP_HEIGHT_ZH_STEP; }
+
+// TerrainLogic::createCraterInTerrain: targetHeight, upstream (u8 sample) and E1-25 (u16 = u8 << 4).
+Int craterTargetOld(Int raw8, Real displacementAmount) { return MAX( 1, raw8 - displacementAmount ); }
+Int craterTargetNew(Int raw8, Real displacementAmount)
+{
+	Int newTarget = MAX( 1, (raw8 << MAP_HEIGHT_ZH_SHIFT) / (Real)MAP_HEIGHT_ZH_STEP - displacementAmount );
+	return newTarget * MAP_HEIGHT_ZH_STEP;
+}
+
 } // namespace
 
 TEST(formula_get_height_map_height_and_normal)
@@ -146,22 +160,74 @@ TEST(formula_flatten_and_crater)
 	for (int iter = 0; iter < 2000000; ++iter) {
 		Real avgHeight = unitFloat(rng) * 260.0f - 50.0f;
 		if (iter < 256 * 4) avgHeight = (iter / 4) * ZH_SCALE + (iter % 4 - 1.5f) * 1e-4f;   // around every step
-		const Int oldRaw = REAL_TO_INT_FLOOR(0.5f + avgHeight/ZH_SCALE);
-		const Int newRaw = REAL_TO_INT_FLOOR(0.5f + avgHeight/MAP_HEIGHT_SCALE_ZH)*MAP_HEIGHT_ZH_STEP;
-		REQUIRE_EQ(newRaw, oldRaw*MAP_HEIGHT_ZH_STEP);
-		const Int oldCenter = REAL_TO_INT_FLOOR(avgHeight/ZH_SCALE);
-		const Int newCenter = REAL_TO_INT_FLOOR(avgHeight/MAP_HEIGHT_SCALE_ZH)*MAP_HEIGHT_ZH_STEP;
-		REQUIRE_EQ(newCenter, oldCenter*MAP_HEIGHT_ZH_STEP);
+		REQUIRE_EQ(flattenRawNew(avgHeight), flattenRawOld(avgHeight)*MAP_HEIGHT_ZH_STEP);
+		REQUIRE_EQ(flattenCenterNew(avgHeight), flattenCenterOld(avgHeight)*MAP_HEIGHT_ZH_STEP);
 	}
 	for (Int raw8 = 0; raw8 < 256; ++raw8) {
 		for (int k = 0; k < 2000; ++k) {
 			const Real displacementAmount = unitFloat(rng) * 300.0f;
-			const Int oldTarget = MAX( 1, raw8 - displacementAmount );
-			Int newTarget = MAX( 1, (raw8 << MAP_HEIGHT_ZH_SHIFT) / (Real)MAP_HEIGHT_ZH_STEP - displacementAmount );
-			newTarget *= MAP_HEIGHT_ZH_STEP;
-			REQUIRE_EQ(newTarget, oldTarget*MAP_HEIGHT_ZH_STEP);
+			REQUIRE_EQ(craterTargetNew(raw8, displacementAmount), craterTargetOld(raw8, displacementAmount)*MAP_HEIGHT_ZH_STEP);
 		}
 	}
+}
+
+// Explicit boundaries (QA, #4): the rounding points of floor(0.5f + avg/0.625) are avg = (k+0.5)*0.625,
+// those of floor(avg/0.625) are avg = k*0.625; both are exact floats. Each one and its float neighbours
+// (nextafterf, 4 steps each way) must give the same result upstream and after E1-25.
+TEST(formula_flatten_rounding_boundaries)
+{
+	int checked = 0;
+	for (Int k = -100; k <= 300; ++k) {
+		const Real half = (k + 0.5f) * ZH_SCALE;      // (2k+1)*5/16, exact
+		const Real whole = k * ZH_SCALE;              // 5k/8, exact
+		REQUIRE_EQ(double(half), (k + 0.5) * 0.625);
+		REQUIRE_EQ(double(whole), k * 0.625);
+		// at the exact x.5 point avg/0.625 is exactly k+0.5, so the upstream rounding gives k+1 (heights
+		// are >= 0). Below 0 REAL_TO_INT_FLOOR (fast_float_floor: f - 0.99999994, then trunc) maps an
+		// integral -n to -n-1 once n >= 2: an upstream quirk, the same before and after, checked below.
+		if (k >= 0) {
+			REQUIRE_EQ(flattenRawOld(half), k + 1);
+			REQUIRE_EQ(flattenCenterOld(whole), k);
+		}
+		for (const Real base : {half, whole}) {
+			Real lo = base, hi = base;
+			for (int step = 0; step <= 4; ++step) {
+				for (const Real avg : {lo, hi}) {
+					REQUIRE_EQ(flattenRawNew(avg), flattenRawOld(avg)*MAP_HEIGHT_ZH_STEP);
+					REQUIRE_EQ(flattenCenterNew(avg), flattenCenterOld(avg)*MAP_HEIGHT_ZH_STEP);
+					++checked;
+				}
+				lo = std::nextafterf(lo, -INFINITY);
+				hi = std::nextafterf(hi, INFINITY);
+			}
+		}
+	}
+	REQUIRE_EQ(checked, 401 * 2 * 5 * 2);
+}
+
+// Explicit crater cases (QA, #4): integer displacementAmount 0..300 and its float neighbours
+// (nextafterf, 2 steps each way) for every ZH height, so MAX(1, h - d) hits the integer boundaries.
+TEST(formula_crater_integer_displacements)
+{
+	int checked = 0;
+	for (Int raw8 = 0; raw8 < 256; ++raw8) {
+		for (Int d = 0; d <= 300; ++d) {
+			Real lo = Real(d), hi = Real(d);
+			for (int step = 0; step <= 2; ++step) {
+				for (const Real displacementAmount : {lo, hi}) {
+					REQUIRE_EQ(craterTargetNew(raw8, displacementAmount), craterTargetOld(raw8, displacementAmount)*MAP_HEIGHT_ZH_STEP);
+					++checked;
+				}
+				lo = std::nextafterf(lo, -INFINITY);
+				hi = std::nextafterf(hi, INFINITY);
+			}
+		}
+		// exact integers: h - d is exact, so the target is MAX(1, h - d)
+		for (Int d = 0; d <= 300; ++d) {
+			REQUIRE_EQ(craterTargetOld(raw8, Real(d)), MAX(1, raw8 - d));
+		}
+	}
+	REQUIRE_EQ(checked, 256 * 301 * 3 * 2);
 }
 
 // W3DTerrainVisual::updateSeismicSimulations (dead code upstream: DO_SEISMIC_SIMULATIONS is never

@@ -53,9 +53,12 @@ Not ref counted.  Do not store pointers to this class.  */
 // BFME: E1-25 type of one raw height sample (upstream UnsignedByte; was typedef'd in BaseHeightMap.h).
 typedef UnsignedShort HeightSampleType;
 
-#define NUM_SOURCE_TILES 1024
-#define NUM_BLEND_TILES 16192
-#define NUM_CLIFF_INFO 32384
+// BFME: E1-25 upper limits of the per-map tile / blend / cliff tables (upstream 1024 / 16192 / 32384
+// fixed member arrays). The tables now live on the heap and are sized from the counts in BlendTileData;
+// a map above these limits is rejected as corrupt. BFME1 maxima on 115 maps: 2036 / 34143 / 102443.
+#define NUM_SOURCE_TILES 4096
+#define NUM_BLEND_TILES 65536
+#define NUM_CLIFF_INFO 131072
 #define FLAG_VAL 0x7ADA0000
 
 // For backwards compatiblity.
@@ -99,6 +102,40 @@ class AlphaTerrainTextureClass;
 class AlphaEdgeTextureClass;
 
 #define NUM_ALPHA_TILES 12
+
+// BFME: E1-25 per-map BlendTileData anomaly counters (docs/formats/BFME1_vs_ZH.md §2.4.4); the same
+// definitions as tools/datacheck (maps.json). Filled by ParseBlendTileData, logged with DEBUG_LOG.
+struct BlendTileDataStats
+{
+	Int version;                 ///< BlendTileData chunk version, -1 if not parsed
+	Int danglingTiles;           ///< cells with (tile >> 2) >= numBitmapTiles, clamped
+	Int flagsOutside0x3;         ///< blend descriptions with `inverted` bits outside INVERTED|FLIPPED, masked &0x3
+	Int edgeClassWithoutClasses; ///< customBlendEdgeClass >= 0 while numEdgeTextureClasses == 0, set to -1
+	Int edgeClassOutOfRange;     ///< customBlendEdgeClass >= numEdgeTextureClasses (superset of the above), set to -1
+	Int dirBytesNot01;           ///< blend descriptions with a direction byte other than 0/1 (kept as is)
+	Int danglingBlend;           ///< cells with blend index outside [0, numBlendedTiles) (reset to 0 by the constructor)
+	Int dangling3Way;            ///< the same for the 3-way blend index
+	Int danglingCliff;           ///< the same for the cliff index and numCliffInfo
+};
+
+// BFME: E1-25 bit masks added in BlendTileData v10..v15 (stored only, no logic yet). Layout as
+// m_cellCliffState: m_flipStateWidth bytes per row, bit (x & 7) of byte y*m_flipStateWidth + (x >> 3).
+enum BlendPassabilityMask
+{
+	BLEND_MASK_IMPASSABLE_TO_PLAYERS = 0,	///< v >= 10
+	BLEND_MASK_PASSAGE_WIDTHS,				///< v >= 11
+	BLEND_MASK_TAINTABLE,					///< 14 <= v < 25
+	BLEND_MASK_EXTRA_PASSABILITY,			///< v >= 15
+	BLEND_MASK_COUNT
+};
+
+// BFME: E1-25 objects removed by ParseObjectData for z outside [minZ, maxZ].
+struct ObjectsZStats
+{
+	Int objects;     ///< Object chunks read
+	Int removedAbove;  ///< z > maxZ
+	Int removedBelow;  ///< z < minZ
+};
 
 class WorldHeightMap : public RefCountClass,
                        public WorldHeightMapInterfaceClass
@@ -151,23 +188,33 @@ protected:
 
 	/// Texture indices.
 	Short  *m_tileNdxes;  ///< matches m_Data, indexes into m_SourceTiles.
-	Short  *m_blendTileNdxes;  ///< matches m_Data, indexes into m_blendedTiles.  0 means no blend info.
-	Short  *m_cliffInfoNdxes;  ///< matches m_Data, indexes into m_cliffInfo.	 0 means no cliff info.
-	Short  *m_extraBlendTileNdxes;  ///< matches m_Data, indexes into m_extraBlendedTiles.  0 means no blend info.
+	// BFME: E1-25 Int (upstream Short): BFME1 blend / cliff indices go up to 34142 / 102442.
+	Int  *m_blendTileNdxes;  ///< matches m_Data, indexes into m_blendedTiles.  0 means no blend info.
+	Int  *m_cliffInfoNdxes;  ///< matches m_Data, indexes into m_cliffInfo.	 0 means no cliff info.
+	Int  *m_extraBlendTileNdxes;  ///< matches m_Data, indexes into m_blendedTiles.  0 means no blend info.
 
 
 	Int m_numBitmapTiles;	// Number of tiles initialized from bitmaps in m_SourceTiles.
 	Int m_numEdgeTiles;	// Number of tiles initialized from bitmaps in m_SourceTiles.
 	Int m_numBlendedTiles;	// Number of blended tiles created from bitmap tiles.
 
-	TileData			*m_sourceTiles[NUM_SOURCE_TILES];	///< Tiles for m_textureClasses
-	TileData			*m_edgeTiles[NUM_SOURCE_TILES];	///< Tiles for m_textureClasses
+	// BFME: E1-25 heap tables sized by the map counts (upstream fixed member arrays of NUM_SOURCE_TILES,
+	// NUM_BLEND_TILES, NUM_CLIFF_INFO). m_extraBlendedTiles was never used upstream and is removed.
+	TileData			**m_sourceTiles;	///< Tiles for m_textureClasses, m_tileCapacity entries
+	TileData			**m_edgeTiles;	///< Tiles for m_edgeTextureClasses, m_tileCapacity entries
+	Int m_tileCapacity;	///< entries in m_sourceTiles and in m_edgeTiles
 
-	TBlendTileInfo	m_blendedTiles[NUM_BLEND_TILES];
-	TBlendTileInfo	m_extraBlendedTiles[NUM_BLEND_TILES];
+	TBlendTileInfo	*m_blendedTiles;	///< MAX(1, m_numBlendedTiles) entries, [0] = no blend
+	Int m_blendedTileCapacity;
 
-	TCliffInfo	m_cliffInfo[NUM_CLIFF_INFO];
+	TCliffInfo	*m_cliffInfo;	///< MAX(1, m_numCliffInfo) entries, [0] = default info
+	Int m_cliffInfoCapacity;
 	Int m_numCliffInfo; ///< Number of cliffInfo's used in m_cliffInfo.
+
+	// BFME: E1-25 BlendTileData v10+ masks (BlendPassabilityMask), nullptr when absent.
+	UnsignedByte *m_passabilityMasks[BLEND_MASK_COUNT];
+	BlendTileDataStats m_blendStats;
+	ObjectsZStats m_objectsZStats;
 
 	// Texture classes.  There is one texture class for each bitmap read in.
 	// A class may have more than one tile.  For example, if the grass bitmap is
@@ -206,8 +253,11 @@ protected:
 
 
 protected:
-	TileData *getSourceTile(UnsignedInt ndx) { if (ndx<NUM_SOURCE_TILES) return(m_sourceTiles[ndx]); return(nullptr); };
-	TileData *getEdgeTile(UnsignedInt ndx) { if (ndx<NUM_SOURCE_TILES) return(m_edgeTiles[ndx]); return(nullptr); };
+	// BFME: E1-25 bounded by the heap table size (upstream NUM_SOURCE_TILES).
+	TileData *getSourceTile(UnsignedInt ndx) { if (ndx<(UnsignedInt)m_tileCapacity) return(m_sourceTiles[ndx]); return(nullptr); };
+	TileData *getEdgeTile(UnsignedInt ndx) { if (ndx<(UnsignedInt)m_tileCapacity) return(m_edgeTiles[ndx]); return(nullptr); };
+	void allocateTileTables(Int tileCapacity, Int numBlendedTiles, Int numCliffInfo);	// BFME: E1-25
+	void freeTileTables();	// BFME: E1-25
 	/// UV mapping data for a cell to map into the terrain texture.
 	void getUVForNdx(Int ndx, float *minU, float *minV, float *maxU, float*maxV);
 	Bool getUVForTileIndex(Int ndx, Short tileNdx, float U[4], float V[4]);
@@ -239,6 +289,12 @@ public: // constructors/destructors
 
 public:  // Boundary info
 	const VecICoord2D& getAllBoundaries() const { return m_boundaries; }
+
+public:  // BFME: E1-25 BlendTileData v10+ masks (stored only) and load counters.
+	const UnsignedByte *getPassabilityMask(BlendPassabilityMask mask) const { return (mask>=0 && mask<BLEND_MASK_COUNT) ? m_passabilityMasks[mask] : nullptr; }
+	Int getMaskBytesPerRow() const { return m_flipStateWidth; }
+	const BlendTileDataStats& getBlendTileDataStats() const { return m_blendStats; }
+	const ObjectsZStats& getObjectsZStats() const { return m_objectsZStats; }
 
 public:  // height map info.
 	static Int getMinHeightValue() {return K_MIN_HEIGHT;}

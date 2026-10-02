@@ -1,6 +1,6 @@
 # Тесты E1-25: 16-битные высоты террейна
 
-Отдельный CMake-проект без vcpkg. Компилирует **настоящие** исходники движка:
+Отдельный CMake-проект без vcpkg. Список исходников движка, базовая ревизия и опция `BFME_TESTS_ASAN` вынесены в `cmake/engine.cmake`, его же подключает `tests/blend`. Компилирует **настоящие** исходники движка:
 - `WorldHeightMap.cpp`, `DataChunk.cpp`, `TileData.cpp`, `Dict.cpp`;
 - `AsciiString`/`UnicodeString`, `GameMemoryNull`;
 - RefPack `refdecode.cpp`.
@@ -9,7 +9,7 @@
 
 ```sh
 cmake -S tests/heights -B build/tests-heights -G Ninja \
-      -DBFME_DXVK_INCLUDE_DIR=references/fbraz3-dxvk/include
+      -DBFME_DXVK_INCLUDE_DIR=references/fbraz3-dxvk/include [-DBFME_TESTS_ASAN=ON]
 cmake --build build/tests-heights -j2
 ctest --test-dir build/tests-heights -L unit
 BFME_GAMEDATA=/path/to/bfme1 BFME_ORACLE_DIR=tools/oracle/out BFME_ORACLE_DUMP_DIR=cache/oracle-dumps/e1-25 \
@@ -53,6 +53,8 @@ BFME_GAMEDATA=/path/to/bfme1 BFME_ORACLE_DIR=tools/oracle/out BFME_ORACLE_DUMP_D
 - `getHeightMapHeight`: интерполяция и сглаженная нормаль, 400 000 клеток;
 - пороги `getUVForTileIndex`: полный перебор;
 - `flattenTerrain`: 2 млн случайных высот и все границы шагов;
+- `formula_flatten_rounding_boundaries` (по просьбе QA в #4): границы x.5 у `floor(0.5f + avg/0.625)`. Для k = −100…300 берутся ровно (k+0.5)·0.625 и k·0.625 (оба точны во float) и по 4 соседних float в каждую сторону (`nextafterf`). При k ≥ 0 значение апстрима проверяется явно: k+1 и k. Ниже нуля `REAL_TO_INT_FLOOR` (`fast_float_floor`) переводит целое −n в −n−1 при n ≥ 2. Это особенность апстрима, одинаковая до и после, а высоты не бывают отрицательными;
+- `formula_crater_integer_displacements` (QA): `displacementAmount` = 0…300 целые и по 2 соседних float в каждую сторону, для всех 256 высот ZH. На целых проверяется явно `MAX(1, h − d)`;
 - `createCraterInTerrain`, сейсмика, раскладка сейва v3;
 - боксы `Cast_Ray`, `updateCenter`.
 
@@ -75,7 +77,7 @@ done
 
 ## Результат (2026-10-02, gcc 13.3, образ `bfme-android-build`)
 
-17/17 passed:
+19/19 passed, в обычной сборке и под ASan (`-DBFME_TESTS_ASAN=ON`, без ошибок):
 - ZH «до/после»: 68 карт, 4 743 768 сэмплов, 377 895 скальных клеток, 42 464 345 байт идентичны.
 - BFME1: 115/115 карт, 25 374 931 сэмпл (raw 0…38 400, мир 0…1500) совпадают с OpenSAGE.
 - Мутационная проверка: расширение `(u8<<4)|(u8>>4)` вместо `u8<<4` роняет 4 теста, в том числе сверку «до/после».
