@@ -108,3 +108,39 @@ android-staging/
 # is disabled on this fork, so a ~40MB binary can't go into version control
 # at all even if it were source), not something to commit.
 /GeneralsXZH-android-local.apk
+
+# ---------------------------------------------------------------------------
+# BFME1 Mobile (ветка bfme): ресурсы игры EA НИКОГДА не попадают в git.
+# Уже отслеживаемые файлы апстрима эти правила не затрагивают.
+# ---------------------------------------------------------------------------
+# .gitkeep нужен, чтобы держать пустые каталоги (правило ".*" выше их скрывает)
+!.gitkeep
+
+# Архивы и видео игры
+*.big
+*.BIG
+*.Big
+*.bik
+*.BIK
+*.vp6
+
+# Локальные копии данных игры и входящие файлы
+/gamedata/
+/incoming/
+**/BFME1/
+**/bfme1-data/
+
+# Модели W3D только в тестовых фикстурах (и в уже существующих каталогах апстрима)
+*.w3d
+*.W3D
+!/tests/**/*.w3d
+!/Core/Libraries/Source/WWVegas/WW3D2/RequiredAssets/*.w3d
+!/Core/Tools/W3DView/Res/*.w3d
+
+# Строки и локализация из игры
+*.csf
+*.CSF
+
+# Сборки APK — в артефакты CI, не в git (история апстрима и так весит ~15 ГБ из-за apk/)
+*.apk
+*.aab
