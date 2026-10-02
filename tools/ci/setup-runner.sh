@@ -37,6 +37,10 @@ $RUNNER_USER ALL=(root) NOPASSWD: /usr/local/sbin/bfme-ci-docker
 SUDO
 sudo visudo -cf "$tmp" >/dev/null && sudo install -o root -g root -m 0440 "$tmp" /etc/sudoers.d/bfme-ci-runner; rm -f "$tmp"
 
+echo "== сетевая изоляция (nft inet bfme_ci: Docker API 2375/2376 и служебные порты бокса закрыты для uid $RUNNER_UID и контейнеров)"
+sudo install -o root -g root -m 0755 "$REPO/tools/ci/check-isolation.sh" /usr/local/sbin/bfme-ci-check-isolation
+"$REPO/tools/ci/firewall.sh" apply
+
 echo "== каталоги $CI_ROOT"
 sudo install -d -o root -g root -m 0755 "$CI_ROOT"
 sudo install -d -o "$RUNNER_USER" -g "$RUNNER_USER" -m 0755 "$CI_ROOT/actions-runner" "$CI_ROOT/cache" "$CI_ROOT/logs"

@@ -39,8 +39,13 @@ jobs:
           test -f "$BFME_SECRETS/bfme-debug.keystore" || { echo "::error::Нет ключа $BFME_SECRETS/bfme-debug.keystore"; exit 1; }
           df -h "$GITHUB_WORKSPACE" "$BFME_CACHE" | tail -n +1
           free -m | head -2
+          # Docker API бокса 0.0.0.0:2375 без аутентификации должен быть закрыт для раннера (tools/ci/firewall.sh).
+          ! curl -s -m 2 127.0.0.1:2375/version || { echo "::error::127.0.0.1:2375 доступен раннеру: tools/ci/firewall.sh apply"; exit 1; }
+          # Полная проверка (127.0.0.1, IP хоста, шлюз, 2375/2376, служебные порты) -- копия root из setup-runner.sh,
+          # а не файл из проверяемой ветки.
+          /usr/local/sbin/bfme-ci-check-isolation
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 (= v4.4.0)
         with:
           submodules: false
           # История репозитория ~15 ГБ (наследие форка, apk/ в истории): только последний коммит.
@@ -52,11 +57,20 @@ jobs:
           git submodule update --init --depth 1 references/fbraz3-dxvk
           git -C references/fbraz3-dxvk submodule update --init --depth 1
 
+      - name: Образ сборки
+        run: tools/build-apk.sh --image-only
+
+      - name: Изоляция контейнера (через bfme-ci-docker, --network host)
+        run: |
+          ! $BFME_DOCKER run --rm --network host -u "$(id -u):$(id -g)" -w /tmp "$(tools/build-apk.sh --print-image-tag)" \
+              curl -s -m 2 127.0.0.1:2375/version || { echo "::error::2375 доступен из контейнера"; exit 1; }
+          tools/ci/check-isolation.sh --container "$(tools/build-apk.sh --print-image-tag)"
+
       - name: Build APK (tools/build-apk.sh)
         run: tools/build-apk.sh
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4 (= v4.6.2)
         with:
           name: bfme-zh-apk-${{ github.run_number }}
           path: |
@@ -67,7 +81,7 @@ jobs:
 
       - name: Upload symbols
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4 (= v4.6.2)
         with:
           name: bfme-zh-symbols-${{ github.run_number }}
           path: out/symbols/
@@ -75,7 +89,7 @@ jobs:
 
       - name: Upload build log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4 (= v4.6.2)
         with:
           name: bfme-zh-build-log-${{ github.run_number }}
           path: |
