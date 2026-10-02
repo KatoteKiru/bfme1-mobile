@@ -37,7 +37,7 @@
 #include "W3DDevice/GameClient/WorldHeightMap.h"
 
 #define MAX_ENABLED_DYNAMIC_LIGHTS 20
-typedef UnsignedByte HeightSampleType;	//type of data to store in heightmap
+// BFME: E1-25 HeightSampleType (type of data to store in heightmap) is now defined in WorldHeightMap.h as u16.
 class W3DTreeBuffer;
 class W3DBibBuffer;
 class W3DRoadBuffer;
@@ -134,7 +134,7 @@ public:
   }
 
 
-	UnsignedByte getClipHeight(Int x, Int y) const
+	HeightSampleType getClipHeight(Int x, Int y) const	// BFME: u16 (E1-25)
 	{
 		Int xextent = m_map->getXExtent() - 1;
 		Int yextent = m_map->getYExtent() - 1;

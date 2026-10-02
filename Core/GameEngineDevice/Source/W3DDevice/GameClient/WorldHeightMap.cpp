@@ -841,6 +841,26 @@ Bool WorldHeightMap::ParseObjectsDataChunk(DataChunkInput &file, DataChunkInfo *
 *	Input: DataChunkInput
 *
 */
+// BFME: E1-25 read the height samples of a HeightMapData chunk into the u16 array.
+// v5+ (BFME1): u16 little-endian samples, stored as is (MAP_HEIGHT_SCALE = MAP_XY_FACTOR/256).
+// v1..v4 (Generals/ZH): u8 samples of MAP_XY_FACTOR/16, widened by << MAP_HEIGHT_ZH_SHIFT so that
+// raw*MAP_HEIGHT_SCALE gives the very same float as the upstream u8*MAP_XY_FACTOR/16.
+// The u8 bytes are read into the upper half of the buffer and widened in place from the front:
+// sample i is written to bytes [2i, 2i+1] <= count+i, i.e. only over bytes already consumed.
+// Little-endian hosts only, like the rest of DataChunkInput.
+static void readHeightSamples(DataChunkInput &file, const DataChunkInfo *info, HeightSampleType *data, Int count)
+{
+	if (info->version >= K_HEIGHT_MAP_VERSION_5) {
+		file.readArrayOfBytes((char *)data, count*(Int)sizeof(HeightSampleType));
+		return;
+	}
+	const UnsignedByte *zhBytes = (const UnsignedByte *)data + count;
+	file.readArrayOfBytes((char *)data + count, count);
+	for (Int i = 0; i < count; ++i) {
+		data[i] = (HeightSampleType)(zhBytes[i] << MAP_HEIGHT_ZH_SHIFT);
+	}
+}
+
 Bool WorldHeightMap::ParseHeightMapDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
 	WorldHeightMap *pThis = (WorldHeightMap *)userData;
@@ -878,7 +898,7 @@ Bool WorldHeightMap::ParseHeightMapData(DataChunkInput &file, DataChunkInfo *inf
 	}
 
 	m_dataSize = file.readInt();
-	m_data = MSGNEW("WorldHeightMap_ParseHeightMapData") UnsignedByte[m_dataSize];
+	m_data = MSGNEW("WorldHeightMap_ParseHeightMapData") HeightSampleType[m_dataSize];	// BFME: u16 (E1-25)
 	if (m_dataSize <= 0 || (m_dataSize != (m_width*m_height))) {
 		throw ERROR_CORRUPT_FILE_FORMAT	;
 	}
@@ -892,7 +912,7 @@ Bool WorldHeightMap::ParseHeightMapData(DataChunkInput &file, DataChunkInfo *inf
   fillSeismicZVelocities( 0 );
 
 
-	file.readArrayOfBytes((char *)m_data, m_dataSize);
+	readHeightSamples(file, info, m_data, m_dataSize);	// BFME: u16, ZH u8 << 4 (E1-25)
 	// Resize me.
 	if (info->version == K_HEIGHT_MAP_VERSION_1) {
 		Int newWidth = (m_width+1)/2;
@@ -952,11 +972,11 @@ Bool WorldHeightMap::ParseSizeOnly(DataChunkInput &file, DataChunkInfo *info, vo
 	}
 
 	m_dataSize = file.readInt();
-	m_data = MSGNEW("WorldHeightMap_ParseSizeOnly") UnsignedByte[m_dataSize];
+	m_data = MSGNEW("WorldHeightMap_ParseSizeOnly") HeightSampleType[m_dataSize];	// BFME: u16 (E1-25)
 	if (m_dataSize <= 0 || (m_dataSize != (m_width*m_height))) {
 		throw ERROR_CORRUPT_FILE_FORMAT	;
 	}
-	file.readArrayOfBytes((char *)m_data, m_dataSize);
+	readHeightSamples(file, info, m_data, m_dataSize);	// BFME: u16, ZH u8 << 4 (E1-25)
 	// Resize me.
 	if (info->version == K_HEIGHT_MAP_VERSION_1) {
 		Int newWidth = (m_width+1)/2;
@@ -1225,7 +1245,7 @@ Bool WorldHeightMap::ParseObjectData(DataChunkInput &file, DataChunkInfo *info, 
 	loc.z = file.readReal();
 
 	Real minZ = -100*MAP_XY_FACTOR;
-	Real maxZ = (255*10)*MAP_HEIGHT_SCALE;
+	Real maxZ = (255*10)*MAP_HEIGHT_SCALE_ZH;	// BFME: world constant, keep the upstream value (E1-25)
 
 	if (info->version <= K_OBJECTS_VERSION_2) {
 		loc.z = 0;
@@ -1782,8 +1802,9 @@ Bool WorldHeightMap::getUVForTileIndex(Int ndx, Short tileNdx, float U[4], float
 			Int deltaH = maxH-minH;
 			Int below = 0;
 			Int above = 0;
-			Int belowLimit = minH+(2*deltaH+1)/3;
-			Int aboveLimit = minH+(deltaH+1)/3;
+			// BFME: E1-25 round in ZH height units as upstream did ((2*d+1)/3 on u8), bit-identical on ZH maps.
+			Int belowLimit = minH+((2*deltaH+MAP_HEIGHT_ZH_STEP)/(3*MAP_HEIGHT_ZH_STEP))*MAP_HEIGHT_ZH_STEP;
+			Int aboveLimit = minH+((deltaH+MAP_HEIGHT_ZH_STEP)/(3*MAP_HEIGHT_ZH_STEP))*MAP_HEIGHT_ZH_STEP;
 			if (h0<belowLimit) below++;
 			if (h1<belowLimit) below++;
 			if (h2<belowLimit) below++;

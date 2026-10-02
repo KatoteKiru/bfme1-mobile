@@ -32,6 +32,7 @@
 #define K_HEIGHT_MAP_VERSION_2	2	// Height map cell = 10.0
 #define K_HEIGHT_MAP_VERSION_3	3	// Added m_borderSize
 #define K_HEIGHT_MAP_VERSION_4	4	// Major rev. See comments at bottom of file.
+#define K_HEIGHT_MAP_VERSION_5	5	// BFME: BFME1, 16-bit height samples (read only; E1-25)
 #define K_BLEND_TILE_VERSION_1	1	// Height map cell = 5.0
 #define K_BLEND_TILE_VERSION_2	2	// Height map cell = 10.0
 #define K_BLEND_TILE_VERSION_3	3	// Added long diagonal blends.

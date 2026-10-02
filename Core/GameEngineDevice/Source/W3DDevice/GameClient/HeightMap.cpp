@@ -1712,11 +1712,12 @@ void HeightMapRenderObjClass::updateCenter(CameraClass *camera, const Vector3 *c
 		minHt = m_map->getMaxHeightValue();
 		for (j=0; j<m_y; j+=4) {
 			for (i=0; i<m_x; i+=4) {
-				Short cur = m_map->getDisplayHeight(i,j);
+				Int cur = m_map->getDisplayHeight(i,j);	// BFME: Int, u16 overflows Short (E1-25)
 				if (cur<minHt) minHt = cur;
 			}
 		}
-		intersectionZ = (float)minHt;
+		// BFME: E1-25 upstream uses the raw u8 value as a world z here; keep that value (ZH units).
+		intersectionZ = (float)minHt/MAP_HEIGHT_ZH_STEP;
 	//	float aspect = camera->Get_Aspect_Ratio();
 
 		Vector2 min,max;
@@ -2251,7 +2252,7 @@ void HeightMapRenderObjClass::renderExtraBlendTiles()
 
 		if (!vb || !ib) return;
 
-		const UnsignedByte* data = m_map->getDataPtr();
+		const HeightSampleType* data = m_map->getDataPtr();	// BFME: u16 (E1-25)
 
 		//Loop over visible terrain and extract all the tiles that need extra blend
 		Int drawEdgeY=m_map->getDrawOrgY()+m_map->getDrawHeight()-1;

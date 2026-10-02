@@ -397,14 +397,15 @@ void W3DTerrainVisual::handleSeismicSimulations()
           {
             if ( ! m_clientHeightMap->getSeismicUpdateFlag( x, y ) )
             {
-              UnsignedByte heightOfOriginal = m_logicHeightMap->getHeight( x, y ); // LOGIC, YES DEFINITELY THE LOGIC
+              HeightSampleType heightOfOriginal = m_logicHeightMap->getHeight( x, y ); // LOGIC, YES DEFINITELY THE LOGIC // BFME: u16 (E1-25)
 
               Real oldSpeed = m_clientHeightMap->getSeismicZVelocity( x, y );
               Real newSpeed = ssn->applyGravity( oldSpeed );// - 0.5f;
 
               m_clientHeightMap->setSeismicZVelocity( x, y, newSpeed );
 
-              Int heightToUse = m_clientHeightMap->getHeight( x, y ) + newSpeed ;
+              // BFME: E1-25 the seismic velocities are in ZH height units (upstream u8); step there, store as raw u16.
+              Int heightToUse = (Int)( m_clientHeightMap->getHeight( x, y ) / (Real)MAP_HEIGHT_ZH_STEP + newSpeed ) * MAP_HEIGHT_ZH_STEP;
 
 
               if (heightToUse <= heightOfOriginal)
@@ -416,8 +417,8 @@ void W3DTerrainVisual::handleSeismicSimulations()
               {
                 ++fallCount;
 
-                if ( heightToUse > 255 )
-                  heightToUse = 255;
+                if ( heightToUse > K_MAX_HEIGHT )	// BFME: u16 (E1-25), upstream 255
+                  heightToUse = K_MAX_HEIGHT;
 
               }
     			    m_clientHeightMap->setRawHeight( x, y, heightToUse );
@@ -1141,11 +1142,28 @@ void W3DTerrainVisual::crc( Xfer *xfer )
 }
 
 // ------------------------------------------------------------------------------------------------
+// BFME: E1-25 true if every height can be saved in the upstream 8-bit layout (raw = ZH u8 << 4).
+static Bool heightsFitZHLayout(WorldHeightMap *map)
+{
+	if (map == nullptr)
+		return TRUE;
+	const HeightSampleType *data = map->getDataPtr();
+	const Int len = map->getXExtent()*map->getYExtent();
+	for (Int i = 0; i < len; ++i) {
+		if ((data[i] & (MAP_HEIGHT_ZH_STEP-1)) != 0 || (data[i] >> MAP_HEIGHT_ZH_SHIFT) > 255)
+			return FALSE;
+	}
+	return TRUE;
+}
+
+// ------------------------------------------------------------------------------------------------
 /** Xfer
 	* Version Info:
 	* 1: Initial version
 	* 2: Add height map heights.
 	* 3: Add client side trees & props. jba. (Added for Zero Hour)
+	* 4: BFME: 16-bit height map heights (E1-25). Written only when a height does not fit the 8-bit ZH
+	*    layout (BFME1 maps), so saves of ZH maps stay v3 and byte-identical to upstream.
 */
 // ------------------------------------------------------------------------------------------------
 void W3DTerrainVisual::xfer( Xfer *xfer )
@@ -1155,9 +1173,12 @@ void W3DTerrainVisual::xfer( Xfer *xfer )
 #if RTS_GENERALS && RETAIL_COMPATIBLE_XFER_SAVE
 	XferVersion currentVersion = 2;
 #else
-	XferVersion currentVersion = 3;
+	XferVersion currentVersion = 4;	// BFME: E1-25 (upstream 3)
 #endif
 	XferVersion version = currentVersion;
+	// BFME: E1-25 keep writing the upstream v3 layout while every height fits it (all ZH maps).
+	if (version == 4 && xfer->getXferMode() != XFER_LOAD && heightsFitZHLayout(m_logicHeightMap))
+		version = 3;
 	xfer->xferVersion( &version, currentVersion );
 
 	// extend base class
@@ -1210,7 +1231,7 @@ void W3DTerrainVisual::xfer( Xfer *xfer )
 
 	// Write out the terrain height data.
 	if (version >= 2) {
-		UnsignedByte *data = m_logicHeightMap->getDataPtr();
+		HeightSampleType *data = m_logicHeightMap->getDataPtr();	// BFME: u16 (E1-25)
 		Int len = m_logicHeightMap->getXExtent()*m_logicHeightMap->getYExtent();
 		Int xferLen = len;
 		xfer->xferInt(&xferLen);
@@ -1220,7 +1241,22 @@ void W3DTerrainVisual::xfer( Xfer *xfer )
 				len = xferLen;
 			}
 		}
-		xfer->xferUser(data, len);
+		// BFME: E1-25 v4 stores the u16 samples; v2/v3 store ZH u8 heights (raw >> 4 on save, << 4 on load).
+		if (version >= 4) {
+			xfer->xferUser(data, len*(Int)sizeof(HeightSampleType));
+		} else {
+			UnsignedByte *zhData = NEW UnsignedByte[len > 0 ? len : 1];
+			if (xfer->getXferMode() != XFER_LOAD) {
+				for (Int i = 0; i < len; ++i)
+					zhData[i] = (UnsignedByte)(data[i] >> MAP_HEIGHT_ZH_SHIFT);
+			}
+			xfer->xferUser(zhData, len);
+			if (xfer->getXferMode() == XFER_LOAD) {
+				for (Int i = 0; i < len; ++i)
+					data[i] = (HeightSampleType)(zhData[i] << MAP_HEIGHT_ZH_SHIFT);
+			}
+			delete [] zhData;
+		}
 		if (xfer->getXferMode() == XFER_LOAD)
     {
 			// Update the display height map.

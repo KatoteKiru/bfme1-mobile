@@ -2706,11 +2706,12 @@ void TerrainLogic::flattenTerrain(Object *obj)
 			}
 			if (numSamples == 0) return;
 			Real avgHeight = totalHeight/numSamples;
-			Int rawDataHeight = REAL_TO_INT_FLOOR(0.5f + avgHeight/MAP_HEIGHT_SCALE);
+			// BFME: E1-25 flatten in ZH height units exactly as upstream (bit-identical on ZH maps), store as raw u16.
+			Int rawDataHeight = REAL_TO_INT_FLOOR(0.5f + avgHeight/MAP_HEIGHT_SCALE_ZH)*MAP_HEIGHT_ZH_STEP;
 
 			// Compare to the height at the building's origin, because setRawMapHeight will only lower,
 			// not raise.  jba
-			Int centerHeight = REAL_TO_INT_FLOOR(getGroundHeight(pos->x, pos->y)/MAP_HEIGHT_SCALE);
+			Int centerHeight = REAL_TO_INT_FLOOR(getGroundHeight(pos->x, pos->y)/MAP_HEIGHT_SCALE_ZH)*MAP_HEIGHT_ZH_STEP;	// BFME: E1-25
 			if (rawDataHeight>centerHeight) rawDataHeight = centerHeight;
 
 			for (i=iMin.x; i<=iMax.x; i++) {
@@ -2795,7 +2796,8 @@ void TerrainLogic::flattenTerrain(Object *obj)
 			}
 			if (numSamples == 0) return;
 			Real avgHeight = totalHeight/numSamples;
-			Int rawDataHeight = REAL_TO_INT_FLOOR(0.5f + avgHeight/MAP_HEIGHT_SCALE);
+			// BFME: E1-25 flatten in ZH height units exactly as upstream (bit-identical on ZH maps), store as raw u16.
+			Int rawDataHeight = REAL_TO_INT_FLOOR(0.5f + avgHeight/MAP_HEIGHT_SCALE_ZH)*MAP_HEIGHT_ZH_STEP;
 			for (i=iMin.x; i<=iMax.x; i++) {
 				for (j=0; j<=iMax.y; j++) {
 					Vector3	testPt(i*MAP_XY_FACTOR, j*MAP_XY_FACTOR, 0);
@@ -2890,7 +2892,10 @@ void TerrainLogic::createCraterInTerrain(Object *obj)
 
         Real displacementAmount = radius * (1.0f - distance / radius );
 
-        Int targetHeight = MAX( 1, TheTerrainVisual->getRawMapHeight( &gridPos ) - displacementAmount );
+        // BFME: E1-25 the displacement is in ZH height units (upstream u8); compute there exactly as upstream
+        // (the u16 sample / 16 is the exact ZH value on ZH maps), then store as raw u16.
+        Int targetHeight = MAX( 1, TheTerrainVisual->getRawMapHeight( &gridPos ) / (Real)MAP_HEIGHT_ZH_STEP - displacementAmount );
+        targetHeight *= MAP_HEIGHT_ZH_STEP;
 
 				TheTerrainVisual->setRawMapHeight( &gridPos, targetHeight );
 			}

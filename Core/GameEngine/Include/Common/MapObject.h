@@ -55,7 +55,15 @@ class Shadow;
 enum WaypointID CPP_11(: Int);
 
 #define MAP_XY_FACTOR			(10.0f)	 //How wide and tall each height map square is in world space.
-#define MAP_HEIGHT_SCALE	(MAP_XY_FACTOR/16.0f)		//divide all map heights by 8.
+// BFME: E1-25 16-bit terrain heights (docs/UPSTREAM-PATCHES.md, docs/formats/e1-25-heights-audit.md).
+// Raw height samples are u16 and one raw unit is MAP_XY_FACTOR/256 (BFME1 HeightMapData v5). Generals/ZH maps
+// store u8 samples of MAP_XY_FACTOR/16 and are widened on load by << MAP_HEIGHT_ZH_SHIFT, so every ZH world
+// height (raw * MAP_HEIGHT_SCALE) stays bit-identical: the rescale is by a power of two.
+// Upstream: #define MAP_HEIGHT_SCALE (MAP_XY_FACTOR/16.0f)
+#define MAP_HEIGHT_SCALE	(MAP_XY_FACTOR/256.0f)		// BFME: world z of one raw height unit
+#define MAP_HEIGHT_ZH_SHIFT	(4)							// BFME: raw u16 = ZH u8 << 4
+#define MAP_HEIGHT_ZH_STEP	(1 << MAP_HEIGHT_ZH_SHIFT)	// BFME: raw units per ZH height unit (16)
+#define MAP_HEIGHT_SCALE_ZH	(MAP_XY_FACTOR/16.0f)		// BFME: world z of one ZH height unit (the upstream MAP_HEIGHT_SCALE value)
 
 // m_flags bit values.
 enum {

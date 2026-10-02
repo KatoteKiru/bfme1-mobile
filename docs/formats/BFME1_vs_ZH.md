@@ -157,8 +157,8 @@ read blends, (v>=6) threeWay, (v>=5) cliff  as idxBits[N] -> Int arrays;
 #### 2.4.4 Особенности данных, которые нужно учесть
 - **Индексы tile**: max 24 839 (влезает в `Short`), но на 2 картах (`map mp rhun`, `map sps good rhun`) `tile>>2` больше `numBitmapTiles` (6 209 при 608). В данных остались висячие индексы. `getSourceTile()` проверяет только `< NUM_SOURCE_TILES` (`WorldHeightMap.h:206`). **Нужен clamp к `numBitmapTiles`** (или к тайлу 0) с логом, иначе нулевой указатель или чужая текстура.
 - **Индексы blend/cliff**: max 34 142 и 102 442. **Не влезают в `Short`** (≤ 32 767), поэтому `m_blendTileNdxes`, `m_extraBlendTileNdxes`, `m_cliffInfoNdxes` надо сделать `Int` и проверить потребителей (`getBlendTileNdx` и др.).
-- **`inverted` (flags)**: 0–3 у 99.99 %. Около 170 записей (на кастомных blend-краях) несут значения 8–61, а байты направления там бывают 12–52. Семантика неизвестна (в OpenSAGE это TODO). ZH использует только `& INVERTED_MASK (0x1)` и `& FLIPPED_MASK (0x2)` (`TileData.h:46-47`). **Читать как есть и маскировать при использовании**, редкие значения логировать.
-- **`customBlendEdgeClass`**: −1 у 99.99 %, есть значения 0…41 при `numEdgeTextureClasses == 0`. ZH должен трактовать индекс ≥ numEdgeTextureClasses как −1 (alpha), иначе выход за `m_edgeTextureClasses`.
+- **`inverted` (flags)**: 0–3 у 99.99 %. 126 описаний (по 42 на трёх картах Central Ithilien: `map mp`, `map sps evil`, `map sps good`; на кастомных blend-краях) несут значения 8–61, а байты направления там бывают 12–52. Семантика неизвестна (в OpenSAGE это TODO). ZH использует только `& INVERTED_MASK (0x1)` и `& FLIPPED_MASK (0x2)` (`TileData.h:46-47`). **Читать как есть и маскировать при использовании**, редкие значения логировать.
+- **`customBlendEdgeClass`**: −1 у 99.99 %, но 129 описаний (по 43 на тех же трёх картах Central Ithilien) несут значения 0–62 при `numEdgeTextureClasses == 0`. ZH должен трактовать индекс ≥ numEdgeTextureClasses как −1 (alpha), иначе выход за `m_edgeTextureClasses`.
 - **cliffInfo `flip/mutant`**: все 4 комбинации встречаются (как в ZH).
 
 #### 2.4.5 Лимиты массивов (`WorldHeightMap.h:53-55, 85, 160-178`; `TileData.h:58`)

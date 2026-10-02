@@ -48,7 +48,10 @@ Not ref counted.  Do not store pointers to this class.  */
 #define HEIGHTMAP_POLYGON_NUM (VERTEX_BUFFER_TILE_LENGTH * VERTEX_BUFFER_TILE_LENGTH * 2)
 
 #define K_MIN_HEIGHT  0
-#define K_MAX_HEIGHT  255
+#define K_MAX_HEIGHT  0xFFFF	// BFME: E1-25 16-bit samples (upstream 255)
+
+// BFME: E1-25 type of one raw height sample (upstream UnsignedByte; was typedef'd in BaseHeightMap.h).
+typedef UnsignedShort HeightSampleType;
 
 #define NUM_SOURCE_TILES 1024
 #define NUM_BLEND_TILES 16192
@@ -135,7 +138,7 @@ protected:
 	Int m_borderSize;		///< Non-playable border area.
 	VecICoord2D m_boundaries;	///< the in-game boundaries
 	Int m_dataSize;			///< size of m_data.
-	UnsignedByte *m_data;	///< array of z(height) values in the height map.
+	HeightSampleType *m_data;	///< array of z(height) values in the height map. BFME: u16 (E1-25)
 
   UnsignedByte *m_seismicUpdateFlag;  ///< array of bits to prevent ovelapping physics-update regions from doubling effects on shared cells
   UnsignedInt   m_seismicUpdateWidth; ///< width of the array holding SeismicUpdateFlags
@@ -241,7 +244,7 @@ public:  // height map info.
 	static Int getMinHeightValue() {return K_MIN_HEIGHT;}
 	static Int getMaxHeightValue() {return K_MAX_HEIGHT;}
 
-	UnsignedByte *getDataPtr() {return m_data;}
+	HeightSampleType *getDataPtr() {return m_data;}	// BFME: u16 (E1-25)
 
 
 	Int getXExtent() {return m_width;}	///<number of vertices in x
@@ -259,10 +262,10 @@ public:  // height map info.
 	virtual Int getBorderSize() override {return m_borderSize;}
   Int getBorderSizeInline() const { return m_borderSize; }
 	/// Get height with the offset that HeightMapRenderObjClass uses built in.
-	UnsignedByte getDisplayHeight(Int x, Int y) { return m_data[x+m_drawOriginX+m_width*(y+m_drawOriginY)];}
+	HeightSampleType getDisplayHeight(Int x, Int y) { return m_data[x+m_drawOriginX+m_width*(y+m_drawOriginY)];}	// BFME: u16 (E1-25)
 
 	/// Get height in normal coordinates.
-	UnsignedByte getHeight(Int xIndex, Int yIndex)
+	HeightSampleType getHeight(Int xIndex, Int yIndex)	// BFME: u16 (E1-25)
 	{
 		Int ndx = (yIndex*m_width)+xIndex;
 		if ((ndx>=0) && (ndx<m_dataSize) && m_data)
@@ -327,7 +330,7 @@ public:  // Flat tile texture info.
 	UnsignedByte *getRGBAlphaDataForWidth(Int width, TBlendTileInfo *pBlend);
 
 public:  // modify height value
-	void setRawHeight(Int xIndex, Int yIndex, UnsignedByte height) {
+	void setRawHeight(Int xIndex, Int yIndex, HeightSampleType height) {	// BFME: u16 (E1-25)
 		Int ndx = (yIndex*m_width)+xIndex;
 		if ((ndx>=0) && (ndx<m_dataSize) && m_data) m_data[ndx]=height;
 	};

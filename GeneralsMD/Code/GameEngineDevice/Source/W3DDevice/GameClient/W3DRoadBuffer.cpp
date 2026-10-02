@@ -567,8 +567,8 @@ void W3DRoadBuffer::loadFloat4PtSection(RoadSegment *pRoad, Vector2 loc,
 														Real uOffset, Real vOffset, Real uScale, Real vScale)
 {
 
-	const Real FLOAT_AMOUNT = MAP_HEIGHT_SCALE/8;
-	const Real MAX_ERROR = MAP_HEIGHT_SCALE*1.1f;
+	const Real FLOAT_AMOUNT = MAP_HEIGHT_SCALE_ZH/8;	// BFME: world constants, keep the upstream values (E1-25)
+	const Real MAX_ERROR = MAP_HEIGHT_SCALE_ZH*1.1f;
 	UnsignedShort ib[MAX_SEG_INDEX];
 	VertexFormatXYZDUV1 vb[MAX_SEG_VERTEX];
 	Int numRoadVertices = 0;
@@ -786,8 +786,8 @@ to the road normal.  */
 void W3DRoadBuffer::loadLit4PtSection(RoadSegment *pRoad, UnsignedShort *ib, VertexFormatXYZDUV1 *vb, RefRenderObjListIterator *pDynamicLightsIterator)
 {
 
-	const Real FLOAT_AMOUNT = MAP_HEIGHT_SCALE/8;
-	const Real MAX_ERROR = MAP_HEIGHT_SCALE*1.1f;
+	const Real FLOAT_AMOUNT = MAP_HEIGHT_SCALE_ZH/8;	// BFME: world constants, keep the upstream values (E1-25)
+	const Real MAX_ERROR = MAP_HEIGHT_SCALE_ZH*1.1f;
 
 
 	if (pRoad->m_uniqueID != m_curUniqueID) {

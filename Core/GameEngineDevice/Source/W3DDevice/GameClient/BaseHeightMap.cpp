@@ -245,7 +245,8 @@ BaseHeightMapRenderObjClass::BaseHeightMapRenderObjClass()
 	m_updating = false;
 	//Set height to the maximum value that can be stored.
 	//We should refine this with actual value.
-	m_maxHeight=(pow(256.0, sizeof(HeightSampleType))-1.0)*MAP_HEIGHT_SCALE;
+	// BFME: E1-25 keep the upstream initial value (255 ZH units); the real maximum is set in initHeightData.
+	m_maxHeight=(pow(256.0, sizeof(UnsignedByte))-1.0)*MAP_HEIGHT_SCALE_ZH;
 	m_minHeight=0;
 	m_shoreLineTilePositions=nullptr;
 	m_numShoreLineTiles=0;
@@ -696,7 +697,11 @@ bool BaseHeightMapRenderObjClass::Cast_Ray(RayCollisionTestClass & raytest)
 	const Int overhang = 2*VERTEX_BUFFER_TILE_LENGTH + borderSize; // Allow picking past the edge for scrolling & objects.
  	Vector3 minPt(MAP_XY_FACTOR*(-overhang), MAP_XY_FACTOR*(-overhang), -MAP_XY_FACTOR);
 	Vector3 maxPt(MAP_XY_FACTOR*(m_map->getXExtent()+overhang),
-		MAP_XY_FACTOR*(m_map->getYExtent()+overhang), MAP_HEIGHT_SCALE*m_map->getMaxHeightValue()+MAP_XY_FACTOR);
+		MAP_XY_FACTOR*(m_map->getYExtent()+overhang),
+		// BFME: E1-25 the box must enclose the terrain but stay below the camera: a ray that starts inside it
+		// finds nothing. Upstream used the u8 maximum (255 ZH units); K_MAX_HEIGHT is now 0xFFFF (2560 world),
+		// so take max(upstream value, actual terrain maximum). Same value as upstream on every ZH map.
+		MAX(255*MAP_HEIGHT_SCALE_ZH, m_maxHeight)+MAP_XY_FACTOR);
 	MinMaxAABoxClass mmbox(minPt, maxPt);
 	hbox.Init(mmbox);
 
@@ -762,13 +767,14 @@ bool BaseHeightMapRenderObjClass::Cast_Ray(RayCollisionTestClass & raytest)
 
 		for (j=startCellY; j<=endCellY; j++) {
 			for (i=startCellX; i<=endCellX; i++) {
-				Short cur = getClipHeight(i+borderSize,j+borderSize);
+				Int cur = getClipHeight(i+borderSize,j+borderSize);	// BFME: Int, u16 overflows Short (E1-25)
 				if (cur<minHt) minHt = cur;
 				if (maxHt<cur) maxHt = cur;
 			}
 		}
-		Vector3 minPt(MAP_XY_FACTOR*(startCellX-1), MAP_XY_FACTOR*(startCellY-1), MAP_HEIGHT_SCALE*(minHt-1));
-		Vector3 maxPt(MAP_XY_FACTOR*(endCellX+1), MAP_XY_FACTOR*(endCellY+1), MAP_HEIGHT_SCALE*(maxHt+1));
+		// BFME: E1-25 pad by one ZH height unit as upstream (+-1 on u8)
+		Vector3 minPt(MAP_XY_FACTOR*(startCellX-1), MAP_XY_FACTOR*(startCellY-1), MAP_HEIGHT_SCALE*(minHt-MAP_HEIGHT_ZH_STEP));
+		Vector3 maxPt(MAP_XY_FACTOR*(endCellX+1), MAP_XY_FACTOR*(endCellY+1), MAP_HEIGHT_SCALE*(maxHt+MAP_HEIGHT_ZH_STEP));
 		MinMaxAABoxClass mmbox(minPt, maxPt);
 		hbox.Init(mmbox);
 	}
@@ -922,7 +928,7 @@ Real BaseHeightMapRenderObjClass::getHeightMapHeight(Real x, Real y, Coord3D* no
 		return getClipHeight(ix, iy) * MAP_HEIGHT_SCALE;
 	}
 
-	const UnsignedByte* data = logicHeightMap->getDataPtr();
+	const HeightSampleType* data = logicHeightMap->getDataPtr();	// BFME: u16 (E1-25)
 	int idx = ix + iy*xExtent;
 	float p0 = data[idx];
 	float p2 = data[idx + xExtent + 1];
@@ -955,7 +961,7 @@ Real BaseHeightMapRenderObjClass::getHeightMapHeight(Real x, Real y, Coord3D* no
  		int idx0 = ix + iy*xExtent;
  		int idx3 = ix + iy*xExtent+xExtent;
 		int idx9 = ix + (iy+2)*xExtent;
-		UnsignedByte d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11;
+		HeightSampleType d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11;	// BFME: u16 (E1-25)
 		d0 = data[idx0];
 		d1 = data[idx0+1];
 		d2 = data[idx3+1];
@@ -1084,7 +1090,7 @@ Bool BaseHeightMapRenderObjClass::isClearLineOfSight(const Coord3D& pos, const C
 	Real zinc = dz * nsInv;
 
 	Bool result = true;
-	const UnsignedByte* data = logicHeightMap->getDataPtr();
+	const HeightSampleType* data = logicHeightMap->getDataPtr();	// BFME: u16 (E1-25)
 	Int xExtent = logicHeightMap->getXExtent();
 	Int yExtent = logicHeightMap->getYExtent();
 	for (Int curpixel = 0; curpixel < numpixels; curpixel++)
@@ -1232,7 +1238,7 @@ Real BaseHeightMapRenderObjClass::getMaxCellHeight(Real x, Real y) const
 	if (iY >= (logicHeightMap->getYExtent()-1)) {
 		iY = logicHeightMap->getYExtent()-2;
 	}
-	UnsignedByte *data = logicHeightMap->getDataPtr();
+	HeightSampleType *data = logicHeightMap->getDataPtr();	// BFME: u16 (E1-25)
 	p0=data[iX+iY*logicHeightMap->getXExtent()]*MAP_HEIGHT_SCALE;
 	p1=data[(iX+offset)+iY*logicHeightMap->getXExtent()]*MAP_HEIGHT_SCALE;
 	p2=data[(iX+offset)+(iY+offset)*logicHeightMap->getXExtent()]*MAP_HEIGHT_SCALE;
@@ -1306,7 +1312,7 @@ Bool BaseHeightMapRenderObjClass::evaluateAsVisibleCliff(Int xIndex, Int yIndex,
 
 	// Note: getHeight will protect us from going out of bounds by returning 0 if we give it
 	// a value outside of its bounds.
-	UnsignedByte bytes[4] =
+	HeightSampleType bytes[4] =	// BFME: u16 (E1-25)
 	{
 		m_map->getHeight(xIndex + 0, yIndex + 0),
 		m_map->getHeight(xIndex + 1, yIndex + 0),
@@ -1810,7 +1816,7 @@ Int BaseHeightMapRenderObjClass::initHeightData(Int x, Int y, WorldHeightMap *pM
 
 			for (j=0; j<m_mapDY; j++) {
 				for (i=0; i<m_mapDX; i++) {
-					Short cur = pMap->getHeight(i,j);
+					Int cur = pMap->getHeight(i,j);	// BFME: Int, u16 overflows Short (E1-25)
 					if (cur<minHt) minHt = cur;
 					if (maxHt<cur) maxHt = cur;
 				}
@@ -1944,7 +1950,7 @@ void BaseHeightMapRenderObjClass::updateScorches()
 			type = 0;
 		}
 		Real amtToFloat = 0;
-		amtToFloat = MAP_HEIGHT_SCALE/10;
+		amtToFloat = MAP_HEIGHT_SCALE_ZH/10;	// BFME: world constant, keep the upstream value (E1-25)
 
 		Int minX = REAL_TO_INT_FLOOR((loc.X-radius)/MAP_XY_FACTOR);
 		Int minY = REAL_TO_INT_FLOOR((loc.Y-radius)/MAP_XY_FACTOR);
