@@ -1,0 +1,133 @@
+# Replay CRC tests (docs/REPLAY-TESTS.md). Paths are relative to tests/replay/.
+# {replay}, {replay_name}, {crclog}, {out}, {case_out} are substituted by the runner.
+# {replay} is always an absolute path ending in ".rep" (the engine requires the extension;
+# a bare file name would be looked up in ReplayDir, Лид 02.10.2026).
+# {out} = run out dir (--out), {case_out} = <out>/<case>/ (created by the runner).
+# Scenario cases (args contain -qaScenario) need no prerecorded .rep: the scenario writes its
+# own <-qaOut>/<scenario_rep> (default {case_out}/last.rep; -qaOut {case_out} is added if
+# missing), {replay} points there. replay_sha256 is only checked for prerecorded replays.
+# Case timeout: --case-timeout S > timeout_s of the case > timeout_s_arch[--arch] > timeout_s of [defaults];
+# then multiplied by --timeout-scale / $BFME_REPLAY_TIMEOUT_SCALE (20 for arm64 under qemu, at most 50).
+# --deadline-min M (run/bless) caps the whole run; see run_replay_tests.py and ci/README.md «Таймауты».
+
+[defaults]
+arch = "linux-x86_64"            # golden set: golden/<arch>/<case>.crclog
+# Real engine: headless Linux build (E1-43). Set by CI via $BFME_HEADLESS_ENGINE.
+# TODO(Android-платформа, E1-43): path of the headless binary in the Docker image.
+engine = "$BFME_HEADLESS_ENGINE"
+# Works with the MYSOREZ fork today (GXReplayCheck.h): headless replay simulation,
+# CRC of every logic frame printed to stderr while GX_NET_TRACE is on.
+# -replay: absolute path works on Linux (fork Recorder.cpp L916-925, Лид 02.10.2026).
+# Run with -jobs 1 (one replay per process); with -jobs N the -gxCrcLog files are per worker.
+args = ["-headless", "-replay", "{replay}", "-gxCrcEveryFrame", "-gxAutoQuit"]
+env = { GX_NET_TRACE = "1" }
+mode = "gx-stderr"               # after engine-hooks/0001 is merged: mode = "crclog"
+# TODO(QA): cwd must be the game-data folder (read-only copy on the box runner).
+cwd = "$BFME_GAMEDATA"
+timeout_s = 900
+# arm64 under qemu: 600 s x 20 = 3.3 h per case, fits the arm64 CI job (timeout-minutes 360, --deadline-min 345)
+timeout_s_arch = { "linux-arm64" = 600, "android-arm64" = 600 }
+stage = "e2"
+logic_hz = 30                    # Лид 02.10.2026; written to/checked against "# logic_hz=" of crclogs
+check = "golden"                 # or "rep-recorded": compare with the CRCs inside the .rep
+rep_crc_offset = 1               # recorded label L = engine frame L-1 (frames 1, 101, 201...) [проверить, REPLAY-TESTS §2]
+
+# --- self-tests of the runner itself (no engine, no game data; run on every PR) ---
+[[case]]
+name = "selftest-match"
+stage = "selftest"
+engine = "fake"
+replay = "fixtures/selftest-a.rep"
+cwd = "."
+env = { FAKE_FRAMES = "900" }
+
+[[case]]
+name = "selftest-crclog-mode"
+stage = "selftest"
+engine = "fake"
+replay = "fixtures/selftest-b.rep"
+cwd = "."
+mode = "crclog"
+args = ["-headless", "-replay", "{replay}", "-gxCrcLog", "{crclog}", "-gxAutoQuit"]
+env = { FAKE_FRAMES = "300" }
+
+# scenario without a prerecorded .rep (fake engine writes {case_out}/last.rep itself)
+[[case]]
+name = "selftest-scenario"
+stage = "selftest"
+engine = "fake"
+cwd = "."
+mode = "crclog"
+args = ["-headless", "-qaScenario", "selftest-squads", "-seed", "1", "-qaOut", "{case_out}", "-gxCrcLog", "{crclog}", "-gxAutoQuit"]
+env = { FAKE_FRAMES = "600" }
+
+[[case]]
+name = "selftest-scenario-rep-recorded"
+stage = "selftest"
+engine = "fake"
+cwd = "."
+mode = "crclog"
+check = "rep-recorded"
+args = ["-headless", "-qaScenario", "selftest-squads", "-seed", "2", "-gxCrcLog", "{crclog}", "-gxAutoQuit"]
+env = { FAKE_FRAMES = "600" }
+
+# --- real replays (from Э2; disabled until the headless build and BFME1 replays exist) ---
+[[case]]
+name = "e2-two-battalions-10min"
+stage = "e2"
+replay = "$BFME_REPLAYS/e2-two-battalions-10min.rep"
+frames = 18000                   # 10 min x 60 s x 30 logic frames/s
+enabled = false
+note = "Э2 criterion: two battalions of different factions fight to the end, replay CRC must match (PLAN §4 Э2). TODO(Геймплей): record the replay."
+
+[[case]]
+name = "zh-upstream-sanity"
+stage = "e1"
+replay = "$BFME_REPLAYS/zh/sanity.rep"
+enabled = false
+note = "E1-43: one Zero Hour replay from the fork's GeneralsReplays submodule, two runs must give identical per-frame CRCs. Needs ZH data on the box runner."
+
+[[case]]
+name = "zh-upstream-recorded-crcs"
+stage = "e1"
+replay = "$BFME_REPLAYS/zh/sanity.rep"
+check = "rep-recorded"
+enabled = false
+note = "E1-43 first run: engine CRCs vs the CRCs recorded in the replay every 100 frames. Confirms rep_crc_offset (expected 1); if 0 or 2 fits, change the default here, not the engine."
+
+# First headless check of engine-hooks/0001 (Лид 02.10.2026): the same replay with and without
+# -gxCrcLog must give the same final CRC and identical gamestats (compare_gamestats.py of the
+# fork). Done by hand / a script on the box runner once E1-43 exists; see REPLAY-TESTS §8.
+
+# --- tests without ZH (ZH not bought, Лид 02.10.2026; REPLAY-TESTS §9) ---
+[[case]]
+name = "synthetic-seed-determinism"
+stage = "e1"
+# The scenario runs without a replay; it records its own .rep to {case_out}/last.rep
+# ({replay} points there, sha256 goes into the crclog as scenario_rep_sha256, not compared).
+# Golden missing: `run --record-missing` (two identical runs) or `bless`.
+args = ["-headless", "-qaScenario", "two-squads", "-seed", "1", "-qaOut", "{case_out}", "-gxCrcLog", "{crclog}", "-gxAutoQuit"]
+mode = "crclog"
+enabled = false
+note = "REPLAY-TESTS §9.1: two runs with one -seed must give identical per-frame CRCs (blocker otherwise). Scenario name is a placeholder until Gameplay/Lead define it; needs -qaScenario in the headless build."
+
+[[case]]
+name = "e1-25-heights-zh"
+stage = "e1"
+replay = "$BFME_REPLAYS/zh/with-buildings.rep"
+enabled = false
+note = "REPLAY-TESTS §9.2: golden blessed on the commit before the first e1-25-heights commit, run on the commit after; all frames must match. Needs ZH (not bought). Fallback now: tests/terrain/height_scale_check.py."
+
+[[case]]
+name = "e1-43a-heights-dump"
+stage = "e1"
+replay = "$BFME_REPLAYS/zh/heights-dump-3maps.rep"
+enabled = false
+note = "REPLAY-TESTS §9.2: E1-43a headless build; buildings (Dozer/Worker, OCL) and a crater on 3 ZH maps, dump of all logic raw heights + getGroundHeight grid from the real functions, upstream 8ef2349 vs bfme 4db8b77: raw after == raw before * 16, world heights bit-identical. Needs ZH; fallback: synthetic BFME1 v5 map vs the tests/terrain model."
+
+[[case]]
+name = "stealth-pulse-phase"
+stage = "e2"
+replay = "$BFME_REPLAYS/synthetic/battle-seed1.rep"
+enabled = false
+note = "REPLAY-TESTS §9.3 / QA-SCENARIOS §3.2: -qaClientSeedOffset 0 vs 12345 and -qaForcePulsePhase 0 vs pi/2 must give identical per-frame CRCs; counts only if StealthUpdate.cpp:691 ran (render build, not headless). Blocked until a render build exists."

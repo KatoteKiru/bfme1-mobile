@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+# BFME1 Mobile: replay CRC tests entry point (QA). Thin wrapper; the code lives in
+# tests/replay/ (QA owns tests/, ADR-0001). Docs: docs/REPLAY-TESTS.md.
+#   tools/replay-test run --stage selftest
+#   tools/replay-test compare golden/linux-x86_64/X.crclog out/X.actual.crclog
+#   tools/replay-test rep-crcs some.rep
+#   tools/replay-test selftest          (all unit tests under tests/: replay, perf, terrain)
+#   tools/replay-test --timeout-scale 20 --arch linux-arm64 --engine "qemu-aarch64-static ..." run ...
+here=$(cd "$(dirname "$0")/.." && pwd)
+cd "$here/tests/replay" && exec python3 run_replay_tests.py "$@"

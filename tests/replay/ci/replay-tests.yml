@@ -1,0 +1,274 @@
+# BFME1 Mobile — реплей-тесты CRC (ПРЕДЛОЖЕНИЕ QA, docs/REPLAY-TESTS.md §7; v2 под режим `replay` обёртки, 02.10.2026).
+# Владелец .github/ и ci/ — Android-платформа (ADR-0001). QA этот файл в .github/workflows/ НЕ кладёт и в GitHub
+# ничего не пушит: Платформа переносит его сама. Контракт режима `replay`, допущения и TODO — ci/README.md рядом.
+#
+# По образцу bfme-android-apk.yml (katotekiru/bfme, PR #5 4ddeb24): только self-hosted раннер бокса (ghrunner,
+# метки self-hosted, linux, bfme); окружение из .env раннера, без GitHub Secrets и кэшей GHA; fetch-depth 1;
+# PR из чужих форков не запускаются.
+#
+# Весь код из checkout (раннер, сборка headless) идёт ТОЛЬКО через `$BFME_DOCKER replay …` (контракт Платформы
+# 02.10.2026, ci/README.md): образ Платформы, --network none, --cap-drop=ALL, uid ghrunner; монтирования: checkout ->
+# /src (workdir), $BFME_GAMEDATA_RO -> /gamedata:ro, $BFME_REPLAYS -> /replays:ro, ci/out/<run_id>/<job> -> /out
+# (каталог создаёт обёртка, подкаталоги — раннер через --out). Режим replay НЕ принимает -e/-v/--network: обёртка
+# сама ставит BFME_GAMEDATA=/gamedata, BFME_REPLAYS=/replays, HOME=/tmp, SDL_*=dummy, CCACHE_DIR=/ccache и
+# пропускает из env шага только BFME_ENGINE_BUILD_ID (40 hex) и BFME_STAGE ([a-z0-9_-]+). Команды: только
+# tools/replay-test, tests/replay/run_replay_tests.py, tools/ci/build-headless.sh. На хосте остаются только
+# проверки окружения, /usr/local/sbin/bfme-check-artifacts, `cat` сводки в $GITHUB_STEP_SUMMARY и upload-artifact.
+#
+# ЖЁСТКОЕ ПРАВИЛО (Лид): файлы игры EA не попадают в артефакты, кэш или облако. В артефакты — только логи и CRC
+# (*.crclog, *.engine.log, junit.xml, summary.md, results.json); перед каждой выгрузкой —
+# /usr/local/sbin/bfme-check-artifacts (root, не из checkout; tools/ci/ — только исходник для setup-runner.sh).
+# Список файлов артефакта — ОДИН на джобу: REPLAY_ARTIFACTS в env джобы; его получают и bfme-check-artifacts,
+# и upload-artifact (path). .rep (в т.ч. <case>/last.rep сценариев) в список не входят и не выгружаются.
+#
+# Время: timeout-minutes джобы > --deadline-min раннера (запас ~15 мин на сборку/сводку/выгрузку); по дедлайну
+# раннер сам завершает прогон с кодом 4 и успевает записать results.json, junit.xml и summary.md.
+#
+# .env раннера для этих джоб: BFME_DOCKER (уже есть), BFME_GAMEDATA_RO, BFME_REPLAYS. Пути к бинарнику в .env НЕТ:
+# headless собирается из коммита PR в этом же workflow.
+name: BFME replay CRC
+
+on:
+  pull_request:
+    branches: [bfme]
+  push:
+    branches: [bfme]
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Стадия кейсов (e1, e2, ...)"
+        default: "e1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bfme-replay-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  # /out контейнера на хосте: ci/out/<run_id>/<job> (создаёт обёртка) — REPLAY_OUT_HOST в env каждой джобы
+  # (контекст env в jobs.<id>.env недоступен, поэтому путь там целиком).
+  # <job> = id джобы ($GITHUB_JOB): хост ci/out/<GITHUB_RUN_ID>/<GITHUB_JOB> (Платформа 02.10.2026).
+  # Headless x86_64 (E1-43a). Отдельного пресета headless в bfme@c70bfa151 нет: берём linux64-deploy
+  # (Linux x86_64, SDL3; headless = ключ -headless + SDL dummy, как в replay-tests.yml форка).
+  # Цель z_generals, OUTPUT_NAME GeneralsXZH (GeneralsMD/Code/Main/CMakeLists.txt).
+  # TODO(Платформа, E1-43a/E1-10): свой пресет linux64-headless с флагами детерминизма -> поменять две строки ниже.
+  # Имя бинарника и пресет ПРЕДВАРИТЕЛЬНЫЕ (Платформа 02.10.2026).
+  HEADLESS_PRESET: linux64-deploy
+  HEADLESS_BIN: build/linux64-deploy/GeneralsMD/GeneralsXZH
+  # arm64 (E1-49): кросс-сборка g++-aarch64-linux-gnu. TODO(Платформа, E1-49): имя пресета/каталога сборки.
+  HEADLESS_PRESET_ARM64: linux-arm64-headless
+  HEADLESS_BIN_ARM64: build/linux-arm64-headless/GeneralsMD/GeneralsXZH
+
+jobs:
+  # 1) Самопроверка раннера: без движка и без данных игры, ~10 с.
+  replay-selftest:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, linux, bfme]
+    timeout-minutes: 10
+    env:
+      REPLAY_OUT_HOST: /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-selftest
+      # единственный список артефакта джобы (проверка + выгрузка); без .rep
+      REPLAY_ARTIFACTS: |
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-selftest/selftest/*.crclog
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-selftest/selftest/*.engine.log
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-selftest/selftest/junit.xml
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-selftest/selftest/summary.md
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-selftest/selftest/results.json
+    steps:
+      - uses: actions/checkout@<SHA-from-Platform> # v4
+        with:
+          fetch-depth: 1
+          submodules: false
+          lfs: false
+      - name: Окружение раннера
+        run: |
+          test -n "${BFME_DOCKER:-}" || { echo "::error::Нет BFME_DOCKER в .env раннера"; exit 3; }
+          # Docker API бокса без аутентификации должен быть закрыт (Лид 02.10.2026).
+          # Голый `! curl …` при bash -e шаг НЕ валит (инверсия !), поэтому `|| exit`.
+          ! curl -s -m 2 127.0.0.1:2375/version || { echo "::error::Открыт Docker API 127.0.0.1:2375"; exit 3; }
+      - name: Юнит-тесты (раннер, анализатор FPS, высоты E1-25)
+        # `selftest` = stdlib unittest всех tests/<каталог>/test_*.py (replay, perf, terrain); код 0/1.
+        run: $BFME_DOCKER replay tools/replay-test selftest
+      - name: Кейсы selftest (фейковый движок)
+        run: |
+          $BFME_DOCKER replay tools/replay-test --out /out/selftest run --stage selftest \
+            --junit /out/selftest/junit.xml --summary /out/selftest/summary.md
+      - name: Сводка
+        if: always()
+        run: cat "$REPLAY_OUT_HOST/selftest/summary.md" >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Проверка артефактов (только логи и CRC)
+        id: artifacts_ok
+        if: always()
+        shell: bash
+        # те же файлы, что уйдут в upload-artifact: глобы REPLAY_ARTIFACTS раскрывает bash (nullglob)
+        run: |
+          shopt -s nullglob
+          files=( $REPLAY_ARTIFACTS )
+          [ ${#files[@]} -gt 0 ] || { echo "::warning::Нет файлов для артефакта"; exit 0; }
+          /usr/local/sbin/bfme-check-artifacts "${files[@]}"
+      - uses: actions/upload-artifact@<SHA-from-Platform> # v4
+        if: always() && steps.artifacts_ok.outcome == 'success'
+        with:
+          name: replay-selftest-${{ github.run_number }}
+          path: ${{ env.REPLAY_ARTIFACTS }}
+          retention-days: 7
+
+  # 2) Синтетические сценарии (-qaScenario + -seed) и реплеи на headless-сборке x86_64 (с Э2 — основной, Лид 02.10.2026).
+  replay-crc:
+    needs: replay-selftest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, linux, bfme]
+    timeout-minutes: 90
+    env:
+      REPLAY_OUT_HOST: /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc
+      REPLAY_ARTIFACTS: |
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc/x86_64/*.crclog
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc/x86_64/*.engine.log
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc/x86_64/junit.xml
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc/x86_64/summary.md
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc/x86_64/results.json
+    steps:
+      - uses: actions/checkout@<SHA-from-Platform> # v4
+        with:
+          fetch-depth: 1
+          submodules: false
+          lfs: false
+      - name: Окружение раннера
+        run: |
+          test -n "${BFME_DOCKER:-}" || { echo "::error::Нет BFME_DOCKER в .env раннера"; exit 3; }
+          test -d "${BFME_GAMEDATA_RO:-/nonexistent}" || { echo "::error::Нет BFME_GAMEDATA_RO"; exit 3; }
+          test -d "${BFME_REPLAYS:-/nonexistent}" || { echo "::error::Нет BFME_REPLAYS"; exit 3; }
+          ! curl -s -m 2 127.0.0.1:2375/version || { echo "::error::Открыт Docker API 127.0.0.1:2375"; exit 3; }
+          # Данные игры только на чтение (ACL u:ghrunner:rX), файлы e1 на месте (ci/README.md «Данные e1»).
+          test ! -w "$BFME_GAMEDATA_RO" || { echo "::error::BFME_GAMEDATA_RO доступен на запись"; exit 3; }
+          for f in ini.big _patch222.big w3d.big; do
+            test -r "$BFME_GAMEDATA_RO/$f" || { echo "::error::Нет $f в BFME_GAMEDATA_RO"; exit 3; }
+            test ! -w "$BFME_GAMEDATA_RO/$f" || { echo "::error::$f доступен на запись"; exit 3; }
+          done
+      - name: Сборка headless x86_64 (E1-43a, ccache в ci/cache)
+        # tools/ci/build-headless.sh (Платформа, в белом списке режима replay); внутри
+        #   cmake --preset "$HEADLESS_PRESET" -DCMAKE_{C,CXX}_COMPILER_LAUNCHER=ccache
+        #   cmake --build "build/$HEADLESS_PRESET" --target z_generals
+        # CCACHE_DIR=/ccache ставит обёртка; при --network none зависимости vcpkg только из бинарного кэша в ci/cache.
+        run: |
+          $BFME_DOCKER replay tools/ci/build-headless.sh --preset "$HEADLESS_PRESET" --target z_generals
+          test -x "$HEADLESS_BIN" || { echo "::error::Нет $HEADLESS_BIN после сборки"; exit 2; }
+      - name: CRC (golden linux-x86_64), -jobs 1
+        # --engine — АБСОЛЮТНЫЙ путь в контейнере: раннер запускает движок с cwd=$BFME_GAMEDATA=/gamedata (manifest,
+        # только чтение: запись туда даёт EROFS, раннер помечает это в результате и в <case>.engine.log).
+        # BFME_ENGINE_BUILD_ID и BFME_STAGE обёртка пропускает из env шага; остальное окружение ставит она сама.
+        # --deadline-min 75 < timeout-minutes 90: оставшиеся кейсы -> deadline (код 4), отчёты пишутся.
+        env:
+          BFME_ENGINE_BUILD_ID: ${{ github.sha }}
+          BFME_STAGE: ${{ inputs.stage || 'e1' }}
+        run: |
+          $BFME_DOCKER replay tools/replay-test --engine /src/build/linux64-deploy/GeneralsMD/GeneralsXZH \
+            --arch linux-x86_64 --out /out/x86_64 \
+            run --stage "$BFME_STAGE" --deadline-min 75 --junit /out/x86_64/junit.xml --summary /out/x86_64/summary.md
+      - name: Сводка
+        if: always()
+        run: cat "$REPLAY_OUT_HOST/x86_64/summary.md" >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Проверка артефактов (только логи и CRC)
+        id: artifacts_ok
+        if: always()
+        shell: bash
+        # те же файлы, что уйдут в upload-artifact: глобы REPLAY_ARTIFACTS раскрывает bash (nullglob)
+        run: |
+          shopt -s nullglob
+          files=( $REPLAY_ARTIFACTS )
+          [ ${#files[@]} -gt 0 ] || { echo "::warning::Нет файлов для артефакта"; exit 0; }
+          /usr/local/sbin/bfme-check-artifacts "${files[@]}"
+      - uses: actions/upload-artifact@<SHA-from-Platform> # v4
+        if: always() && steps.artifacts_ok.outcome == 'success'
+        with:
+          name: replay-crc-linux-x86_64-${{ github.run_number }}
+          path: ${{ env.REPLAY_ARTIFACTS }}
+          retention-days: 14
+
+  # 3) arm64 против x86_64 (E1-45): headless arm64 под qemu-aarch64-static в образе Платформы.
+  #    Расхождение архитектур — major (не блокер), поэтому continue-on-error. Только вручную (workflow_dispatch),
+  #    пока E1-49 не добавит в образ sysroot и кросс-g++ (Платформа 02.10.2026).
+  replay-crc-arm64:
+    needs: replay-selftest
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, linux, bfme]
+    timeout-minutes: 360
+    continue-on-error: true
+    env:
+      REPLAY_OUT_HOST: /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc-arm64
+      REPLAY_ARTIFACTS: |
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc-arm64/arm64/*.crclog
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc-arm64/arm64/*.engine.log
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc-arm64/arm64/junit.xml
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc-arm64/arm64/summary.md
+        /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc-arm64/arm64/results.json
+    steps:
+      - uses: actions/checkout@<SHA-from-Platform> # v4
+        with:
+          fetch-depth: 1
+          submodules: false
+          lfs: false
+      - name: Окружение раннера
+        run: |
+          test -n "${BFME_DOCKER:-}" || { echo "::error::Нет BFME_DOCKER в .env раннера"; exit 3; }
+          test -d "${BFME_GAMEDATA_RO:-/nonexistent}" || { echo "::error::Нет BFME_GAMEDATA_RO"; exit 3; }
+          test -d "${BFME_REPLAYS:-/nonexistent}" || { echo "::error::Нет BFME_REPLAYS"; exit 3; }
+          ! curl -s -m 2 127.0.0.1:2375/version || { echo "::error::Открыт Docker API 127.0.0.1:2375"; exit 3; }
+          test ! -w "$BFME_GAMEDATA_RO" || { echo "::error::BFME_GAMEDATA_RO доступен на запись"; exit 3; }
+          for f in ini.big _patch222.big w3d.big; do
+            test -r "$BFME_GAMEDATA_RO/$f" || { echo "::error::Нет $f в BFME_GAMEDATA_RO"; exit 3; }
+            test ! -w "$BFME_GAMEDATA_RO/$f" || { echo "::error::$f доступен на запись"; exit 3; }
+          done
+      - name: Кросс-сборка headless arm64 (E1-49, g++-aarch64-linux-gnu)
+        # TODO(Платформа, E1-49): g++-aarch64-linux-gnu и libc6-dev-arm64-cross в образе; тулчейн-файл/триплет
+        # arm64-linux для vcpkg; static где получится (минимум -static-libstdc++ -static-libgcc; полностью static
+        # мешают SDL3/OpenAL/DXVK из linux64-deploy). Оставшиеся .so — через RPATH на /src/build/... (тот же путь
+        # в контейнере при сборке и прогоне), libc — из -L /usr/aarch64-linux-gnu.
+        run: |
+          $BFME_DOCKER replay tools/ci/build-headless.sh --arch arm64 --preset "$HEADLESS_PRESET_ARM64" --target z_generals
+          test -x "$HEADLESS_BIN_ARM64" || { echo "::error::Нет $HEADLESS_BIN_ARM64 после сборки"; exit 2; }
+      - name: CRC (golden linux-arm64) + сравнение с x86_64
+        # Многословный --engine раннер принимает: resolve_engine() = shlex.split(os.path.expandvars(...)).
+        # --timeout-scale 20: таймаут каждого кейса x20 под qemu (замедление ~10–30x). Тот же множитель раннер
+        # ставит сам для --arch *arm64* с движком qemu-*, здесь он явно. Таймаут кейса для linux-arm64 — 600 с
+        # (manifest [defaults].timeout_s_arch; перекрывается --case-timeout S) x 20 = 3,3 ч на кейс;
+        # --deadline-min 345 < timeout-minutes 360: по дедлайну раннер ставит оставшимся кейсам deadline (код 4).
+        env:
+          BFME_ENGINE_BUILD_ID: ${{ github.sha }}
+          BFME_STAGE: ${{ inputs.stage || 'e1' }}
+        run: |
+          rc=0
+          $BFME_DOCKER replay tools/replay-test \
+            --engine "qemu-aarch64-static -L /usr/aarch64-linux-gnu /src/$HEADLESS_BIN_ARM64" \
+            --arch linux-arm64 --out /out/arm64 --timeout-scale 20 \
+            run --stage "$BFME_STAGE" --deadline-min 345 --junit /out/arm64/junit.xml --summary /out/arm64/summary.md || rc=$?
+          for g in tests/replay/golden/linux-x86_64/*.crclog; do
+            n=$(basename "$g" .crclog)
+            [ -f "$REPLAY_OUT_HOST/arm64/$n.actual.crclog" ] || continue
+            { echo "#### $n: x86_64 против arm64"
+              $BFME_DOCKER replay tools/replay-test compare "/src/$g" "/out/arm64/$n.actual.crclog"
+            } >> "$REPLAY_OUT_HOST/arm64/summary.md" || true
+          done
+          exit $rc
+      - name: Сводка
+        if: always()
+        run: cat "$REPLAY_OUT_HOST/arm64/summary.md" >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Проверка артефактов (только логи и CRC)
+        id: artifacts_ok
+        if: always()
+        shell: bash
+        # те же файлы, что уйдут в upload-artifact: глобы REPLAY_ARTIFACTS раскрывает bash (nullglob)
+        run: |
+          shopt -s nullglob
+          files=( $REPLAY_ARTIFACTS )
+          [ ${#files[@]} -gt 0 ] || { echo "::warning::Нет файлов для артефакта"; exit 0; }
+          /usr/local/sbin/bfme-check-artifacts "${files[@]}"
+      - uses: actions/upload-artifact@<SHA-from-Platform> # v4
+        if: always() && steps.artifacts_ok.outcome == 'success'
+        with:
+          name: replay-crc-linux-arm64-${{ github.run_number }}
+          path: ${{ env.REPLAY_ARTIFACTS }}
+          retention-days: 14
