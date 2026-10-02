@@ -46,7 +46,14 @@
 
 ### 2.3 Плавающая точка в потоке логики (решение Лида п. 7 и уточнение платформы)
 
-Регистры управления FP у каждого потока свои. Поток логики — тот, который первым вызвал `GameLogic::init()` (`GeneralsMD/Code/GameEngine/Source/GameLogic/System/GameLogic.cpp:430`). Его `std::thread::id` запоминается там же, в `fp::` или в `GameLogic`. `checkAndReset`, `assertExpected` и `getCRC` сверяют id с запомненным. В debug и в CI несовпадение фатально. К имени потока не привязываемся: игровой цикл запускает SDL или `main` в зависимости от платформы, а правило «кто инициализировал, тот и тикает» одинаково везде. Счётчики не атомарные: их трогает только этот поток.
+Регистры управления FP у каждого потока свои. Поток логики привязывает `fp::bindLogicThread()`. Это первый вызов в `GameMain()` (`GeneralsMD/Code/GameEngine/Source/Common/GameMain.cpp:39`), до `TheGameEngine->init()` (`:46`). Строка 39 — объявление функции; сегодня первая строка тела — `int exitcode = 0` (`:41`). Сравнение — по `std::thread::id`. Повторный `bindLogicThread()` из другого потока фатален в debug. Счётчики не атомарные: их трогает только привязанный поток.
+Запасной привязки по первому вызову нет: если `fp::bindLogicThread()` не вызывался, первая проверка (`checkAndReset`, `assertExpected`, `getCRC`, `setFPMode`, `GameLogic::init`) в debug и CI фатальна, в release пишет одну ошибку в лог и привязывается к текущему потоку; молчаливой привязки нет ни в одной сборке.
+
+`GameLogic::init` (`GameLogic.cpp:430`) и `fp::setFPMode()` проверяют, что вызов идёт из привязанного потока. В debug и в CI несовпадение фатально, в release — одна ошибка в лог. Проверка в `setFPMode` нужна потому, что `INI::load` (`Core/GameEngine/Source/Common/INI/INI.cpp:416`) вызывает `setFPMode()` раньше `GameLogic::init`. Если загрузка INI уйдёт в фоновый поток, она выставит FP-режим чужому потоку. Привязка по первому `GameLogic::init()` этот вызов не увидит и молча примет чужой поток.
+
+`gettid()` и `GetCurrentThreadId()` (MSVC) пишутся только в лог, чтобы tid совпадал с logcat и tombstone. Имя потока `"SDLThread"` проверяется только в debug на Android и только предупреждением в лог, без fatal. `ThreadClass::_Get_Current_Thread_ID()` для этой проверки не годится: на `_UNIX` он возвращает 0 (`Core/Libraries/Source/WWVegas/WWLib/thread.cpp:160–165`, возврат на `:163`). Исправление этого места Лид взял себе в рендер.
+
+Вызов в `GameMain` и объявление в `fp.h` делает Геймплей. Реализацию в `GameMath/fp/` делает Платформа.
 
 `docs/fpcr-audit.md` в ветке нет (придёт с PR E1-03). Интерфейс ниже — согласованное с Android-платформой описание, которое иначе лежало бы в §8 того файла.
 
@@ -55,7 +62,7 @@
 - arm64: `FPCR == 0`;
 - x86_64: `(MXCSR & 0xFFC0) == 0x1F80` и `(x87 CW & 0x0F3F) == 0x003F`.
 
-`State` хранит только управляющие регистры (arm64 — FPCR; x86_64 — MXCSR и x87 CW), без FPSR. Чтение — `asm volatile` с клоббером `"memory"`. Что `fesetenv(FE_DFL_ENV)` на bionic arm64 пишет FPCR=0, в этом дереве не проверено: bionic здесь не лежит, это вывод аудита. В коде проверено другое: не-Windows ветка `setFPMode()` (`GameLogic.cpp:239–241`) вызывает `fesetenv(FE_DFL_ENV)`, затем `feclearexcept(FE_ALL_EXCEPT)` и `fesetround(FE_TONEAREST)`; на x86 следом правит x87 CW (`:243–248`, маска `~0x0F00`) и MXCSR (`:250–254`).
+`State` хранит только управляющие регистры (arm64 — FPCR; x86_64 — MXCSR и x87 CW), без FPSR. Чтение — `asm volatile` с клоббером `"memory"`. Платформа проверила: на bionic arm64 `fesetenv(FE_DFL_ENV)` даёт FPCR=0 (тест `tools/fpcr/fe_dfl_env_test.c`, ветка `e1-10-fpcr-fedfl`, `c2f6790`; файла в этой ветке нет). `fesetround(FE_TONEAREST)` сбрасывает только биты округления, FZ/DN/AHP остаются (`0x07000000`). `fp::reset()` — через `fesetenv(FE_DFL_ENV)` или `msr fpcr, xzr`, не через `fesetround`. В коде сейчас не-Windows ветка `setFPMode()` (`GameLogic.cpp:239–241`) вызывает `fesetenv(FE_DFL_ENV)`, затем `feclearexcept(FE_ALL_EXCEPT)` и `fesetround(FE_TONEAREST)`; на x86 следом правит x87 CW (`:243–248`, маска `~0x0F00`) и MXCSR (`:250–254`).
 
 **Почему проверка строится на `setFPMode`, а не рядом.** `fp::checkAndReset` нельзя вызывать после `setFPMode()`: после сброса он всегда видит норму. `fp::reset()` — единственная реализация сброса. `setFPMode()` остаётся обёрткой над `fp::reset()`, чтобы нынешние вызовы сами начали сбрасывать через `fp::`.
 
@@ -63,19 +70,19 @@
 
 Другие вызовы `setFPMode()`, которые остаются обёрткой над `reset()`: `GameLogic::init` (`:433`), сброс в `init` (`:488`), загрузка карты (`:1440`), кадр затухания при загрузке (`:2380`), `INI::load` (`Core/GameEngine/Source/Common/INI/INI.cpp:416`), `W3DModelDraw` (`:507`, `:603`, `:727`, `:865`). Тем же путём идут `GameClient.cpp:682`, `ScoreScreen.cpp:900`, `W3DView.cpp:654`, `MapUtil.cpp:441`, `LoadScreen.cpp` (`:191`, `:682`, `:1187`).
 
-**Конец тика и CRC.** `fp::assertExpected("tick-end")` — перед выходом из `GameLogic::update` (функция заканчивается на строке 4467). В `getCRC` сейчас первая строка тела после проверки режима — снова `setFPMode()` (`:4714`); её заменяем на `fp::assertExpected("getCRC")`, а не ставим проверку следом: сброс перед проверкой спрятал бы отклонение. Оба вызова, как и `checkAndReset`, сначала сверяют `std::thread::id` с потоком, который первым вошёл в `GameLogic::init()`. Фатален `assertExpected` и несовпадение id: в CI и debug режим Fatal, в release — Log (§ ниже, `setMode`). Несовпадение id в debug и CI фатально и в Log не переводится.
+**Конец тика и CRC.** `fp::assertExpected("tick-end")` — перед выходом из `GameLogic::update` (функция заканчивается на строке 4467). В `getCRC` сейчас первая строка тела после проверки режима — снова `setFPMode()` (`:4714`); её заменяем на `fp::assertExpected("getCRC")`, а не ставим проверку следом: сброс перед проверкой спрятал бы отклонение. `checkAndReset`, `assertExpected` и `getCRC` сверяют `std::thread::id` с потоком, который привязал `bindLogicThread()`. Несовпадение id: в debug и CI фатально, в release — одна ошибка в лог. `assertExpected` по состоянию FP по-прежнему фатален в CI и debug; в release режим — Log (§ ниже, `setMode`).
 
 **Интерфейс `fp::`.** Заголовок `Core/Libraries/Source/GameMath/include/fp.h`, пространство имён `fp`. Реализации: `Core/Libraries/Source/GameMath/fp/fp_arm64.cpp`, `fp_x86_64.cpp`, `fp_msvc.cpp` (MSVC — через `_controlfp_s`).
 
-- `State`, `read()`, `isExpected()`, `reset()`, `checkAndReset(where)`, `assertExpected(where)`;
+- `bindLogicThread()`, `State`, `read()`, `isExpected()`, `reset()`, `checkAndReset(where)`, `assertExpected(where)`;
 - RAII `Guard`: восстанавливает состояние, увеличивает `guardRestores` и пишет в лог, не падает;
 - `Stats { tickStartDeviations, tickEndFailures, guardRestores, lastWhere, lastValue, lastFrame }`, `stats()`, `resetStats()`;
 - `setMode(Off/Log/Fatal)` по флагу `-gxFpCheck=off|log|fatal`: в CI и debug — Fatal, в release — Log.
 
 **Кто что делает.**
 
-- Геймплей: вызовы в `GameLogic` (`tick-start`, `tick-end`, `getCRC`), `Stats` в оверлее, флаг `-gxFpCheck`. Это R1.
-- Android-платформа: реализации по архитектурам; `fp::Guard` вокруг `ThingFactory::newDrawable` (`GeneralsMD/Code/GameEngine/Source/Common/Thing/ThingFactory.cpp:355`) и создания ресурсов рендера из логики (R2); хаос-режим `-gxFpChaos` для теста T4 аудита. Страж не фатален. Обёртку вокруг каждого вызова GL/AL не делаем.
+- Геймплей: вызов `fp::bindLogicThread()` в `GameMain`, объявление в `fp.h`, вызовы в `GameLogic` (`tick-start`, `tick-end`, `getCRC`), `Stats` в оверлее, флаг `-gxFpCheck`. Это R1.
+- Android-платформа: реализация `bindLogicThread` и остальных функций в `GameMath/fp/`; `fp::Guard` вокруг `ThingFactory::newDrawable` (`GeneralsMD/Code/GameEngine/Source/Common/Thing/ThingFactory.cpp:355`) и создания ресурсов рендера из логики (R2); хаос-режим `-gxFpChaos` для теста T4 аудита. Страж не фатален. Обёртку вокруг каждого вызова GL/AL не делаем.
 
 ### 2.4 Целые типы, float→int и `long double` (решение Лида п. 8 и R6)
 
@@ -151,7 +158,7 @@
 - **Класть флаги детерминизма в `CMakePresets.json`:** они уже в `cmake/compilers.cmake`.
 - **Вызывать `checkAndReset` после `setFPMode()`:** проверка увидела бы уже сброшенное состояние.
 - **Флаг `Xfer::isLogicCRCDump()`:** не нужен, Deep CRC идёт через `crc()`, а не через `xfer()`. К нему вернёмся, только если появится `crc()`, который зовёт `xfer()`. В ZH такой вызов уже есть у `AIUpdateInterface::crc` (`AIUpdate.cpp:5086`); это исключение, не образец для модулей BFME (§2.5 п. 5).
-- **Привязка потока логики к имени `SDLThread`:** поток — тот, который первым вызвал `GameLogic::init()`, по `std::thread::id`.
+- **Поток логики = первый вызвавший `GameLogic::init()`:** отклонено, `setFPMode()` вызывается раньше из `INI::load`, и привязка по первому вызову молча примет чужой поток.
 - **Заполнять `AttackPriorityInfo::crc()`:** лёгкая CRC должна остаться как в ZH. Порядок имён задаётся только в записи `xfer`.
 
 ## 4. Последствия
@@ -196,10 +203,14 @@
 1. **§2.5 п. 5, черновик.** Здесь предлагался флаг `Xfer::isLogicCRCDump()`. Следующий блок его снимает: Deep CRC идёт через `crc()`.
 2. **§2.5 п. 5, «на разбор с QA».** На тот момент открыты были `StealthUpdate.cpp:135` и `SpectreGunshipUpdate.cpp:656–657`. `m_pulsePhase` закрыт следующим блоком.
 3. **§2.5 п. 2.** Запись `AttackPriorityMap` сортируется по имени шаблона. Загрузка не меняется. `crc()` остаётся пустым, как в ZH.
-4. **§2.3.** Поток логики — первый вызов `GameLogic::init()`. Имя `SDLThread` убрано. Несовпадение `std::thread::id` фатально в debug и CI.
+4. **§2.3.** На тот момент поток логики — первый вызов `GameLogic::init()`. Следующий блок это снимает: привязка через `fp::bindLogicThread()` в `GameMain`.
 5. **§2.5 п. 8.** ClientBehavior (`ClientUpdate`, `MODULETYPE_CLIENT_UPDATE`) пишется с `Drawable` через `GameClient`, блок `SNAPSHOT_SAVELOAD`. В лёгкую CRC и в `XferDeepCRC` не входит. `docs/E1-BACKLOG.md` этим PR не меняется: формулировки E1-45, E1-49 и E1-10 остаются в ADR по номеру задачи, без новых номеров строк бэклога.
 
 ---
+
+## Изменения 02.10.2026 (поток логики — `bindLogicThread`)
+
+`fp::bindLogicThread()` — первый вызов в `GameMain()` (`GameMain.cpp:39`), до `TheGameEngine->init()` (`:46`). `GameLogic::init` и `fp::setFPMode()` сверяют `std::thread::id`: несовпадение фатально в debug и CI, в release — одна ошибка в лог. `INI::load` (`INI.cpp:416`) зовёт `setFPMode()` раньше `GameLogic::init`. Имя `"SDLThread"` — только предупреждение в debug на Android. `ThreadClass::_Get_Current_Thread_ID()` на `_UNIX` возвращает 0 (`thread.cpp:163`). `fp::reset()` — `fesetenv(FE_DFL_ENV)` или `msr fpcr, xzr`, не `fesetround`. Правило «первый вызвавший `GameLogic::init()`» отклонено (§3).
 
 ## Изменения 02.10.2026 (`m_pulsePhase` закрыт QA)
 
