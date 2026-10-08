@@ -1,0 +1,39 @@
+{
+ "format": 1,
+ "label": "2.22",
+ "archives_mount_order": [
+  {
+   "name": "_patch222.big",
+   "bytes": 82445787,
+   "sha256": "5c022eb9205815859974320bd55e3ae8ca6342f8945e4005aa52bfb5b0c74ebb",
+   "magic": "BIGF",
+   "entries": 1246
+  },
+  {
+   "name": "_patch222maps.big",
+   "bytes": 302698541,
+   "sha256": "925cd6140549b5598f3d69c6fe878bd8953026aab74e9d29d0155441f004de02",
+   "magic": "BIGF",
+   "entries": 1290
+  },
+  {
+   "name": "ini.big",
+   "bytes": 13513985,
+   "sha256": "f5220a9357c467d5ed8499dc9140d2d995e487abd8ba08216dba7496782e8156",
+   "magic": "BIG4",
+   "entries": 242
+  },
+  {
+   "name": "maps.big",
+   "bytes": 94265671,
+   "sha256": "499d60ebd3c37d556dfbba4b0f0cb92bc893c94f8ca3d720b4a7125a91a368d4",
+   "magic": "BIG4",
+   "entries": 372
+  }
+ ],
+ "schema": {
+  "opensage_revision": "588ac477367a0022adf29f20a084e8873014e6ce",
+  "zh_revision": "28170001f408d8827c5200ef2af0f814926cfe21"
+ },
+ "rebuild": "./run.sh --game $BFME_GAMEDATA --archives ini.big,maps.big,_patch222.big,_patch222maps.big --reference-out reference/2.22 --reference-only"
+}

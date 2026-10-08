@@ -1,0 +1,7 @@
+out/
+out-*/
+__pycache__/
+*.pyc
+.locale/
+# generated from EA map files, never in git (Lead's decision); datacheck writes a copy to out*/
+bfme1_script_names_maps_big.tsv

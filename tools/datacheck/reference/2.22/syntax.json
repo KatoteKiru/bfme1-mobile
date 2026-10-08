@@ -1,0 +1,278 @@
+{
+ "set": "2.22",
+ "files": 615,
+ "lua": {
+  "blocks": 5948,
+  "files": 185,
+  "modules": 692,
+  "direct_in_module": 2092,
+  "by_module_type": [
+   {
+    "field": "draw",
+    "module_type": "W3DScriptedModelDraw",
+    "blocks": 3863
+   },
+   {
+    "field": "draw",
+    "module_type": "W3DHordeModelDraw",
+    "blocks": 1920
+   },
+   {
+    "field": "draw",
+    "module_type": "W3DQuadrupedDraw",
+    "blocks": 102
+   },
+   {
+    "field": "draw",
+    "module_type": "W3DTruckDraw",
+    "blocks": 63
+   }
+  ],
+  "by_owner_field": {
+   "AnimationState": 5436,
+   "IdleAnimationState": 484,
+   "TransitionState": 28
+  },
+  "by_parent_kind": {
+   "Object": 5234,
+   "ChildObject": 609,
+   "ObjectReskin": 105
+  },
+  "top_files": [
+   [
+    "maps\\[EVIL Coop Campaign] Mission  05 Helm_s Deep\\map.ini",
+    432
+   ],
+   [
+    "data\\ini\\object\\civilian\\civilianbuildings.ini",
+    362
+   ],
+   [
+    "maps\\[GOOD Coop Campaign] Mission  11 Black Gate\\map.ini",
+    350
+   ],
+   [
+    "maps\\[GOOD Coop Campaign] Mission  10 Minas Tirith\\map.ini",
+    314
+   ],
+   [
+    "maps\\[GOOD Coop Campaign] Mission  06 Isengard\\map.ini",
+    271
+   ],
+   [
+    "maps\\[EVIL Coop Campaign] Mission  02 Fangorn\\map.ini",
+    256
+   ],
+   [
+    "maps\\[EVIL Coop Campaign] Mission  01 Isengard\\map.ini",
+    247
+   ],
+   [
+    "maps\\[GOOD Coop Campaign] Mission  05 Helm's Deep\\map.ini",
+    231
+   ],
+   [
+    "maps\\[EVIL Coop Campaign] Mission  04 Edoras\\map.ini",
+    226
+   ],
+   [
+    "maps\\[EVIL Coop Campaign] Mission  03 Amon-Hen\\map.ini",
+    208
+   ],
+   [
+    "maps\\[GOOD Coop Campaign] Mission  02 Lothlorien\\map.ini",
+    180
+   ],
+   [
+    "maps\\[EVIL Coop Campaign] Mission  07 Ithilien\\map.ini",
+    166
+   ],
+   [
+    "data\\ini\\object\\cinematic\\cinematicobjects.ini",
+    165
+   ],
+   [
+    "maps\\[GOOD Coop Campaign] Mission  08 Osgiliath\\map.ini",
+    159
+   ],
+   [
+    "maps\\[EVIL Coop Campaign] Mission  06 Near Harad\\map.ini",
+    145
+   ]
+  ],
+  "after_begin_nonempty": 17,
+  "after_end_nonempty": 0,
+  "eof_before_end": [],
+  "nested_begin": [],
+  "endscript_substring": [],
+  "outside_module": [],
+  "not_in_analyzer": [],
+  "max_line_len": 177,
+  "max_line_at": "_patch222maps.big:maps\\Helm Deep Survival\\map.ini:9829",
+  "lines_over_zh_limit": 0,
+  "zh_ini_max_chars_per_line": 1028,
+  "lua_lines": 24578,
+  "files_with_lua_eol": {
+   "crlf": 185
+  },
+  "all_ini_eol": {
+   "crlf": 614,
+   "none": 1
+  },
+  "blocks_with_lua_end_line": 1017,
+  "blocks_with_zh_end_token": 1017,
+  "zh_end_token_lines": 1674,
+  "blocks_with_semicolon": 531,
+  "zh_module_unknown": 5885,
+  "zh_module_known_owner_unknown": 63,
+  "zh_module_known_owner_known": 0,
+  "by_wrapper": {
+   "ReplaceModule": 3785,
+   "direct": 2092,
+   "AddModule": 71
+  },
+  "begin_case": {
+   "canonical": 5948,
+   "other": 0
+  },
+  "end_case": {
+   "canonical": 5948,
+   "other": 0
+  },
+  "body_eol": {
+   "crlf": 24578
+  }
+ },
+ "extensions": {
+  "include": {
+   "count": 0,
+   "example": null,
+   "zh": "падает"
+  },
+  "define": {
+   "count": 2480,
+   "example": "_patch222.big:data\\ini\\experiencelevels.ini:18",
+   "zh": "падает"
+  },
+  "undef": {
+   "count": 0,
+   "example": null,
+   "zh": "падает"
+  },
+  "other_directive": {
+   "count": 0,
+   "example": null,
+   "zh": "падает"
+  },
+  "arith": {
+   "count": 0,
+   "example": null,
+   "zh": "падает"
+  },
+  "macro_numeric": {
+   "count": 10149,
+   "example": "_patch222.big:data\\ini\\attributemodifier.ini:254",
+   "zh": "падает"
+  },
+  "macro_other": {
+   "count": 423,
+   "example": "ini.big:data\\ini\\neutralunits.ini:2153",
+   "zh": "молча ошибается"
+  },
+  "lua_block": {
+   "count": 5948,
+   "example": "ini.big:data\\ini\\neutralunits.ini:83",
+   "zh": "падает / молча ошибается"
+  },
+  "slash_comment": {
+   "count": 12,
+   "example": "_patch222.big:data\\ini\\attributemodifier.ini:2376",
+   "zh": "молча ошибается / падает"
+  },
+  "dash_comment": {
+   "count": 6,
+   "example": "_patch222.big:data\\ini\\object\\goodfaction\\units\\gondor\\beregond.ini:1079",
+   "zh": "молча ошибается"
+  },
+  "quotes": {
+   "count": 1343,
+   "example": "_patch222.big:data\\ini\\audiosettings.ini:62",
+   "zh": "частично"
+  },
+  "unbalanced_quotes": {
+   "count": 3,
+   "example": "_patch222.big:data\\ini\\credits.ini:464",
+   "zh": "молча ошибается"
+  },
+  "continuation": {
+   "count": 0,
+   "example": null,
+   "zh": "молча ошибается"
+  },
+  "comma_values": {
+   "count": 78,
+   "example": "_patch222.big:data\\ini\\credits.ini:168",
+   "zh": "зависит от поля"
+  },
+  "tabs": {
+   "count": 209295,
+   "example": "_patch222.big:data\\ini\\ambientstream.ini:23",
+   "zh": "поддерживает (release)"
+  },
+  "crlf": {
+   "count": 938577,
+   "example": "_patch222.big:data\\ini\\aidata.ini",
+   "zh": "поддерживает"
+  },
+  "lone_cr": {
+   "count": 0,
+   "example": null,
+   "zh": "молча ошибается"
+  },
+  "long_lines": {
+   "count": 17,
+   "example": "_patch222maps.big:maps\\MapCache.ini:2596",
+   "zh": "молча ошибается"
+  },
+  "non_ascii": {
+   "count": 24341,
+   "example": "_patch222.big:data\\ini\\armor.ini:2497",
+   "zh": "поддерживает"
+  },
+  "end_case": {
+   "count": 12016,
+   "example": "_patch222.big:data\\ini\\armor.ini:1411",
+   "zh": "поддерживает"
+  },
+  "missing_end": {
+   "count": 1,
+   "example": "_patch222.big:data\\ini\\networking_debug.ini:5",
+   "zh": "падает"
+  },
+  "stray_end": {
+   "count": 0,
+   "example": null,
+   "zh": "падает"
+  },
+  "unknown_top_block": {
+   "count": 8045,
+   "example": "_patch222.big:data\\ini\\experiencelevels.ini:22",
+   "zh": "падает"
+  },
+  "unknown_module": {
+   "count": 8347,
+   "example": "_patch222.big:data\\ini\\crate.ini:187",
+   "zh": "падает"
+  },
+  "unknown_nested_block": {
+   "count": 35590,
+   "example": "_patch222.big:data\\ini\\object\\cinematic\\cinematicobjects.ini:28",
+   "zh": "молча ошибается, потом падает"
+  },
+  "unknown_field": {
+   "count": 144697,
+   "example": "_patch222.big:data\\ini\\object\\cinematic\\cinematicobjects.ini:19",
+   "zh": "молча ошибается"
+  }
+ }
+}

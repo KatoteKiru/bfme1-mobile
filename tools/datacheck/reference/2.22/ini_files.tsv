@@ -1,0 +1,626 @@
+path	archive	sha256	bytes	lines	top_level_blocks	warnings	crlf	lf	cr	max_line_len
+data\ini\aidata.ini	_patch222.big	1e1efe69475b98c09e9ee3c32c3d9a4d4213fddfe332d7c8d09a99bac33910c0	66	3	1	0	3	0	0	51
+data\ini\ambientstream.ini	_patch222.big	380acc34a8ae2a9fd524860fbfabd90162bacb9d4d5dc382f72dd6bd508a4f43	3454	153	19	0	153	0	0	149
+data\ini\animation2d.ini	_patch222.big	5bb870587f66ae9b727f96bfb60de24bc167080e4bc2b714a0210e42e0771da9	15495	426	19	0	426	0	0	80
+data\ini\armor.ini	_patch222.big	bdafff31caf83cf2ea59d78c1fe82059474844f013e5c10834494fd3025b4365	140147	3031	279	0	3030	0	0	724
+data\ini\attributemodifier.ini	_patch222.big	132464d32037329c165100af110aac4a6340ade3905ab5cb76930f35e4c75bee	100998	2907	359	0	2906	0	0	724
+data\ini\audiosettings.ini	_patch222.big	8ef937d050088c343df4d28130bc7601f5f202ed3ee4cbd440ddecc4d3afe7cc	9452	141	2	0	141	0	0	160
+data\ini\bannerui.ini	_patch222.big	3a55f1b2fd11da0a413fab3e0962bf70aa33c0864d7babf307893e1ca3fd1892	4630	188	6	0	188	0	0	151
+data\ini\campaign.ini	_patch222.big	cb58f26fe8c4a697028f2d8079456c00e01561bd3fc079559b3dad1feee78dbe	11629	382	4	0	382	0	0	92
+data\ini\campaigns\democampaigns.ini	_patch222.big	88ddda9d24ac5cac87146f0002be8db0026c255dc39699cd176e699fb03d17df	35708	1428	4	0	1428	0	0	96
+data\ini\campaigns\gondorcampaign.ini	_patch222.big	638fd6afc8580e9ed4705fa57359a9cb4797416b8cfff135efdc48023ffe6a49	155713	5730	62	0	5730	0	0	332
+data\ini\campaigns\mordorcampaign.ini	_patch222.big	228d993aace2faff909625060f71828fadd4fd9394b272c666edbc097a5eea8e	149439	4798	39	0	4797	0	0	369
+data\ini\commandbutton.ini	_patch222.big	17efb6b18f2540ffdc05c5f95b7f420bf28d6b791b9387d0be0d08bea752e272	317563	7939	592	0	7938	0	0	724
+data\ini\commandmap.ini	_patch222.big	97d1c1de8cd227158020307082536c71e0e544ab7decad34b1b4fb470e10772a	249	4	0	0	4	0	0	83
+data\ini\commandmapdebug.ini	_patch222.big	44be442b4d2dbb34690d408ae074089cb5d1be2d99aa42f2838329eb32233ec0	20168	1065	131	0	1065	0	0	100
+data\ini\commandset.ini	_patch222.big	aa086cf32613211a8c9341572023548d558bff826a6c15918aa5ffcb4c0e14a8	83622	2909	295	0	2908	0	0	147
+data\ini\controlbarresizer.ini	_patch222.big	6a7c3f69410c570392732bc92578234f3ae74fb6f0156b396d14243aac89441c	9398	430	86	0	430	0	0	70
+data\ini\controlbarscheme.ini	_patch222.big	c9be8850b3241336405110aa66182f30655c06e81b972d834e26c92765b3c895	5935	178	5	0	178	0	0	112
+data\ini\crate.ini	_patch222.big	0a38272b32b1d17629569bd994fe00da9577df98278053663f0b23e86f905c69	32840	912	21	0	912	0	0	225
+data\ini\credits.ini	_patch222.big	9ebab8781c20a6fd10fb639100a45710a4c8653bb5a4b269042369b2f4d718fc	40656	1495	1	0	1494	0	0	122
+data\ini\damagefx.ini	_patch222.big	a155138bfdcb0f9b584a2d4220a31c88474a0d7d0f7dc702979f4f87eb60a49f	6858	224	11	0	224	0	0	92
+data\ini\default\aidata.ini	_patch222.big	cc730cdb9ea89ebedeafb87bb89fa60a7a2cdab0ce3f728c9d8650a70df432a0	51750	1287	1	0	1287	0	0	163
+data\ini\default\ambientstream.ini	_patch222.big	eb2728bd1055de2d8dc4b3031482bc85e4fd3bf814b8a7c0ea79d576149df7a3	1544	24	1	0	24	0	0	163
+data\ini\default\buttonsets.ini	_patch222.big	c5b4aa0d04bb7b95a728d1792f067841418ccfe6f508e7e378feeb6f36738901	790	15	1	0	14	0	0	61
+data\ini\default\commandbutton.ini	_patch222.big	c07adf4c6434a3c1b10b0169a6ec235b9da4addf19b07718b82d0bad46817b90	2138	40	0	0	40	0	0	115
+data\ini\default\controlbarscheme.ini	_patch222.big	e756127a3531539a6d3fcd3620c72b1ee322698f0eb473693b20e3cff8970681	2504	52	1	0	52	0	0	107
+data\ini\default\crate.ini	_patch222.big	fba8c413bdbf12173e7ce22bf7c5a254a03b8ad68d54c0465d48b7f694c14f6c	296	7	1	0	6	0	0	79
+data\ini\default\environment.ini	_patch222.big	205da7b949b306e6cab8acdb4cbb88a7d37d1a24057b153537ff50e1e1eb9b8f	243	3	0	0	3	0	0	79
+data\ini\default\eva.ini	_patch222.big	4ecc2f4b35d865188c58b4398a38e1a342424ee91926e0002e91eb8e97e29702	1244	20	1	0	20	0	0	221
+data\ini\default\fxlist.ini	_patch222.big	0215e3bb5a3b0636d627b6b674b8a9d685df846bb8dfb57f68bf0552dd0f8330	1117	45	0	0	45	0	0	116
+data\ini\default\gamedata.ini	_patch222.big	8009139ca4061060fcc19d4e818fb2eb8256f0201f77d35ca73779d4cacb76c8	39	3	1	0	3	0	0	22
+data\ini\default\locomotor.ini	_patch222.big	b2d23332cb2093d9d22ebe7ee947a0cfe78b113a2c62170ea779caf21b115aa4	1385	63	0	0	63	0	0	79
+data\ini\default\multiplayer.ini	_patch222.big	de04dc5c581cb5b899e309202e497fc6e12374f277f1cb59620b4cb102a71f9f	273	7	1	0	7	0	0	79
+data\ini\default\music.ini	_patch222.big	8296f8b041c437fe68195186ecc5ffb4611af02e6fa38903cf1d17b5fe0a3b2c	589	12	1	0	12	0	0	87
+data\ini\default\object.ini	_patch222.big	7e87f8d194598ecc5bddc613910ef8a3006821b5ec52e8e4df896fcbf1317a0f	17287	382	1	0	382	0	0	205
+data\ini\default\objectcreationlist.ini	_patch222.big	588f84546ed4b893a2f6070140d072544926a73261e6f0b49d0b088400a80848	1323	48	0	0	47	0	0	88
+data\ini\default\playertemplate.ini	_patch222.big	66bc776e6a1a223a526031b11554157707f49dce5d994712b3dffd127996c429	239	3	0	0	3	0	0	79
+data\ini\default\roads.ini	_patch222.big	69fc65ad5cdeb1f00e5470ede1855983195092a07a3fc98908ed3f65ff4cad73	468	15	0	0	15	0	0	79
+data\ini\default\science.ini	_patch222.big	9ebf998e3935328b18e82dff299e5e265b151157c68a05a1ae9369637a5c1621	245	3	0	0	3	0	0	81
+data\ini\default\shellmenuscheme.ini	_patch222.big	949a1ce18131cf2c93a690cc8576d9e41db19d92035f9ad52ae6befb79cdfddf	38	1	0	0	0	0	0	38
+data\ini\default\soundeffects.ini	_patch222.big	453504805430959d2e4a5df721fedd944e00ca8a1f9be214d5e433791a782ea3	2064	41	2	0	41	0	0	168
+data\ini\default\specialpower.ini	_patch222.big	f1e3d814203ecc04a687d441e03e61f643ad0ba543c839636c3463fc7f612bb4	642	21	1	0	21	0	0	79
+data\ini\default\speech.ini	_patch222.big	732b152c31524bf3b33cececa1f43f707a3c09f6b75caa89017f0104d1f13769	505	11	1	0	11	0	0	148
+data\ini\default\subsystemlegend.ini	_patch222.big	049e3d08ee4f110cf335e424a440386e4d4fbd825700f2d8b86fd6d018b57a19	6204	251	39	0	251	0	0	104
+data\ini\default\terrain.ini	_patch222.big	c93cffea1b2ca7d97ebdb2095876a2a47e6f88fec11daa4c6c56a0fe1262f169	367	11	1	0	11	0	0	79
+data\ini\default\upgrade.ini	_patch222.big	e4c08cad4fb846f48970481d69e6bac0d9d9484abdf30a5a1b978d9ed0be95e0	422	16	1	0	16	0	0	79
+data\ini\default\victorysystem.ini	_patch222.big	5ea68a8e5569be1ec82ce2c3ea0740e6d301f96c8278f7bfc70288a94421720e	7740	131	8	0	131	0	0	141
+data\ini\default\video.ini	_patch222.big	fbac9b765703edeabbaefd99cdfc8a4ecc42a5c53b5f916fffaa1b4d7d60bb58	525	12	1	0	12	0	0	89
+data\ini\default\voice.ini	_patch222.big	4450c628efa0d5a8e0c358f52b7e168cfd17ad8ee1411a860609203376759507	518	14	0	0	14	0	0	89
+data\ini\default\water.ini	_patch222.big	918248d0818564a6d42ff388a823430136cf0ca53a24cbcc1f212fa81cfa21a4	190	3	0	0	3	0	0	79
+data\ini\default\watertextures.ini	_patch222.big	5ffb3cf108caf82ce79c9fb029e2059d0b205d87eb38f9aa48d4bab412a0c8f6	516	24	6	0	24	0	0	79
+data\ini\default\weapon.ini	_patch222.big	4304e9f8ab7faa81127a8c659bf230b972b53f5ada74bcf37d4b5fe52be4a474	3035	103	0	0	103	0	0	131
+data\ini\default\weather.ini	_patch222.big	118502113c992f8b3bfadc5d1271188af936a2c1f5c6ce218084406fdf433279	192	3	0	0	3	0	0	79
+data\ini\default\webpages.ini	_patch222.big	bbde29ef82e193786ef73de7b8a97e422512976abc6c58d2b5c2d217643e3841	240	3	0	0	3	0	0	79
+data\ini\drawgroupinfo.ini	_patch222.big	4e07a3914136568d43433a83c1eeac3a60c4864f670c519f187c8102f61de64f	398	18	1	0	18	0	0	82
+data\ini\emotions.ini	_patch222.big	dca223d181d5a32b4d9aa9911931fcb84cdee88a7d348176acd1f6d6529510c8	5281	181	15	0	181	0	0	92
+data\ini\environment.ini	_patch222.big	2ee415ee5c2977eeeb0534dd33cc2eeb7a1f1e7ccdcb8c5a77c2fb71c6da0063	7005	173	15	0	173	0	0	141
+data\ini\eva.ini	_patch222.big	7c6aa29a0852e17f612e692fb8532e4e94592b74e007192f37fc5db0c7da1384	32499	1178	51	0	1177	0	0	242
+data\ini\experiencelevels.ini	_patch222.big	a8f46ab86b674727d42b18b57929db318b47d6fc63d3ca721479529b09169958	428725	13927	651	0	13926	0	0	578
+data\ini\fontsettings.ini	_patch222.big	1362c771a5f2f3b778a1cc7f1f4d71d7d698aae4cda7606adbc6f2e99285a435	930	31	5	0	30	0	0	79
+data\ini\fontsubstitution.ini	_patch222.big	9c7a71074243c1827b6b8985a425258768474565ca5f4eb356533020795e22a4	1647	35	1	0	35	0	0	151
+data\ini\fxlist.ini	_patch222.big	be1b886541da5091c88e7fbd68e88891589e4645d44c56bac7227d3441cfd82b	241692	10496	563	0	10495	0	0	724
+data\ini\fxparticlesystem.ini	_patch222.big	533a3933b600228bf29f84640379043b4f3682737da30e94db1061d7774068a2	907535	41558	1065	0	41557	0	0	724
+data\ini\fxparticlesystemcustom.ini	_patch222.big	6473d28e9717645c94e99f8abdcbed7324a2a49bd041a5446bf4508b71690805	6556	255	4	0	255	0	0	50
+data\ini\gamedata.ini	_patch222.big	f12ca37098533b6d3c0bd117c61dd1d7ea1a086be6c43fa91cb30af3c8c42f0e	189906	3964	1	0	3963	0	0	197
+data\ini\gamedatadebug.ini	_patch222.big	d7dd0dce83367ae5ace627733c8dab4150d208d94e1fe76df52e08755f86d80d	1976	41	1	0	41	0	0	122
+data\ini\gamelod.ini	_patch222.big	be6d76b4638ea922924fd092b3076702994c07a94e1ad6fbf0107ef6f78c6b2a	9348	176	12	0	176	0	0	99
+data\ini\gamelodpresets.ini	_patch222.big	fd00e69f899f2198a4e0fde2eaa6d9539265bc7fc2324bb85642ab8b3c5189d0	894	19	19	0	19	0	0	51
+data\ini\housecolor.ini	_patch222.big	aef32034307f008d39ef9c2ec01251a77529719c60b52c5381068483f10d484e	23263	1315	256	0	1314	0	0	57
+data\ini\ingameui.ini	_patch222.big	4609c1e01a4859210a9ca142a864e43cf08cc0434d7e9e5fa6ff19aa9f949408	20486	654	1	0	653	0	0	134
+data\ini\language.ini	_patch222.big	5ef0c8c90997b0c7688401e8a1f4f310d43c8fec91548b8d7c5a6362f8803723	2766	36	1	0	36	0	0	116
+data\ini\largegroupaudio.ini	_patch222.big	01baa90689157f6893d5a408bcf617367c5d1f1a4b3ef2526fa18123c8163a0e	70484	2043	118	0	2043	0	0	618
+data\ini\lightpoints.ini	_patch222.big	52e2f66577956312c7f1d4c9a4716e07dc4b1d56f8878ed83fe3ca39347355d6	129	5	1	0	5	0	0	46
+data\ini\livingworld.ini	_patch222.big	7c5eca36d917d6b47c3cd7fa574ed403af675cd162db40d5a233b126e2024703	20348	770	50	0	770	0	0	95
+data\ini\livingworldlogic.ini	_patch222.big	c24766a7ed92a8eb961111ed90a1cadf1d53d3fce23b5f6fa0ca15bcd81caafe	192	6	0	0	6	0	0	79
+data\ini\livingworldregions.ini	_patch222.big	f9bcb5abb843a472088b56d0403bc3c4c2bf546294a25d5f373bbfaa21eefbb2	22278	864	2	0	863	0	0	79
+data\ini\locomotor.ini	_patch222.big	d72368699aeda5f798a9161198424daee3e84c6778c62145201223d11ee8f8db	105751	2036	82	0	2035	0	0	162
+data\ini\mappedimages\aptimages\aptcomponents.ini	_patch222.big	86880f546f41d343df937c6ed1e19ba3cad2de52d103ea999827faf7e2107944	29656	1241	153	0	1240	0	0	84
+data\ini\mappedimages\aptimages\aptimages.ini	_patch222.big	fa1bf99ba14889b4da6c78a3e77a3042d2924801463cbeabdd8247912aea09d4	476	13	1	0	13	0	0	63
+data\ini\mappedimages\aptimages\heroselecticons.ini	_patch222.big	4c7637bbaea3c4dc0d771bd805de0ae23a999163d7821dd186b4fd8dbb9774d9	16293	798	99	0	798	0	0	78
+data\ini\mappedimages\aptimages\heroui\hsaragorn.ini	_patch222.big	47fd15fcd799101a34081268ba3c4b17547ddd1dfa28b74b1f86238fe686486b	1652	63	6	0	62	0	0	86
+data\ini\mappedimages\aptimages\heroui\hsarwen.ini	_patch222.big	963e53d1a04d0c7e92a37618b6c7dfc015ce45b1f4bf2224a50001b4ec2814f0	549	14	0	0	13	0	0	84
+data\ini\mappedimages\aptimages\heroui\hsbalrog.ini	_patch222.big	7187c787b3315896503289704086f35d3fb47d218f8bba348b4e8e9ea768701a	1810	71	7	0	70	0	0	85
+data\ini\mappedimages\aptimages\heroui\hsblackrider.ini	_patch222.big	7a6bbdb9009957766da9bd2f195614f1b1880a707729445ef41c3d7f20cc7ab4	178	7	1	0	6	0	0	45
+data\ini\mappedimages\aptimages\heroui\hsborimir.ini	_patch222.big	5a19b5bd9dbc2673660f0a0b9c61ebe585a024f70f659e26eccb0c75085e2e8d	1665	63	6	0	62	0	0	86
+data\ini\mappedimages\aptimages\heroui\hsdamrod.ini	_patch222.big	038bffe145ac521b68fad773281178ff8f48d945c491584ca90193386a1ca12f	745	23	1	0	22	0	0	85
+data\ini\mappedimages\aptimages\heroui\hsdenethor.ini	_patch222.big	bdd74b1d418c281d4365dbda7506f4fdcacbb9cdf5999d077e27075167ff850c	753	23	1	0	22	0	0	87
+data\ini\mappedimages\aptimages\heroui\hselrond.ini	_patch222.big	ab2af5e1b2594a48146cb6271b8a060f3a2e64b7617fd0baec7ef8189f053052	1103	39	3	0	38	0	0	85
+data\ini\mappedimages\aptimages\heroui\hseomer.ini	_patch222.big	7fe7700ca2587131f590574ecd3286c7e8e3462245e94e0b88317cd9fc53d9f0	1620	63	6	0	62	0	0	84
+data\ini\mappedimages\aptimages\heroui\hseowyn.ini	_patch222.big	b12312ff7be689e1139f80af55cfffc9a6488c57ad6069aeaad0e00e7d118f09	1621	63	6	0	62	0	0	84
+data\ini\mappedimages\aptimages\heroui\hsfaramir.ini	_patch222.big	ad908e2b664cfc64d04248359f4743aeaec1233920d34a9c945a79ffe80bfe58	2023	79	8	0	78	0	0	86
+data\ini\mappedimages\aptimages\heroui\hsfrodo.ini	_patch222.big	7e36f31b663684881ee425297a29e05c49cf8e5ddd9ae8c3f4a34fd4e4425a00	1804	71	7	0	70	0	0	84
+data\ini\mappedimages\aptimages\heroui\hsgaladriel.ini	_patch222.big	bbbbd0067688fd31757ffeb7a9ba1bd35d588af6e4c90630dd9d0d1b6ead9da8	584	15	0	0	14	0	0	88
+data\ini\mappedimages\aptimages\heroui\hsgandalf.ini	_patch222.big	422a021516bf9689be4c2e5281c9c3452e0d83f91704c6b1b2b4a3ec6195ec78	2196	87	9	0	86	0	0	86
+data\ini\mappedimages\aptimages\heroui\hsgandalfgrey.ini	_patch222.big	eb64cd1eff3b31a88f6b63e3318f0971f692227c1d77e83a4b6ce20e14e179cc	765	23	1	0	22	0	0	90
+data\ini\mappedimages\aptimages\heroui\hsgimli.ini	_patch222.big	fa5020806c84bb863959bf3fd325409caa42d708addcb59d248c485509c168de	1970	79	8	0	78	0	0	84
+data\ini\mappedimages\aptimages\heroui\hsgollum.ini	_patch222.big	f3bfe240232554c56ea02edbe41f3bee60cb5145810a1a17b3871d939eaf6e5a	745	23	1	0	22	0	0	85
+data\ini\mappedimages\aptimages\heroui\hsgothmog.ini	_patch222.big	b7a86ee84f064033b3096b22a6312a5cc861568b936aa9349a2c23d0075581d5	1285	45	4	0	44	0	0	86
+data\ini\mappedimages\aptimages\heroui\hsgwahir.ini	_patch222.big	c6ceaf5d2c00283838007e5b83c98ec9c54024e63f34ea01b04819a6a2951931	745	23	1	0	22	0	0	85
+data\ini\mappedimages\aptimages\heroui\hshaldir.ini	_patch222.big	1f13b3c4e070b97f7f78f766588a2b7ebacd7ff7ce0e98e3bf01ad27fb3cf296	745	23	1	0	22	0	0	85
+data\ini\mappedimages\aptimages\heroui\hsisildur.ini	_patch222.big	04e50d72b2d1eb35a8458a6fc9109ea9a04bf8b60ff24a946bed15405775f916	929	31	2	0	30	0	0	86
+data\ini\mappedimages\aptimages\heroui\hslegolas.ini	_patch222.big	379389717be89990b11ef681bb4dca38e4df621a1a1b0d2c8d413eb013c10ce0	1845	71	7	0	70	0	0	86
+data\ini\mappedimages\aptimages\heroui\hslurtz.ini	_patch222.big	536b09a7824ba67abda84ee4df7364dc64550b4e344d9de0ddae4a28ebca5e89	1976	79	8	0	78	0	0	84
+data\ini\mappedimages\aptimages\heroui\hsmerry.ini	_patch222.big	52ce88dab876623a06fb0a5e43592d4e5c4ff80f7146d74e8ff662f275f38e37	1965	76	8	0	75	0	0	84
+data\ini\mappedimages\aptimages\heroui\hsmultiple.ini	_patch222.big	700ea14b083c15661627b66a9e28c752f08fb243ea42ecb76e5ada900f5e9ef1	756	23	1	0	22	0	0	87
+data\ini\mappedimages\aptimages\heroui\hsnazgul.ini	_patch222.big	1a5f3addd581ab254b6fea793ba3df6d059974f3417e61339d4e05c1c9d5597a	1095	39	3	0	38	0	0	85
+data\ini\mappedimages\aptimages\heroui\hsnumenorean.ini	_patch222.big	343e35a82c67387098d859e3d5d6c11ba99b56faa969b49fb0a2b7ec39b5e140	761	23	1	0	22	0	0	89
+data\ini\mappedimages\aptimages\heroui\hspippin.ini	_patch222.big	9de331184237eb3ccadac31efa66e518d5e7d971dceaa4ef16ba91d874f74022	1980	76	8	0	75	0	0	85
+data\ini\mappedimages\aptimages\heroui\hsplaceholder.ini	_patch222.big	7a7ae1af4374f2c5104b78fb2dff956fcfa2841b64a7b061432fb751cd60d716	771	23	1	0	22	0	0	90
+data\ini\mappedimages\aptimages\heroui\hssam.ini	_patch222.big	78403346b5080c27b995e1db8933833ccda98101e85f08264253bf6a8d021d6e	1770	71	7	0	70	0	0	82
+data\ini\mappedimages\aptimages\heroui\hssaruman.ini	_patch222.big	e2598c289186567dab5e609dd72685b04eaaf939ab7f89cb8ed6debd75cec8a8	1658	63	6	0	62	0	0	86
+data\ini\mappedimages\aptimages\heroui\hssauron.ini	_patch222.big	106399970dcc17047af1269f50ae25271206f09f2c78c23f32fcfa8803bf4755	1805	68	7	0	67	0	0	85
+data\ini\mappedimages\aptimages\heroui\hssauroneye.ini	_patch222.big	6227ea999ca538adca1a2f4087fbd199c777eeb2161328b26bc49e4182dadef8	758	23	1	0	22	0	0	88
+data\ini\mappedimages\aptimages\heroui\hssharku.ini	_patch222.big	c01e92dee32a3f33195bbd5dd7eb46647dc1b7473e7a1dffad7c0272d4afbd1d	1624	62	6	0	62	0	0	85
+data\ini\mappedimages\aptimages\heroui\hsshelob.ini	_patch222.big	e69904e84c967fbfaee201714e026dd2f67a5b4ff48c07de598ef0e65b23a618	745	23	1	0	22	0	0	85
+data\ini\mappedimages\aptimages\heroui\hstheoden.ini	_patch222.big	baca9237bfc9dc2f4c09c6babd82ff1b4689ac667bdf95fa7f3ad7b52c08d857	1841	71	7	0	70	0	0	86
+data\ini\mappedimages\aptimages\heroui\hstreebeard.ini	_patch222.big	eb5092c9577d2a4d4929438a1540bcb9c778ff5a96860355eacd723c4e95c7fa	943	31	2	0	30	0	0	88
+data\ini\mappedimages\aptimages\heroui\hswitchking.ini	_patch222.big	3f56ae7b9c8ad102f54b157ae4a084221ff2a8ac8e6d2197f5b8ef5666c78807	1859	69	7	0	68	0	0	88
+data\ini\mappedimages\aptimages\heroui\mouthofSauron.ini	_patch222.big	531e99afb28452cce5a4cd9732d0efd5b8b6c1605443b6eb4b4e89bc9965aecc	1116	37	3	0	36	0	0	92
+data\ini\mappedimages\aptimages\mapregionportraits.ini	_patch222.big	363c21c880bda7f839acebb59feb8965f5f0a0c2cff293ff9ccdec1a11d9d0bc	8711	415	51	0	415	0	0	75
+data\ini\mappedimages\aptimages\spellbookui\sbevil.ini	_patch222.big	18960039702270c348c07ca2bb8a7a4a3b60691dfaea1ea9f1540f2215e2679d	12549	254	18	0	253	0	0	724
+data\ini\mappedimages\aptimages\spellbookui\sbgood.ini	_patch222.big	ea9ee874c939f87412771b320b1cca372240d154c85fd8a1e9c25b950c9b16e4	3220	134	15	0	133	0	0	86
+data\ini\mappedimages\aptimages\unitcommands.ini	_patch222.big	496a3162b93084071199a8c1e34a7ada309d2f8d46dd82696d66ce8bfa1d3795	18175	855	106	0	854	0	0	80
+data\ini\mappedimages\aptimages\unitportraits.ini	_patch222.big	301e0dc2d943632ad4237f4bcd22bca2d7603dd2f89f4b8e5e49db0649eb35bd	28384	1334	165	0	1333	0	0	82
+data\ini\mappedimages\aptimages\unitui\usmordor_catapult.ini	_patch222.big	875b53e89e16f302959447b0d810994d94a653c1fbfc24d3e02f70c2b0fc06dc	1203	39	3	0	38	0	0	102
+data\ini\mappedimages\handcreated\buildingradialbuttons.ini	_patch222.big	bd768f924aefcd877c94ede719fc8cb5c92ebf84bd6dd1b61e8da0596a1f95b4	48313	1898	227	0	1898	0	0	86
+data\ini\mappedimages\handcreated\handcreatedmappedimages.ini	_patch222.big	fb72dfc02b9eaafd955516ee84cbd5f844d0f985349820785779781567dc2180	24908	1091	142	0	1091	0	0	62
+data\ini\mappedimages\handcreated\heroresurrection.ini	_patch222.big	7d16129a9bb5568b34038f7cebadbea5d654576bf7e67a7c17fdc308eb3f20f0	5165	214	25	0	213	0	0	77
+data\ini\mappedimages\texturesize_512\cursorlitepts.ini	_patch222.big	31f62626b1a36eb806a5836c20da193ced1b02cc812f77c633243351af00ee4a	4968	212	26	0	212	0	0	62
+data\ini\mappedimages\texturesize_512\elvenburnintext.ini	_patch222.big	9ee2d73635b241644e470de1541d3c0ef387c7d3a7f4f5ddf32fa15350a94a43	11539	493	59	0	492	0	0	71
+data\ini\mappedimages\texturesize_512\guiicons.ini	_patch222.big	67a00f62147dc2459778a5e84e43cef05e6b8040dd6dfdb25d4b7d8afbac44b0	1414	56	5	0	55	0	0	62
+data\ini\mappedimages\texturesize_512\radaralerts.ini	_patch222.big	fc3af77aded8225197f5d1e5660546efa56a5c67b6e30dda982dbd6afdaea4a1	3542	145	16	0	144	0	0	65
+data\ini\mappedimages\texturesize_512\sacontrolbar512.ini	_patch222.big	42c5aa71fc7d24d56dba4de833681063cf918099f70418d9b8c6560551cdd273	8252	364	45	0	364	0	0	62
+data\ini\mappedimages\texturesize_512\sauserinterface512.ini	_patch222.big	255050dc89d5f6295674771faa4a7eb5cd28908360516664bf430f692c214d1e	17807	772	96	0	772	0	0	62
+data\ini\mappedimages\texturesize_512\scgameuserinterface512.ini	_patch222.big	36ebf3e6b7ced37e49145dd918fe29ef7b27e0319214e4158309c630ed172cb3	35960	1527	190	0	1527	0	0	62
+data\ini\mappedimages\texturesize_512\sclogosuserinterface512.ini	_patch222.big	6f5ecee8390fbab1607dd97b5c6d8b353a04f6568728813bb041890565cc49a1	2125	84	10	0	84	0	0	62
+data\ini\mappedimages\texturesize_512\scshelluserinterface512.ini	_patch222.big	4f78a67a9796ab35bce93ba5564f512e76a47337d7af010ce48cfcbaf70a0411	15801	652	81	0	652	0	0	62
+data\ini\mappedimages\texturesize_512\scsmshelluserinterface512.ini	_patch222.big	f779e627fd94656f82fc7f0f8c354c29020ddfee228505fb12219d5ae16b4442	41584	1692	206	0	1692	0	0	62
+data\ini\mappedimages\texturesize_512\scsmshelluserinterfaceloadbar.ini	_patch222.big	cd9526cd703da2f7b0ee7434b738d3566128927716715fbb11d5b421e3f95037	1158	44	5	0	44	0	0	62
+data\ini\mappedimages\texturesize_512\scuserinterface.ini	_patch222.big	e35832704369853bc65b7e543da666ff4435be46c09b3bffb9f336c5e79a9f32	1070	44	5	0	44	0	0	62
+data\ini\mappedimages\texturesize_512\sncontrolbar512.ini	_patch222.big	3412c3997fff04dd41f04fc411906db455deb758e422acb50c1e45097d146570	8255	364	45	0	364	0	0	62
+data\ini\mappedimages\texturesize_512\snuserinterface512.ini	_patch222.big	324b7fffe2c1472d2b319c2ac9c3498c37b317c57c390eee0f34f6a5bad1da1f	16684	724	90	0	724	0	0	62
+data\ini\mappedimages\texturesize_512\ssuserinterface512.ini	_patch222.big	6ca17b0e250e652f4b7b46748714bcfdc70563c7dbb0dbde9d3a8f3aaa32b413	6818	292	36	0	292	0	0	62
+data\ini\mappedimages\texturesize_512\sucontrolbar512.ini	_patch222.big	c2993df9add91ac31e68405e4356c4cb60f4d8db0f6f672a9c8b136e4370bcad	8058	356	44	0	356	0	0	62
+data\ini\mappedimages\texturesize_512\suuserinterface512.ini	_patch222.big	370adf128918064b2e13bb9f9f07e52091d39a978689235315382ccec13ff558	17851	772	96	0	772	0	0	62
+data\ini\mappedimages\transitionimages\solomordortransition.ini	_patch222.big	5cad961759714d60c7dafcab78bea34c588524009917711182274469fbbfd674	387	12	1	0	12	0	0	62
+data\ini\mappedimages\transitionimages\worldviewmordorstart.ini	_patch222.big	94212dcd97a9b5fe822e2ff8546ffba5a8629b3d5d2910d15e34f8e75bb3f724	387	12	1	0	12	0	0	62
+data\ini\memorypools.ini	_patch222.big	9b3466b3ba6a1279a460261eb26fe5f7814bb5666b4c27f485a1b67426e751b0	541	11	0	0	11	0	0	79
+data\ini\miscaudio.ini	_patch222.big	ebe835a992134aa619f623f9538b28c2baa23209c8428a0cc89534dcec78eea1	3623	35	1	0	35	0	0	141
+data\ini\mouse.ini	_patch222.big	09287dd789de3ab1ad4d610ff65769f97c2318f18e0234005c5c2bdd7ff30f01	6901	273	48	0	272	0	0	149
+data\ini\multiplayer.ini	_patch222.big	b6b1a3af04d1d71f242421aa3f6909881aa3f74805601b289e20f8676c55a977	3921	154	18	0	153	0	0	79
+data\ini\music.ini	_patch222.big	9e367d74aaa27d2a050ec82dd9a3bd75ef83ec4d29f6157e580982eaac65b6a6	12999	759	146	0	759	0	0	97
+data\ini\networking_debug.ini	_patch222.big	5fdd71a56dcfda02b11a88ca80142d31ccc33510d4c0359b86bc082ea31fb485	650	12	1	1	11	0	0	115
+data\ini\object\cinematic\cinematicobjects.ini	_patch222.big	c298b612d5d373617d94da93b99d3957e80853617756e406930c3733881364b3	564884	19724	158	0	19724	0	0	200
+data\ini\object\civilian\civilianbuildings.ini	_patch222.big	8f31d25511c63f4433e5d93ed40f382a9056ed8f85f2ac084f60e0c2c6a6e02f	1034092	29815	236	0	29815	0	0	234
+data\ini\object\civilian\civilianprop.ini	_patch222.big	e6f76ac1fd979aeffaf485404feeeeb7963aba551c49fb7721180725980e9f4c	138099	5323	169	0	5322	0	0	143
+data\ini\object\civilian\civiliansubobjects.ini	_patch222.big	18a8b75d829ba2ace78b3beba968630d9753c6e56fa77ee5b10d94e95a17bc64	182823	6866	359	0	6866	0	0	98
+data\ini\object\civilian\civilianunit.ini	_patch222.big	dc9f5e6ca5407a511907f18faff8b882f41e5e12922956a724b96cbdc7b5e29e	54972	2042	94	0	2042	0	0	316
+data\ini\object\civilian\gondorbuildings.ini	_patch222.big	724075378e8c001565318972bb2cfe25037fe0e6ca191c66c4600ffae254d5ee	75320	2431	6	0	2431	0	0	231
+data\ini\object\civilian\isengardbuildings.ini	_patch222.big	231d06255a71c6b6091473ff7d8b6a8cd28469ff566ba174aaf2a82ff989acff	15527	534	4	0	534	0	0	135
+data\ini\object\civilian\ithilienbuildings.ini	_patch222.big	3520f199cf06898306541a0ecf9c524087d06f41eae055ce5070aaf9c789c07a	203039	5622	38	0	5621	0	0	98
+data\ini\object\civilian\mapvision.ini	_patch222.big	a48576a5264ea984c6272054d48f3dd13c7aab650e20c9f33bf5e1baaf5775d5	919	37	1	0	36	0	0	83
+data\ini\object\civilian\minastirithstructureupgrades.ini	_patch222.big	8d40b2ba661796f9ca9a703563bd99440814b746db86995756ccbac394e8186d	2619	96	1	0	95	0	0	119
+data\ini\object\civilian\ministirithbuildings.ini	_patch222.big	4e930e36b431db13b82bdb73c3a0f829a32f8eb0799da54cb01eb9f74caa65d8	184253	6283	63	0	6283	0	0	147
+data\ini\object\civilian\moriamodules.ini	_patch222.big	976b37058a6109bb7e4245d435cbe561883ec45b4fb01710dcfdf8df80f95215	147349	4852	173	0	4851	0	0	131
+data\ini\object\civilian\osgiliathbuildings.ini	_patch222.big	a09ba9c1fe07476920f14f8012bcff74d2136d9f3531026b3657bdb7ddb8aff3	5048	179	3	0	179	0	0	95
+data\ini\object\civilian\rohanbuildings.ini	_patch222.big	8142065126d9e69d0c4516a639131eecf80846e4782ce227787c16729462f7ef	49896	1701	6	0	1701	0	0	151
+data\ini\object\demotest\demotest.ini	_patch222.big	27fd193c213ab7477bea12996260f8598603df6325aa38c963060a230b9c5018	136083	4151	15	0	4151	0	0	195
+data\ini\object\evilfaction\evilfactionbuildings.ini	_patch222.big	ca858b4458089eb131454ade66a1a445b330094c1a8d1439f5a86b966235caf0	7197	228	1	0	227	0	0	127
+data\ini\object\evilfaction\evilfactionprops.ini	_patch222.big	843d76ee0ed5fde59fc9fe7aa464cf0af5a36c6c6c25683ee208b7f1cee4a765	48531	1830	33	0	1830	0	0	120
+data\ini\object\evilfaction\evilfactionsubobjects.ini	_patch222.big	4824c82249504993c5819d3b69311854c22c5d00c46c36c7e784bb55bdb73a87	53038	1887	61	0	1886	0	0	164
+data\ini\object\evilfaction\evilfactionunits.ini	_patch222.big	e8fcfc35e8574264fa86ca6286efdef4a499f5ea60e7625549dce5d0ff75c4f6	11094	372	3	0	371	0	0	100
+data\ini\object\evilfaction\hordes\isengard\crossbow.ini	_patch222.big	874cc19c8a71842fa4c0c2f396b598a5fe3a514f07485a0b91aebc8f9c4cab90	8210	191	2	0	190	0	0	315
+data\ini\object\evilfaction\hordes\isengard\crossbowpikecombo.ini	_patch222.big	f1a7135177366d52907ff8fb45a3d494b4102e1f3a71fbe2aaa5fc7fef91b3f2	6988	181	1	0	180	0	0	299
+data\ini\object\evilfaction\hordes\isengard\fighter.ini	_patch222.big	a637ec3fcb2f47b8bf886d5552cc2b313b5cd5900b38fc60078dd6df0401b6a1	8962	211	2	0	210	0	0	316
+data\ini\object\evilfaction\hordes\isengard\fightercrossbowcombo.ini	_patch222.big	7babec5a8b6598e2a71dfbea2bb15c57e808460e69723add5e37fb39baa371b6	6801	176	1	0	175	0	0	301
+data\ini\object\evilfaction\hordes\isengard\fighterladdercombo.ini	_patch222.big	a49feb72945b862349d81c3b571054a4679dbf5a9a10c521d81a0464009e95c0	5231	139	1	0	138	0	0	299
+data\ini\object\evilfaction\hordes\isengard\fighterpikecombo.ini	_patch222.big	327b90f0e6d1d7ff0271998f61284dc0815cf43bf9cfe512dd2733e6fabc72ce	6654	178	1	0	177	0	0	301
+data\ini\object\evilfaction\hordes\isengard\pikeman.ini	_patch222.big	b78f091ed63a77542935be327cc40c8edbde40a3fb91f7a2a69b08bdc1159248	8258	196	2	0	195	0	0	315
+data\ini\object\evilfaction\hordes\isengard\warg.ini	_patch222.big	1f185f2164b1262c98affe94b076e65d80293f579b39018e2eea160007a6da28	5623	157	1	0	156	0	0	314
+data\ini\object\evilfaction\hordes\isengard\wargrider.ini	_patch222.big	50bec2c396b1a3d9d67e98f25c7c5d2dcffdbd1835eb687c110975ad58b75748	7254	194	2	0	193	0	0	314
+data\ini\object\evilfaction\hordes\isengard\wildman.ini	_patch222.big	3bd197f7acff9e70160417e40780f6e73a03bee89dbcba7ba934670463f42322	8796	238	2	0	237	0	0	316
+data\ini\object\evilfaction\hordes\mordor\archer.ini	_patch222.big	4039bc9d45270a70c63b2504072f73c9b3d3c19dbb4f1b99bf8c6f552cf7d75f	7194	183	2	0	182	0	0	314
+data\ini\object\evilfaction\hordes\mordor\archerpikecombo.ini	_patch222.big	8072fed116e7004c8f786a2c5a82dfb439537951bef63fa2bbe6577d841d99be	6503	169	1	0	168	0	0	299
+data\ini\object\evilfaction\hordes\mordor\cinepike.ini	_patch222.big	68ef14ec6f0f4f5503a58b6f8bd709e9e447c63268129c148ba6f6a829b6d591	3049	89	1	0	88	0	0	159
+data\ini\object\evilfaction\hordes\mordor\corsair.ini	_patch222.big	e593f8ac8051f9f5146aa6863bfdb28c2f7f0b76c4d408d12b60674c1a372618	4367	125	1	0	124	0	0	314
+data\ini\object\evilfaction\hordes\mordor\easterling.ini	_patch222.big	0883354a8c74b6e705626c6af96f7de5df30f7d5d253284b47221f867aec9b80	6238	167	2	0	166	0	0	314
+data\ini\object\evilfaction\hordes\mordor\fighter.ini	_patch222.big	9b2d59d45c7e9a2ff87ed2a416407f874cfd998944f57f245e5d61895f5f9f3e	16023	431	4	0	430	0	0	314
+data\ini\object\evilfaction\hordes\mordor\fighterarchercombo.ini	_patch222.big	f56392894180e2b98267183ab7b7ee93768852c0804e4a80cc9b8f88ff5fafa9	6429	165	1	0	164	0	0	314
+data\ini\object\evilfaction\hordes\mordor\fightertowercombo.ini	_patch222.big	1c97b7de8be5b7616d352eef2c21c3a9d678d571843d3e57837008651be6da8b	4066	113	1	0	112	0	0	218
+data\ini\object\evilfaction\hordes\mordor\goblinarcher.ini	_patch222.big	e333ee931c80fae0cd90e224cf07c13916870bf14562c03cd2aeb121ab232c1e	783	24	1	0	23	0	0	153
+data\ini\object\evilfaction\hordes\mordor\goblinfighter.ini	_patch222.big	5a54a5c0bdded614a36340240d148e82f88c3b99b55baf05bf663fd7a7989cce	4395	120	1	0	119	0	0	298
+data\ini\object\evilfaction\hordes\mordor\haradrim.ini	_patch222.big	41c4e34f2dec526095d4c4c942a714f47794fb4eb0f23edf8c6448f425364dcd	6808	190	2	0	189	0	0	314
+data\ini\object\evilfaction\hordes\mordor\haradrimarcher.ini	_patch222.big	7d42345785da833225c792dc7292b9bf85a132d5b10f2de4671d3786afd5a4c9	5701	149	1	0	148	0	0	314
+data\ini\object\evilfaction\hordes\mordor\haradrimlancer.ini	_patch222.big	649e5fba473c198c55352b717671f5206bb2ad86fb257ba2b41bb4019883c638	4919	139	1	0	138	0	0	300
+data\ini\object\evilfaction\hordes\mordor\haradrimrider.ini	_patch222.big	cd5911b81d826fdd0248db9fef548a071b30b1fbf0867887b8b460a3a0e73523	7697	196	2	0	195	0	0	240
+data\ini\object\evilfaction\hordes\mordor\pikeman.ini	_patch222.big	49ae101fc556286a85ea2ac519bd8bd239c504a5771ac2c98908811136e5cd13	7841	186	2	0	185	0	0	315
+data\ini\object\evilfaction\hordes\mordor\scout.ini	_patch222.big	313269db1f4a7699aa9bd58f86df8c6b3bd664df3dbdf3399faac99a0e834973	4273	115	1	0	114	0	0	299
+data\ini\object\evilfaction\structures\isengard\armory.ini	_patch222.big	c646d01f8049245f57b59597aa9d20f4b7e50e56c4a4f20085ed8d116a73e992	11790	360	1	0	359	0	0	174
+data\ini\object\evilfaction\structures\isengard\battletower.ini	_patch222.big	7b5d46dfc4a8e6b782bf3d046491075837d428e2664d5002e8ec3ca1acd6ed7b	11418	348	1	0	347	0	0	176
+data\ini\object\evilfaction\structures\isengard\campbuildings.ini	_patch222.big	cc85f8bb90f2a10637f01a1f504baf0e3babd74dcd6dce6627478585be083d67	38670	1201	8	0	1200	0	0	193
+data\ini\object\evilfaction\structures\isengard\orthanc.ini	_patch222.big	3998d6931f2269c29f51b35c70efe05c09770415d3eb28c1db3c55ce55409090	17455	563	7	0	562	0	0	184
+data\ini\object\evilfaction\structures\isengard\scaffolding.ini	_patch222.big	bc81d329a8962f8b9cddf7d1924a7353a953958ad06020ec522e0dcecf2125d3	35762	1322	13	0	1321	0	0	110
+data\ini\object\evilfaction\structures\isengard\siegeworks.ini	_patch222.big	92044f10c78945251d9c91c149775f0bc5d7ace4f7edcc6e73cf97f4beba724e	14553	448	1	0	447	0	0	187
+data\ini\object\evilfaction\structures\isengard\tents.ini	_patch222.big	f269eface32091b7fc4ab2ade04a5859c0d588108f3bfec22c87ea5cf31ce934	9962	297	3	0	296	0	0	140
+data\ini\object\evilfaction\structures\isengard\urukpit.ini	_patch222.big	af4475fa3ec93e3459cd6768443cc1ef61faaf80106593a44fb670c1712857f1	13801	399	1	0	398	0	0	176
+data\ini\object\evilfaction\structures\isengard\wargpit.ini	_patch222.big	0ce26e6d7ba2b2aaffaadcefb83e1e7506d5e6697a7185d12ec63976a812c79a	16176	481	1	0	480	0	0	176
+data\ini\object\evilfaction\structures\isengard\wargsentry.ini	_patch222.big	1bb4b87363a60103355cfe617f41535c166865bd05a134c4ea504f60badd03c1	1949	66	1	0	65	0	0	113
+data\ini\object\evilfaction\structures\mordor\baracks.ini	_patch222.big	25fc7314643391005c1d7f6bd2714defc3fed54769700a7adac4470187ac7687	4842	135	1	0	134	0	0	165
+data\ini\object\evilfaction\structures\mordor\baraddur.ini	_patch222.big	7724ddbbc4253c15d714e4cf81a1fdfe376add459f0a90e2dcb57fa3900c86ef	19328	725	11	0	724	0	0	96
+data\ini\object\evilfaction\structures\mordor\blackgate.ini	_patch222.big	1acd209a6dffdd3e92e8244a9a9956b14b0f77637eebcb8f933818aed588d9c6	37855	1146	10	0	1145	0	0	168
+data\ini\object\evilfaction\structures\mordor\campbuildings.ini	_patch222.big	9829ff534130f9e2b20c18501cdf8ac415808a2c2e8665221078444c67faec5b	54060	1657	11	0	1656	0	0	213
+data\ini\object\evilfaction\structures\mordor\campsandcastles.ini	_patch222.big	a5c66d1d2f50cb082e7a84204372fc2b5b10f63020faab563aeb4df8689b8837	9371	304	2	0	303	0	0	146
+data\ini\object\evilfaction\structures\mordor\eyeofsauron.ini	_patch222.big	fad7a1aaf171345187b005a5bc30e8abc3d3ec2e19f127eec9bec6dfd611f478	1624	54	1	0	53	0	0	111
+data\ini\object\evilfaction\structures\mordor\haradrimpalace.ini	_patch222.big	b89a90c4824a90c8278d507b10de0a5d8e85dd2cc0e4f7e5f4d1152f4fcf8f44	24454	733	2	0	732	0	0	177
+data\ini\object\evilfaction\structures\mordor\mordormisc.ini	_patch222.big	6da0e52baaf314f759ad0eed741da9e59ae36791e4b77f13740bb1d4cca4fc90	1832	68	2	0	67	0	0	91
+data\ini\object\evilfaction\structures\mordor\mountdoom.ini	_patch222.big	d1499ed9116a3c6b8d27a8ede99d88f46c9106f4cd79077c3e6ccd1b86071259	706	30	1	0	29	0	0	47
+data\ini\object\evilfaction\structures\mordor\mumakilpen.ini	_patch222.big	2c279bac086ff59acac2b77c2d089ee1c04a9da723358ac2c9db8a33879f3693	13887	440	1	0	439	0	0	187
+data\ini\object\evilfaction\structures\mordor\orcfletcher.ini	_patch222.big	2c61c1500516a24f45a16167bab28b34aa6cdd920cd541338b1f8489f8512c17	4078	124	1	0	123	0	0	103
+data\ini\object\evilfaction\structures\mordor\orcpit.ini	_patch222.big	77fc90decdcbcd1094a711ee9d85756b086e816d2f76fd037f50e41542776230	12547	379	1	0	378	0	0	175
+data\ini\object\evilfaction\structures\mordor\siegeworks.ini	_patch222.big	c985ad682d75be03547da8380ef7bfc1bb1cee60b5ebe2bd38a572945b3ba712	22901	714	1	0	713	0	0	156
+data\ini\object\evilfaction\structures\mordor\tents.ini	_patch222.big	e1c1545427ac282ce790ed24e1c0c6e18f019995e16f8ff138afebeee2a93139	13773	450	5	0	449	0	0	141
+data\ini\object\evilfaction\structures\mordor\trollcage.ini	_patch222.big	b62ac0d826a2959ffee8d5e5180074a04cdf99682265a410f579e5674809630b	16537	497	1	0	496	0	0	176
+data\ini\object\evilfaction\structures\mordor\umbartavern.ini	_patch222.big	05e7682cdadb58a1e393b4297ba1cea6bfaa02e7731cd1eeba8b43def9623850	4138	125	1	0	124	0	0	138
+data\ini\object\evilfaction\structures\taintland.ini	_patch222.big	e620dfa322b92c6b6544f77a9134044828b89c3f17840bba8c81bd2d4b71d9b8	2092	61	1	0	60	0	0	214
+data\ini\object\evilfaction\units\isengard\ballista.ini	_patch222.big	7743a81b0a9366c221ed544383d1e8b6e0c8c2a778fab0c0728d136c77a482b0	15362	439	1	0	438	0	0	141
+data\ini\object\evilfaction\units\isengard\bannerorc.ini	_patch222.big	02a37c8269729422cf9bcb0c6001d7f9ecf83f720b66c358cc6be584ce8e4674	24451	828	1	0	827	0	0	245
+data\ini\object\evilfaction\units\isengard\batteringram.ini	_patch222.big	fd0b71ed05d6c91ab890a980659e9f6be8dca9501c072deba7c552ccd2356129	21428	641	2	0	640	0	0	138
+data\ini\object\evilfaction\units\isengard\berserker.ini	_patch222.big	c044240c74e247d6e039a15471f6861796008c249f5024984c196ae06e3a346c	23457	720	1	0	719	0	0	245
+data\ini\object\evilfaction\units\isengard\crossbow.ini	_patch222.big	96cad9a18a39bdd8d749914b6cc3cb02a54cf0c4ebea42628b1fc6d91925cfad	24821	840	2	0	839	0	0	176
+data\ini\object\evilfaction\units\isengard\fighter.ini	_patch222.big	bb6563469f274252fa5dd671de8ff608ee1705da8a3b02c84329475919144797	21460	745	2	0	744	0	0	127
+data\ini\object\evilfaction\units\isengard\grima.ini	_patch222.big	96b11a41c596518bd4a0f6d0096cdafe7d0f0d64c53964f11110804861364357	17877	567	1	0	566	0	0	173
+data\ini\object\evilfaction\units\isengard\lurtz.ini	_patch222.big	4387a0903966fd5cdc4dcca90bdd859f92b1316ebf66243c2c231fb7f52e5204	29359	879	1	0	878	0	0	193
+data\ini\object\evilfaction\units\isengard\mine.ini	_patch222.big	018323c5eefb590bbe9d040a913d5788ed19bc0471d33ee9dd5a25dd72511de0	15182	523	3	0	522	0	0	160
+data\ini\object\evilfaction\units\isengard\overseer.ini	_patch222.big	4c30a9d2afc75a95259280413b3b77b0032b5515911ab96005a115d08becc233	4905	202	1	0	201	0	0	122
+data\ini\object\evilfaction\units\isengard\pikeman.ini	_patch222.big	3a055172ecb9b943a60289796c1da9be84c4f1cd38ec1db37fdd952cf8e07f5d	22480	785	2	0	784	0	0	149
+data\ini\object\evilfaction\units\isengard\porter.ini	_patch222.big	386670caa5feba080b7189f9dbcaf3ac15cdc0e94b3c84487db9c8967f32630c	16737	524	4	0	523	0	0	289
+data\ini\object\evilfaction\units\isengard\saruman.ini	_patch222.big	8caef8446b5befb9e93274986e0482c2837734d13a221036eb6b34b6d88d4c1a	21571	656	1	0	655	0	0	173
+data\ini\object\evilfaction\units\isengard\sharku.ini	_patch222.big	7ceec15cea1348bb9f6a79e67540f6104223d4e70e0dcee7a7b9efb8381588d8	19649	653	1	0	652	0	0	183
+data\ini\object\evilfaction\units\isengard\siegeladder.ini	_patch222.big	6ef696c878b7f8f63a35a20e0448eeeb4b6fe3fba54c09c04436444a9336fbff	11365	346	1	0	345	0	0	131
+data\ini\object\evilfaction\units\isengard\ugluk.ini	_patch222.big	cfbba408ea8cd624c0170ee8b036d15167c702fe10f9233f8b80c0f6f9f5dc1c	19800	618	1	0	617	0	0	193
+data\ini\object\evilfaction\units\isengard\warg.ini	_patch222.big	3d721a984efef4e9df4459043fd7bf93ada23a7b38bc2d932991bc209e18dcf1	15034	499	2	0	498	0	0	124
+data\ini\object\evilfaction\units\isengard\wargrider.ini	_patch222.big	40ef7afd43327df3fba87399bbe46c95c86be2c33179a1e08fdc053493adf21e	20438	683	4	0	682	0	0	143
+data\ini\object\evilfaction\units\isengard\wargriderbanner.ini	_patch222.big	c5cd73428e012f2c3cb085ae513bf01a15463069fb381a53df6d7b4fe0dd5f9d	58	2	1	0	1	0	0	53
+data\ini\object\evilfaction\units\isengard\wildman.ini	_patch222.big	0d5ba52bd6c2844c1ea290fbd69172cb873e8d7174b917cde22799bbdde96cfe	13688	517	3	0	516	0	0	127
+data\ini\object\evilfaction\units\isengard\wulf.ini	_patch222.big	bd0bcc947237af643c2042f345150c993b56266f94fdbd4d678dddfd72c9907e	16962	579	1	0	579	0	0	167
+data\ini\object\evilfaction\units\mordor\archer.ini	_patch222.big	d16dd9d92b6d1775ce96d8707eed8e41382fa973ed74ec281dbab2a161956e48	21970	762	3	0	762	0	0	192
+data\ini\object\evilfaction\units\mordor\banner.ini	_patch222.big	51327b1746087c58af2d05c416fa2ef134f8c04799b40a0ce1416c0d471b35e7	27232	872	1	0	871	0	0	257
+data\ini\object\evilfaction\units\mordor\bannerorc.ini	_patch222.big	69a36f66f0e038ca161c576f7a21f434b5e4a33a0804dea84993816d30797277	23867	798	1	0	797	0	0	245
+data\ini\object\evilfaction\units\mordor\batteringram.ini	_patch222.big	28af364c8727c5a6b42cf2704499fb4cc2a03a6c8ac752669ffec557fc825af5	13363	416	2	0	415	0	0	138
+data\ini\object\evilfaction\units\mordor\catapult.ini	_patch222.big	e604dadbf059e17db7f87aab2e7d2d633412b14cd6c88ac72563f783030853e3	21719	711	3	0	710	0	0	120
+data\ini\object\evilfaction\units\mordor\cavetroll.ini	_patch222.big	fef680424022b70d25eafdce8dd2d6091c495818a3a94a7fdf89018f8f1f7a5a	33977	1048	3	0	1047	0	0	855
+data\ini\object\evilfaction\units\mordor\corsair.ini	_patch222.big	efc3e950f537fdb4e4b69e75d29250ae679986c357545d9b44d1d8e1c8947275	17976	608	2	0	607	0	0	168
+data\ini\object\evilfaction\units\mordor\corsairship.ini	_patch222.big	7174343a242d68065eb6ab864b6214fd38926085d178e4bc82e03f5039368e57	6440	251	1	0	250	0	0	95
+data\ini\object\evilfaction\units\mordor\drummertroll.ini	_patch222.big	579bf12f65c63940ddcfdb98bfb9192606fecb0b3a52d0a3c8c967b25d917dd0	21493	558	1	0	557	0	0	201
+data\ini\object\evilfaction\units\mordor\easterling.ini	_patch222.big	e49346171e911df4304d3a4aa17459d251239521991da288312a9ea33283f92a	17894	562	1	0	561	0	0	130
+data\ini\object\evilfaction\units\mordor\eyeofsauron.ini	_patch222.big	785c3ce45076b71ee73820ef95f9b06d807c09db926cfc6ebf6f2dc21095f6cd	5806	207	2	0	206	0	0	176
+data\ini\object\evilfaction\units\mordor\fellbeast.ini	_patch222.big	772f1f1f87b4cc79f769585353a23b6bc92c1ea953bf02943464bd3096a98099	26691	777	2	0	776	0	0	173
+data\ini\object\evilfaction\units\mordor\fighter.ini	_patch222.big	c93e11a5c4738a68a5fe11b193b896cca329f1e499517c5e4393b6f802297a95	77560	2899	11	0	2898	0	0	176
+data\ini\object\evilfaction\units\mordor\goblinarcher.ini	_patch222.big	ee8b31fef5c2cce3c9b8c54fef6a8441227cb6c1709f28ea8d06f6f2a277e462	17738	557	2	0	556	0	0	313
+data\ini\object\evilfaction\units\mordor\goblinswordsman.ini	_patch222.big	08a1c79477819c830de998e9f3688ac6971dda07bf765bfbc825958aa7dc99f6	17130	539	2	0	538	0	0	298
+data\ini\object\evilfaction\units\mordor\gothmog.ini	_patch222.big	92d93c74af802f3239d0b5c53f69a6632d84ea6d7d2017c0e17a5d65531ba3bb	27777	943	2	0	942	0	0	193
+data\ini\object\evilfaction\units\mordor\gothmogmultiplayer.ini	_patch222.big	d45755f85de925027fa084f3c0ddeb7abd7e20f63a50e6d0489a12e2e6774dc9	30779	1022	2	0	1021	0	0	193
+data\ini\object\evilfaction\units\mordor\grond.ini	_patch222.big	7403b99b4872d40a5763f58ab59eec2fabaee3c6f71d91da7a2145aeae5c76d5	27561	834	2	0	833	0	0	160
+data\ini\object\evilfaction\units\mordor\haradrimarcher.ini	_patch222.big	12da33f9490955dab1f739b0cc7023574242d00b9b97b5edf0463452b72da296	46824	1612	3	0	1611	0	0	157
+data\ini\object\evilfaction\units\mordor\haradrimlancer.ini	_patch222.big	f0e547ce15a313761f666f5556d12d10ef4a25421732512692492f5dd79ea89c	32892	1150	2	0	1149	0	0	174
+data\ini\object\evilfaction\units\mordor\haradrimrider.ini	_patch222.big	1c42a646aa103597f85749f38bdb0552016d0dd2700241c9f4f160325f8075d2	16256	581	1	0	580	0	0	116
+data\ini\object\evilfaction\units\mordor\haradrimsandbox.ini	_patch222.big	da11f834fa36c0805206951380f6e8215e47013734db233cde08140c7ab99563	8570	302	1	0	301	0	0	123
+data\ini\object\evilfaction\units\mordor\moranorc.ini	_patch222.big	956be790e2f0e70c0014bfaff1ca057c4041eb12650f01e7d7358d9e8b797294	16349	534	2	0	533	0	0	87
+data\ini\object\evilfaction\units\mordor\mountaintroll.ini	_patch222.big	a94c77e511a7c8a4cf82e83da072329babbe8f79317d6321c30909b0a148433f	48021	1298	1	0	1297	0	0	202
+data\ini\object\evilfaction\units\mordor\mountednazgul.ini	_patch222.big	75eb3e3eb126a41a6d4d516b62ed123dcb7b8d91b527a968548aa65b076b61d6	16521	551	1	0	551	0	0	167
+data\ini\object\evilfaction\units\mordor\mouthofsauron.ini	_patch222.big	9350b9a13d7375fe8b5dcbb31d3bdbf7d3cc42ab4dd2c8c5cf6085a185ff61a8	23695	792	2	0	792	0	0	167
+data\ini\object\evilfaction\units\mordor\mumakil.ini	_patch222.big	791c987f64af09905fac35a446520171f0d9e22260d99f41a993e33afcf32b82	78606	1788	5	0	1787	0	0	178
+data\ini\object\evilfaction\units\mordor\orcscout.ini	_patch222.big	5e5f6abcd3d6c6f31685139671adc19ffbd1e9930ace7f15e870d5ab54a2b860	6054	211	1	0	210	0	0	123
+data\ini\object\evilfaction\units\mordor\pikeman.ini	_patch222.big	f6e54a3074d29efe61d920c746432684b234e68626bbd22b478e70aed4f7a262	24011	816	2	0	815	0	0	173
+data\ini\object\evilfaction\units\mordor\porter.ini	_patch222.big	57d00e0b872277033cbbd70d69dd2c51516a7868bd21e95fade256f1bce46edc	6655	226	1	0	225	0	0	121
+data\ini\object\evilfaction\units\mordor\rhunsoldier.ini	_patch222.big	e11a1fc3edfdc8d5e8142b3086ecb49f479259587ed2889572e85b88f815378a	7402	257	1	0	256	0	0	159
+data\ini\object\evilfaction\units\mordor\ringwraith.ini	_patch222.big	32cded28bab949ef382f0ce927d4a5fa7d2346dc6446f49739fbb2f1572113b0	8874	295	2	0	294	0	0	126
+data\ini\object\evilfaction\units\mordor\sauron.ini	_patch222.big	f9d4f3d0718ba11fc5e4dcc412ae838512a722fe1d21f417d46d868f8894430b	12637	444	1	0	443	0	0	110
+data\ini\object\evilfaction\units\mordor\shelob.ini	_patch222.big	1dfe899ea9a7abeab13b11b3174a306fb919089cb033e8170cc34bcef83e2da6	14018	434	5	0	434	0	0	322
+data\ini\object\evilfaction\units\mordor\siegetower.ini	_patch222.big	37af7d7072a5e8addf17c8e0dea8a953807c465ff5d80a713bb24d3cd14b7c23	29015	833	2	0	832	0	0	202
+data\ini\object\evilfaction\units\mordor\tributecart.ini	_patch222.big	0e49db1b8427eae91e4c9fc65b3f23dfde8ae484c7b9a1df71a1dadadcb1f64f	5088	171	1	0	170	0	0	122
+data\ini\object\evilfaction\units\mordor\witchking.ini	_patch222.big	44242cdfd50b5ad772d1ce938ef06977c9fbbf4aa6905209d536b2117740f533	13722	474	1	0	473	0	0	149
+data\ini\object\evilfaction\units\mordor\worker.ini	_patch222.big	4a6034f1f384c996e22e29e19dd40098d3050d157a07fabebd6b6a66c5d2f5ad	26959	983	2	0	982	0	0	266
+data\ini\object\goodfaction\goodfactionbuildings.ini	_patch222.big	1901e8ab185933b1453d357809fe3052e42892867b283219c34c5e9704cdaaa7	251290	8504	90	0	8503	0	0	208
+data\ini\object\goodfaction\goodfactionprops.ini	_patch222.big	eba63d8934811a738ee012721a72d90cdafd74173627ff0b29497b3d79dd354e	5708	252	7	0	251	0	0	163
+data\ini\object\goodfaction\goodfactionsubobjects.ini	_patch222.big	ac3554432ce1d84473a1093e54ed31f814972ec106cfd9d2f65fca77d28a4e6d	163388	5254	138	0	5254	0	0	724
+data\ini\object\goodfaction\goodfactionunits.ini	_patch222.big	c6810d3b5ba385a2ded103748d4037a72fb79d8fb6213e0d65d6d3f7dad035a0	715	11	0	0	10	0	0	79
+data\ini\object\goodfaction\hordes\gondor\archer.ini	_patch222.big	a2297f4f91fa90c4c82e957199ec992f3ce53a18c006fec14a71e49c55381549	8398	219	2	0	218	0	0	302
+data\ini\object\goodfaction\hordes\gondor\fighter.ini	_patch222.big	38bdca00bb20960fb37a199898344083322d95e38c0360e75ef955fa9a2517b4	9933	240	2	0	239	0	0	302
+data\ini\object\goodfaction\hordes\gondor\fighterarchercombo.ini	_patch222.big	94a0bfa385be366adf079fda590dc54fd8a90c70fea82f8d315d95479cfe2cdc	6292	170	1	0	169	0	0	302
+data\ini\object\goodfaction\hordes\gondor\fighterrangercombo.ini	_patch222.big	e837558fe38ef939a948b3342075687d42abc512cddbc310d95929c9f1c72cfd	6299	173	1	0	172	0	0	302
+data\ini\object\goodfaction\hordes\gondor\fightertowerguardcombo.ini	_patch222.big	d193e37289354426f72802d07acb00bb2016103861c3c3457de858872f99c61c	6457	179	1	0	178	0	0	302
+data\ini\object\goodfaction\hordes\gondor\fightertrebuchetcombo.ini	_patch222.big	f195650457d35ff5d80bd6d455861dcdf84ad4a0f34e8530a6ca856d78613b01	7679	213	2	0	212	0	0	302
+data\ini\object\goodfaction\hordes\gondor\gondorhordes.ini	_patch222.big	c6810d3b5ba385a2ded103748d4037a72fb79d8fb6213e0d65d6d3f7dad035a0	715	11	0	0	10	0	0	79
+data\ini\object\goodfaction\hordes\gondor\knight.ini	_patch222.big	a0834e91e8878d4340556930ee85cf07872c624b21a860710eec6a03beb94f09	9067	220	2	0	219	0	0	302
+data\ini\object\goodfaction\hordes\gondor\knightfightercombo.ini	_patch222.big	859679a1c4b61f4f56e98c67bbc1c2b163306226269a9be8c03b171fcc9662ec	4412	125	1	0	124	0	0	159
+data\ini\object\goodfaction\hordes\gondor\knighttowerguardcombo.ini	_patch222.big	3d18e01027e0c2d9ba2be12510e291c98ec7ecd752c16b80db85130f038e249d	4532	126	1	0	125	0	0	159
+data\ini\object\goodfaction\hordes\gondor\laarcher.ini	_patch222.big	fbbec2a35c68dbfd4bba71bb813d41ec0d3b99ed0df63b3d95018c1d8c918dca	5927	173	1	0	172	0	0	302
+data\ini\object\goodfaction\hordes\gondor\lafighter.ini	_patch222.big	3afaa2c5df9b391ab8301d189d2e53b51f474cca3d99f54dd8b1eb4079789f6b	6197	170	1	0	169	0	0	302
+data\ini\object\goodfaction\hordes\gondor\ranger.ini	_patch222.big	fbc52e91ab77b2bb4d279820c839640a753da6b726592f69e72d94a309f878f6	16043	406	4	0	405	0	0	302
+data\ini\object\goodfaction\hordes\gondor\towerguard.ini	_patch222.big	7242f7032ba9ced6a5619c3e545104743fa43af6854c0da595f756fe9360063e	9466	216	2	0	215	0	0	259
+data\ini\object\goodfaction\hordes\gondor\towerguardarchercombo.ini	_patch222.big	67e2734d7df338b917b3ea679d8aa686e5d9a85bc9475f28a9e6de89157007c2	6222	170	1	0	169	0	0	302
+data\ini\object\goodfaction\hordes\gondor\towerguardsrangercombo.ini	_patch222.big	097e24fa594c78ec1b91b4c1a3a5fc48f9fb945c57abe486ec1c57059e4ec80b	1702	35	1	0	34	0	0	153
+data\ini\object\goodfaction\hordes\rohan\archer.ini	_patch222.big	78455f9464aefc2df7906607991da5eb136c809e8b9a9c3eaf82fb45f7f9ff20	6846	185	2	0	184	0	0	241
+data\ini\object\goodfaction\hordes\rohan\elvenwarrior.ini	_patch222.big	e626f01cd36f6996c4729eb5b9804fc6c0d9c7d34d6af3ac35e3709082fb0dec	14856	377	5	0	376	0	0	241
+data\ini\object\goodfaction\hordes\rohan\hobbit.ini	_patch222.big	b4f092e802103249ebb677b9ddb0e570b6e44b664b8b0e91c011f07dda2f8f7d	4552	147	3	0	146	0	0	139
+data\ini\object\goodfaction\hordes\rohan\laelevenwarrior.ini	_patch222.big	0eab51a1cd60bf6f2065a28745f61bb0ef7c090ed4e077db5439204d6468db2c	8563	243	2	0	242	0	0	241
+data\ini\object\goodfaction\hordes\rohan\oathbreaker.ini	_patch222.big	25b83f8595625503df4265863ca16e170a44caf6098dbd4406ac2168d2617809	22396	518	4	0	517	0	0	162
+data\ini\object\goodfaction\hordes\rohan\peasant.ini	_patch222.big	dfef4055f0b2c24bf99b53c75ddb27dd3566bc16b150436f7514041a69824ba2	6212	169	1	0	168	0	0	241
+data\ini\object\goodfaction\hordes\rohan\peasantarchercombo.ini	_patch222.big	6233cd3999eac369dc43e0dd41720c8c97d9f6b096dbe4b54f261f2a1f04f4d4	4594	129	1	0	128	0	0	148
+data\ini\object\goodfaction\hordes\rohan\rohanhordes.ini	_patch222.big	c6810d3b5ba385a2ded103748d4037a72fb79d8fb6213e0d65d6d3f7dad035a0	715	11	0	0	10	0	0	79
+data\ini\object\goodfaction\hordes\rohan\rohirrim.ini	_patch222.big	3a3e5d2c7d5c30c20eb993c56eac355f6ceae9b8f711906bcb708058ba7de5c2	9856	254	3	0	253	0	0	240
+data\ini\object\goodfaction\hordes\rohan\rohirrimarcher.ini	_patch222.big	f498f9b33fccbbeca1207d0efce741b3087c0bb76ed695d7cfbef938fc65b927	8170	229	4	0	229	0	0	158
+data\ini\object\goodfaction\hordes\rohan\rohirrimarcherpeasantcombo.ini	_patch222.big	e1c946deeb91869494c700e1bfe42b592d49ffb16a2f0499b423f318102f1966	4653	129	1	0	129	0	0	157
+data\ini\object\goodfaction\hordes\rohan\rohirrimpeasantcombo.ini	_patch222.big	67321b392b166309d1d48dacb177491671215a41fea9ed8380d1984294a227b0	4823	134	1	0	133	0	0	151
+data\ini\object\goodfaction\hordes\rohan\rohirrimroyalguard.ini	_patch222.big	d81eadbe4a98924abc19969b66bf88093a15d7a4b88123a8ed2e6abd37a50d69	1986	60	1	0	59	0	0	152
+data\ini\object\goodfaction\hordes\rohan\royalguard.ini	_patch222.big	a70a6739b1d98b28a5db3af44779d29ca737acb1a2f6893d98b977de56084cc5	4278	128	1	0	127	0	0	241
+data\ini\object\goodfaction\structures\elves\buildingfoundation.ini	_patch222.big	76aab024428f5566fc9bf8ecab2123dd63f3261791efa2c7d41968ab9283199b	1575	60	1	0	59	0	0	130
+data\ini\object\goodfaction\structures\elves\farm.ini	_patch222.big	376efad34c4306f0278ba25257984bd7ecde673f1ae348decf44cf67cfc937d9	8557	272	1	0	271	0	0	110
+data\ini\object\goodfaction\structures\ents\buildingfoundation.ini	_patch222.big	896f787bbdb2f26cfc63b8f074a9c36ff3f8a95a4fa9143c8129b630f9c87f11	1583	59	1	0	58	0	0	130
+data\ini\object\goodfaction\structures\ents\entmoot.ini	_patch222.big	d4c755aebef11fdfe1378dc11752a5e4ccd7f38aaccbbf0708218943ce8dc6d0	8254	234	1	0	233	0	0	149
+data\ini\object\goodfaction\structures\gondor\archeryrange.ini	_patch222.big	d845f7ae255ea2600953dd50a2b4e5169c805ac384c8aff7823ead8d9f587ef7	15811	462	1	0	461	0	0	185
+data\ini\object\goodfaction\structures\gondor\barracks.ini	_patch222.big	a38a2b6666b87e83ebf92c152347e6f2531eb65f26158947a854f75d30a13a0a	14595	443	1	0	442	0	0	199
+data\ini\object\goodfaction\structures\gondor\buildingfoundation.ini	_patch222.big	967b7f50f26c4aa421384f5f1f81a4386a6d1187aa351c598b43b7fd34554e3e	1711	62	1	0	61	0	0	130
+data\ini\object\goodfaction\structures\gondor\campbuildings.ini	_patch222.big	85327bb362cf454e7711100918ed716fa94db879d59945e168ac39c59d232d24	96107	2895	17	0	2894	0	0	224
+data\ini\object\goodfaction\structures\gondor\catacombs.ini	_patch222.big	f6a98c32be813f6faf22ae420183d0d2d88b5f7d7d40ef47f741cbd1124e6c95	4903	161	1	0	160	0	0	115
+data\ini\object\goodfaction\structures\gondor\defencebuildingfoundation.ini	_patch222.big	73b0f25ef7d6bd7e23ab985b1c3890281a8bbcbd2bdf9fafbaa690af3abea63e	1690	60	1	0	59	0	0	154
+data\ini\object\goodfaction\structures\gondor\farm.ini	_patch222.big	b33b40870500281911add04f246cbe39169eb8103ece71b366b8a7d175ffbc05	5302	145	2	0	144	0	0	178
+data\ini\object\goodfaction\structures\gondor\forbiddenpool.ini	_patch222.big	b743df9b2bc4694a1dc1389ed7ba83016b3597c1635d93a0cf29c6ef7ac31b7d	10683	256	2	0	255	0	0	148
+data\ini\object\goodfaction\structures\gondor\forge.ini	_patch222.big	e28b3a8999b81bc9253d3e6e6b851de5e8d7364fc3873457c821058aabe6ad35	30453	737	1	0	736	0	0	206
+data\ini\object\goodfaction\structures\gondor\herostatue.ini	_patch222.big	542c636ed284537910c827b5bb1434896154a945cd45fddf3f53071ad29a8597	6803	203	1	0	202	0	0	149
+data\ini\object\goodfaction\structures\gondor\hseheal.ini	_patch222.big	a5d851ab05cd249c08e98ee88e64966c5bf0dcbcdd5eb17f695c85edc6201bd1	8523	252	1	0	251	0	0	98
+data\ini\object\goodfaction\structures\gondor\marketplace.ini	_patch222.big	31b96ef737483135e5b63509746ace70bc9ef6c3cf531b41499273387f463390	11722	340	1	0	339	0	0	123
+data\ini\object\goodfaction\structures\gondor\sentrytower.ini	_patch222.big	dca57f6e49c4d2ec96a92bdba6a105af41c30d103270d9ea032ef878faf3cc9b	6715	219	1	0	218	0	0	128
+data\ini\object\goodfaction\structures\gondor\stables.ini	_patch222.big	6ccd439899ec29c0af7cbc6836084e6ce5bdc2d6e56c4a32eae663d53bed707e	14010	414	1	0	413	0	0	136
+data\ini\object\goodfaction\structures\gondor\statue.ini	_patch222.big	449ecb361b4fb40ce32090b0277c8939a885e7820474058c9f65e374deb976db	3845	120	1	0	119	0	0	110
+data\ini\object\goodfaction\structures\gondor\stonemaker.ini	_patch222.big	669734a8f2b9fbafb282f734aea2949fedd1b09107cf51ce51f21d93dfeb6cab	12044	349	1	0	348	0	0	111
+data\ini\object\goodfaction\structures\gondor\well.ini	_patch222.big	f771f365017f3ca640aca28bd6097a6c02c86af7d810e276a48256c4bdb9467d	7798	226	1	0	225	0	0	149
+data\ini\object\goodfaction\structures\gondor\workshop.ini	_patch222.big	40ae4cc01e5ca847ee491a640662e018c5bf862d7a6e94e22c57f1b6340736a1	14533	435	1	0	434	0	0	135
+data\ini\object\goodfaction\structures\helmsdeep\arcade.ini	_patch222.big	509ea7c62567137dce1c0d0e6ea91d074419a6c2e5dfd678a08aa74273d4b426	6121	178	1	0	177	0	0	408
+data\ini\object\goodfaction\structures\helmsdeep\causeway.ini	_patch222.big	d49224c237ff9ddd71df221b0ce6e1b9a1df3da03600d234036677aab660255f	2961	111	1	0	110	0	0	126
+data\ini\object\goodfaction\structures\helmsdeep\culvert.ini	_patch222.big	0ab58ca47da6098ad85dcc117c1732f8ff0acad0e938c0169fb9bd0d566bc754	7343	248	1	0	247	0	0	137
+data\ini\object\goodfaction\structures\helmsdeep\disections.ini	_patch222.big	5e3becc34ee365eae213586c8445fea3e0f052de630a81fb24f992b57abcd746	42025	1506	13	0	1505	0	0	126
+data\ini\object\goodfaction\structures\helmsdeep\dosections.ini	_patch222.big	016d96f2226e875252254ab65c7cc751a51d27ad2cc0dbb21139235a5b40d23a	29430	1028	8	0	1027	0	0	127
+data\ini\object\goodfaction\structures\helmsdeep\gate.ini	_patch222.big	c98df2366ca32669c5f4dc4ffb7492e47ead8f55401001143425e7334f8b60e3	4911	186	1	0	185	0	0	71
+data\ini\object\goodfaction\structures\helmsdeep\gatebig.ini	_patch222.big	e1ecd4818c2e95f73f77814ff826737875f6cec24dcda13b040c2681fcef3371	5523	179	1	0	178	0	0	110
+data\ini\object\goodfaction\structures\helmsdeep\gatehousecenter.ini	_patch222.big	1b8b48bbf6edc0bdff12f0c5c93c75b641033dea14e805344d39687c3c187b5c	3918	135	1	0	134	0	0	123
+data\ini\object\goodfaction\structures\helmsdeep\gatehouseleft.ini	_patch222.big	f17e88e101052c33b51587ab7bcf118480d92eaf72369c4c7b59f9a5ab87a401	8369	274	1	0	273	0	0	137
+data\ini\object\goodfaction\structures\helmsdeep\gatehouseright.ini	_patch222.big	eb381b24ad183126e69d58a5816a4cfdd89e6004744942040c52e9648f7edbee	3737	132	1	0	131	0	0	125
+data\ini\object\goodfaction\structures\helmsdeep\gatesmall.ini	_patch222.big	f5482f6a26ad06b518f4764c0eded9526c0a35325153c0f1c2628034a4cffb54	5474	177	1	0	176	0	0	110
+data\ini\object\goodfaction\structures\helmsdeep\pavement1.ini	_patch222.big	993c7998aba4b501cc37677463b6659d4df238b4d6addecb3b71ea82c9878456	1678	63	1	0	62	0	0	72
+data\ini\object\goodfaction\structures\helmsdeep\pavement2.ini	_patch222.big	60232c0ddfa9fd400e688f0b98ccc170819e2e50c6415a471aff7615f052c971	1673	63	1	0	62	0	0	72
+data\ini\object\goodfaction\structures\helmsdeep\ramps.ini	_patch222.big	f760de4530ee6ca54d169910c5992c2b39ba336ce12eddcc21d25b901f5cea68	19360	686	6	0	685	0	0	125
+data\ini\object\goodfaction\structures\helmsdeep\sectionai.ini	_patch222.big	f8faa0a2c27cd260bd79e94ca574232b1ad41fe2f1c4854e064e1db0c0839bee	4904	176	1	0	175	0	0	110
+data\ini\object\goodfaction\structures\helmsdeep\sectionb.ini	_patch222.big	ac42d22e26f70cc2514d6e94f7c82efd33593da86e68309a1219b6eeedd811d6	4989	176	1	0	175	0	0	111
+data\ini\object\goodfaction\structures\helmsdeep\sectionc.ini	_patch222.big	92d4115c79e7b9eb65bde5bc8b444bbca7ce00a98549ec13241d6aa946ace847	4923	173	1	0	172	0	0	124
+data\ini\object\goodfaction\structures\helmsdeep\stairsa1.ini	_patch222.big	bd4dc7f95b4970d7467584d5082e20c73dabf8feaa6d496a34de8bdf902dcbbf	3594	126	1	0	125	0	0	125
+data\ini\object\goodfaction\structures\helmsdeep\stairsa2.ini	_patch222.big	a714d99957b2dab07745a4dd50bcd8f3bf1fda4666b75d7de5e2722fe639205d	3594	125	1	0	124	0	0	126
+data\ini\object\goodfaction\structures\helmsdeep\tower.ini	_patch222.big	8c185b08800ff17c1f344e59fae9279b5e168bf49bb98e5186959c8d06a3ad80	3078	119	1	0	118	0	0	106
+data\ini\object\goodfaction\structures\helmsdeep\wallgate1.ini	_patch222.big	cba8800d3c58f7890daf586e00293861853ffafa7e312b083ad54e1740ccdd30	2067	80	1	0	79	0	0	72
+data\ini\object\goodfaction\structures\helmsdeep\wallgate2.ini	_patch222.big	f647957414022c7e709c4775d59e8a6142bd0621732b7f300bbb1015d3257036	1829	73	1	0	72	0	0	72
+data\ini\object\goodfaction\structures\rohan\archeryrange.ini	_patch222.big	ade7bbcec474f98cd64078f19da6a9d48beff3c99ae8584a57cf14906e9c0b24	13332	413	1	0	412	0	0	198
+data\ini\object\goodfaction\structures\rohan\armory.ini	_patch222.big	7e2768a99e194b9043ff68944259ac4d9f55fc30ae1e086eec19363e8f4643ac	12151	372	1	0	371	0	0	190
+data\ini\object\goodfaction\structures\rohan\battletower.ini	_patch222.big	10e8c7631b388a0bf1b0baadf8d31241e69664ccfeae9a36e2826364e55fdcc4	11470	330	1	0	329	0	0	176
+data\ini\object\goodfaction\structures\rohan\campbuildings.ini	_patch222.big	02abff5ee1f3d68f46dfc165a9a1285c6ae089f82d9c296e4cf09937d34e44da	115271	3757	22	0	3756	0	0	226
+data\ini\object\goodfaction\structures\rohan\defencebuildingfoundation.ini	_patch222.big	e12091bb89200535811e5ea1f712bc8c846cf43d96baac9c186d044f9974e7b3	1694	62	1	0	62	0	0	154
+data\ini\object\goodfaction\structures\rohan\farm.ini	_patch222.big	a632548e8175787f8d0636257578ebe01ceceb807b356054febb9783fd4fc908	5503	157	2	0	156	0	0	197
+data\ini\object\goodfaction\structures\rohan\goldenhall.ini	_patch222.big	854ad91d251ce316febb63b04fff91e38e0d7745b5ce1d8067cd464ee9ca8ad9	13187	369	1	0	368	0	0	149
+data\ini\object\goodfaction\structures\rohan\herostatue.ini	_patch222.big	a87ea9e69e69be6f10a2f33d42942dad11484ccd8cd4faf23283add63c8fc732	7213	219	2	0	218	0	0	148
+data\ini\object\goodfaction\structures\rohan\refugeecamp.ini	_patch222.big	f3fb95086ca72531e08187af8f0c6767ca4863cec8c057635b53a73334908ced	13216	437	4	0	436	0	0	117
+data\ini\object\goodfaction\structures\rohan\sentrytower.ini	_patch222.big	07436ade4e30f576e34bb2e5ad5fb666dbf7c8a9afa8d090aa30d236a03e8d70	6688	214	1	0	213	0	0	127
+data\ini\object\goodfaction\structures\rohan\stables.ini	_patch222.big	04d5365dc850774008ee7085106d7765020cddbe3a641a2b4bde34cc8ab2d203	16989	499	1	0	498	0	0	187
+data\ini\object\goodfaction\structures\rohan\well.ini	_patch222.big	0aa115bd379a119fae8a2c76290032729bdf242d72ab0b9f681f4be9df18a455	8022	232	1	0	231	0	0	149
+data\ini\object\goodfaction\units\elven\arwen.ini	_patch222.big	6faceaf712f47aae6c42cca8d8ffc78ae50b93e2604e01728cb28d8b4908573a	8485	304	1	0	303	0	0	101
+data\ini\object\goodfaction\units\elven\elrond.ini	_patch222.big	ce0b54088b3680ea7f401754a587b112ce51e7ddefcb183edc303eb63edf5d7c	25785	907	1	0	907	0	0	117
+data\ini\object\goodfaction\units\elven\elveninfantry.ini	_patch222.big	9fefdab51308cc788fd3241749de253d936b7188bedafa545d42829a466481e8	159955	5265	5	0	5264	0	0	159
+data\ini\object\goodfaction\units\elven\elvennoldor.ini	_patch222.big	47f3c7423a43133b5fecd70961afc488fe39723f6c05560709514740eebc96ee	64145	2013	3	0	2013	0	0	241
+data\ini\object\goodfaction\units\elven\galadriel.ini	_patch222.big	61658b80192074683959c4071a7ae7519b26fb23381bef183e2284b551518cd8	8922	312	1	0	311	0	0	159
+data\ini\object\goodfaction\units\elven\haldir.ini	_patch222.big	5d3faa351cfd87a50066a9432dac853c10fc8a68ec85f0c063545a271287e309	47689	1520	1	0	1519	0	0	179
+data\ini\object\goodfaction\units\elven\isildur.ini	_patch222.big	044b3870e93d5aabb83dfa99e6f536cbd9dae29689bd9f7a702b6bfaff20f38c	13723	525	1	0	524	0	0	117
+data\ini\object\goodfaction\units\ents\entsinfantry.ini	_patch222.big	acd77aa715dab3db06fb620765e68813f3e3ee5cc1b8db570a5f030c8bb39070	102333	3131	6	0	3131	0	0	176
+data\ini\object\goodfaction\units\ents\treebeard.ini	_patch222.big	847c5d27aa04c47a592a498dc28f95385f231b0434db2073fad93f5a7de7b80f	44920	1190	1	0	1189	0	0	185
+data\ini\object\goodfaction\units\gondor\aragorn.ini	_patch222.big	1e3e76b3a6af9d5fd336674efe5b619265d8a11fc3dd9ceba5855bb621896315	26339	791	2	0	791	0	0	184
+data\ini\object\goodfaction\units\gondor\archer.ini	_patch222.big	8bfe1013022138a43d975b3fd84836474d00143eae705f61510c42afb9bc9320	24711	791	2	0	790	0	0	192
+data\ini\object\goodfaction\units\gondor\banner.ini	_patch222.big	f1623339de4361d1d0766c72d63084ff5a50036994baf04f2cbdb6a9f7865944	54410	1762	2	0	1761	0	0	213
+data\ini\object\goodfaction\units\gondor\beregond.ini	_patch222.big	3f2b56567c4f755f31dd0bf92aa42abe109573a78f3df83276c945d4caa1805a	37878	1179	1	0	1179	0	0	192
+data\ini\object\goodfaction\units\gondor\boromir.ini	_patch222.big	0295bcdbe513be3ede53fbd7b39c61c7da9a248c03212259bfdd566457dac27a	27599	802	1	0	802	0	0	337
+data\ini\object\goodfaction\units\gondor\captain.ini	_patch222.big	534fdbcb8f036d3575da6bf27f8f2efb05bf869559aeb7d58c43eb6f5e56504e	6111	224	1	0	223	0	0	102
+data\ini\object\goodfaction\units\gondor\citadelguard.ini	_patch222.big	b416135465943e9fabe21d77c7c271609aa6b0d6cf72119f26ac2584ea6ea8bb	38356	1206	4	0	1206	0	0	241
+data\ini\object\goodfaction\units\gondor\damrod.ini	_patch222.big	40a176d51554fb61f3b62c9719772593820295dc6f438730df45f1664dcd08c7	40311	1266	2	0	1265	0	0	192
+data\ini\object\goodfaction\units\gondor\denethor.ini	_patch222.big	0ca1f082976942ac00f189a31c335df2116080ebad814fc5b467cc95d288b64b	8970	319	1	0	318	0	0	101
+data\ini\object\goodfaction\units\gondor\faramir.ini	_patch222.big	edaadd7d43299f7d5be80c841e0a16db17e888e49cef0761e50e9e09d31d70b4	43976	1330	2	0	1330	0	0	192
+data\ini\object\goodfaction\units\gondor\fighter.ini	_patch222.big	85c8aef7e80b724f46ee831f3be20eefc62924b5603aef34b49bed30df4f5632	26798	885	2	0	884	0	0	172
+data\ini\object\goodfaction\units\gondor\gandalf.ini	_patch222.big	7e0ab100b18fa30a8743ded972add37a89fdddf40f152ba64e97e4a647326feb	61117	1986	4	0	1986	0	0	169
+data\ini\object\goodfaction\units\gondor\gandalfgrey.ini	_patch222.big	41185e6cc4d2663fea650957c73ae32bba23c3375e971e23d2a6ae77a6eab505	449	13	0	0	13	0	0	79
+data\ini\object\goodfaction\units\gondor\gondorcavalry.ini	_patch222.big	1040378f26c083d61b2042ad15be3df765749ed1fad0236763236a1be0ea9715	20675	672	2	0	671	0	0	103
+data\ini\object\goodfaction\units\gondor\gondorinfantry.ini	_patch222.big	e73bf5933db479f25e5b0638db8b9e5785e3bd54d36cec7223bedc1e7406e8c1	8330	290	3	0	289	0	0	92
+data\ini\object\goodfaction\units\gondor\graycompany.ini	_patch222.big	0a2a73ad9aeb5ca36c7cbf89a623a9d323eb369e07b4aef4055324108897a28c	37082	1119	3	0	1118	0	0	241
+data\ini\object\goodfaction\units\gondor\gwaihir.ini	_patch222.big	a3cc151addb4aafffde03669c977036debd6ae70651c45ccb8de1ca70e0871ab	12396	443	2	0	442	0	0	130
+data\ini\object\goodfaction\units\gondor\halbarad.ini	_patch222.big	c562a057d920d2e93d858752023df360f0d62d2add3e51a0a0ca6456284252e8	39598	1240	2	0	1240	0	0	192
+data\ini\object\goodfaction\units\gondor\imrahil.ini	_patch222.big	19f2427fd25e7c1774c6b394759a9c38de1d50d760d36a4a0f5174ed0e779248	32414	1075	2	0	1074	0	0	145
+data\ini\object\goodfaction\units\gondor\ithilienswordsman.ini	_patch222.big	87a99e4a19d03962e63c99339a0b406e6853ea35b4303acb2480c646b01b292b	28962	952	3	0	952	0	0	302
+data\ini\object\goodfaction\units\gondor\laarcher.ini	_patch222.big	2ff8edf9360c23f6131349dab449298048b288200f9d4f611cf14d57bf49968f	22893	734	1	0	733	0	0	192
+data\ini\object\goodfaction\units\gondor\labanner.ini	_patch222.big	f560b8afb7200dad511d7175bd6216d2b91adccb306e23069c8fa673f6e10961	24403	800	1	0	799	0	0	142
+data\ini\object\goodfaction\units\gondor\lafighter.ini	_patch222.big	d4e5c51b32714edd7e778962eefdac93b767fa0f79a346466efa74748b46d25c	24155	810	1	0	809	0	0	172
+data\ini\object\goodfaction\units\gondor\porter.ini	_patch222.big	686448691715dcd7a010694bd6485ab00fbf63c2f04c2a5fbe0e097cf842b865	22217	701	7	0	701	0	0	211
+data\ini\object\goodfaction\units\gondor\ranger.ini	_patch222.big	14896625dd3f26ac907cdd747d99053645e6e08a8a7e62cee77d725af55386df	53103	1683	3	0	1683	0	0	193
+data\ini\object\goodfaction\units\gondor\rangerhorse.ini	_patch222.big	11fdcd5be28d9677b3192b4febde29808b0471fd11b3fea004571583f9d791c7	22980	731	2	0	730	0	0	115
+data\ini\object\goodfaction\units\gondor\rangernostealth.ini	_patch222.big	6e0baa1e9fe4b9a2b8cd2f1c705b0a48de69582d54abe291b7b480c3d9c58f6d	25588	830	1	0	829	0	0	116
+data\ini\object\goodfaction\units\gondor\swanknight.ini	_patch222.big	851439f03c941ddc9680cf6b7628b000f666b2c8f3fa8a48d68b00601a19e3a0	27028	838	4	0	837	0	0	302
+data\ini\object\goodfaction\units\gondor\towerguard.ini	_patch222.big	1d2d3b7dd3a54ebc7dce04750933d97611a866e5fb72e387333457ff47782cfd	18141	618	2	0	617	0	0	116
+data\ini\object\goodfaction\units\gondor\trebuchet.ini	_patch222.big	625cbace1411c82ba21ceaed520b1171903e881de4ce2751aefe02dda7fb4bf0	26997	852	4	0	852	0	0	201
+data\ini\object\goodfaction\units\gondor\woodcutter.ini	_patch222.big	d6f72e1bc5471039455e7797b8e8130f13fcb885d00bb515e47ad28c3484d14b	4202	149	1	0	148	0	0	122
+data\ini\object\goodfaction\units\gondor\worker.ini	_patch222.big	345114060696f53e10f07e1c540c068a75459e5d83b63bce4402e46e50cd4c74	6439	220	2	0	219	0	0	134
+data\ini\object\goodfaction\units\rohan\archer.ini	_patch222.big	57eba0176a58fecea8c5d6ab99d43c3cd0b2faa6e5fe29049b84c7d7946e0a7b	24750	798	2	0	797	0	0	193
+data\ini\object\goodfaction\units\rohan\banner.ini	_patch222.big	090076e0e127aad148b2cb30496e5bc163dcd4b064bd21761d1fb29c6b9486d8	25907	850	1	0	849	0	0	257
+data\ini\object\goodfaction\units\rohan\eomer.ini	_patch222.big	68a1447aebca9d73e9e3715d12c389df02840a8e7f71e8d9a46a161db2414cba	34764	1078	2	0	1078	0	0	158
+data\ini\object\goodfaction\units\rohan\eowyn.ini	_patch222.big	a7378b325495b8d0b4eb31453000f88d1563d54db1d74030ebd190d92f9ee776	47851	1597	2	0	1597	0	0	143
+data\ini\object\goodfaction\units\rohan\frodo.ini	_patch222.big	47f8a31d9e91824fd96603299f52bd776b9e131b523d3e2803b99ba1ecdbbb08	70013	1926	2	0	1926	0	0	184
+data\ini\object\goodfaction\units\rohan\gamling.ini	_patch222.big	931ce45df63f9c0687adaa474b76262b3ea46763c104de5b4fde2c097c2f1f40	11114	391	1	0	391	0	0	117
+data\ini\object\goodfaction\units\rohan\gimli.ini	_patch222.big	bc302491242139faab30b04095ed81b949f097cee04af73192931f6abd089cc2	29617	914	1	0	914	0	0	167
+data\ini\object\goodfaction\units\rohan\legolas.ini	_patch222.big	c3682c4e8c4271e64ff95f4e7bedfd91e3f13b26715d4c54646c04249b20eb28	43932	1007	2	0	1007	0	0	213
+data\ini\object\goodfaction\units\rohan\merry.ini	_patch222.big	6aabbe367aeb97d3ca86d07b1a3d5568a2b2a9bda18ae08945ab9b894ad1351f	36298	1095	1	0	1095	0	0	172
+data\ini\object\goodfaction\units\rohan\peasant.ini	_patch222.big	51ad19dcfad79da2fe04eef7c66bbbb2280742b727d1231b8d502e66ecbf744e	1190	30	1	0	30	0	0	135
+data\ini\object\goodfaction\units\rohan\peasant1.ini	_patch222.big	befd5766e9ba17e9ed8aa98384c7deb18e873a63077516313eb919b7f3e8464f	47925	1697	7	0	1696	0	0	173
+data\ini\object\goodfaction\units\rohan\pippin.ini	_patch222.big	c0073929124fd68f7f2ecbd73201535af0f3b2a3e35debb38e2af2245bc605f2	33396	1008	1	0	1008	0	0	179
+data\ini\object\goodfaction\units\rohan\porter.ini	_patch222.big	666f7d625b571c1c5489102a9818e7c5bc39d6e2295dd0c8a9e0b5c506862172	19185	613	6	0	612	0	0	288
+data\ini\object\goodfaction\units\rohan\rohancavalry.ini	_patch222.big	c6810d3b5ba385a2ded103748d4037a72fb79d8fb6213e0d65d6d3f7dad035a0	715	11	0	0	10	0	0	79
+data\ini\object\goodfaction\units\rohan\rohangamling.ini	_patch222.big	7dfe05983086fa3a6f02e36873040651b2fce0173b39493fd33707fe2134a97f	36241	1149	2	0	1148	0	0	187
+data\ini\object\goodfaction\units\rohan\rohaninfantry.ini	_patch222.big	c6810d3b5ba385a2ded103748d4037a72fb79d8fb6213e0d65d6d3f7dad035a0	715	11	0	0	10	0	0	79
+data\ini\object\goodfaction\units\rohan\rohanroyalguardonfoot.ini	_patch222.big	ba3178806d21698be647080df0031fe4defc6b002d6094d96447c202364bdb4f	40482	1234	4	0	1234	0	0	241
+data\ini\object\goodfaction\units\rohan\rohirrim.ini	_patch222.big	baa210e654bda9fb386d064aee34459b7bda562f0297e39f93ac01c0e4f881a8	32533	1178	6	0	1177	0	0	159
+data\ini\object\goodfaction\units\rohan\rohirrimarcher.ini	_patch222.big	3dff65e35bffa824b75c73e3fab93d67dc76ee098babe85dd22a242a3e34acec	22869	727	1	0	726	0	0	115
+data\ini\object\goodfaction\units\rohan\rohirrimbanner.ini	_patch222.big	bbd11dd383fafda724d42f735deaff842a75340183456647e9123d798783b29a	15101	510	1	0	509	0	0	296
+data\ini\object\goodfaction\units\rohan\rohirrimroyalguard.ini	_patch222.big	6b496a8241c646971df19c7b9bd10ddcb7edc6e45fa132e884f0643e2fb4c632	25575	815	3	0	814	0	0	240
+data\ini\object\goodfaction\units\rohan\royalguard.ini	_patch222.big	75bf817f91ae5f330246a1fb43cbd03a3c6c2c32812109ed80a4f491f82d2dd8	48	3	1	0	2	0	0	41
+data\ini\object\goodfaction\units\rohan\sam.ini	_patch222.big	69dbdfd22268582ad397fb3ec652bee27746d34b700d1a163351dace3597db6c	33002	936	1	0	936	0	0	154
+data\ini\object\goodfaction\units\rohan\spearthrower.ini	_patch222.big	0d3acad333f6509dfbcd7195cd5d4a8796ee788559f9ad506e74a16b843048f0	32396	1074	4	0	1073	0	0	241
+data\ini\object\goodfaction\units\rohan\theoden.ini	_patch222.big	1016ccbe1381bb58cb7e8cff2a6a13e9430b7acd8aaf006bff8686512b90f0c7	49439	1610	3	0	1610	0	0	188
+data\ini\object\goodfaction\units\rohan\theodred.ini	_patch222.big	e33456bd218d8cd841e5fb23d19ee004c02fdb8fbe5694ac4131c92b0b0c8072	34834	1081	2	0	1081	0	0	188
+data\ini\object\goodfaction\units\rohan\worker.ini	_patch222.big	5ff371d0d75f866f792f8bbf432b01a8c7317838fbe7c584a4f89900347382f9	6192	218	2	0	217	0	0	134
+data\ini\object\hordes\evilfactionhordes.ini	_patch222.big	2bcca6f1eb8986f3068d8834c9c7422c38459ba1c616f46b616909a8b7fb386d	817	14	0	0	13	0	0	79
+data\ini\object\nature\natureprop.ini	_patch222.big	827c58db5310eab80c070f44033da9326fa03f442f632546d51a83357feebad4	131890	4977	168	0	4976	0	0	127
+data\ini\object\nature\naturerocks.ini	_patch222.big	8480e6974a76c646a5cccec20596517f367ff941a78720f851b12e05e65ceabc	70612	2610	98	0	2610	0	0	249
+data\ini\object\nature\naturetrees.ini	_patch222.big	fc2e3029d35a0c8331b86c7bee6257ab09ae660f39757203f900b0b60c861d1e	226604	8127	137	0	8127	0	0	126
+data\ini\object\nature\natureunits.ini	_patch222.big	6688683b994026acd911aa0683a55fea58d78470ffd702eb113615e521683c5b	114397	4384	33	0	4384	0	0	114
+data\ini\object\nature\placeholdernatureunits.ini	_patch222.big	a722c6d354ddaf4759e0f63c16efc7b672b89ed76966faf9e15e15470556248e	2999	110	1	0	110	0	0	95
+data\ini\object\neutral\cavetrolllair.ini	_patch222.big	8b14fe1b695d0e7f1a08e6a169b7bb9559ef0c7c255411675b0632e17fdbf7a7	3604	132	1	0	132	0	0	101
+data\ini\object\neutral\giantspider.ini	_patch222.big	59555ff428c9c1ea7e5f30ebe9d415e7adb413b7d5850efbf9c976261a3f88d4	13856	565	6	0	564	0	0	298
+data\ini\object\neutral\moriagoblinlair.ini	_patch222.big	2d48ae694eaef0a328445930aeb2556e0939c422cc92a1d164fd163b682b7c23	3495	127	1	0	127	0	0	108
+data\ini\object\neutral\neutralunits.ini	_patch222.big	71f8a26debb43a86ab7c14efc6efdb7c1d64446e79a5f11eff1f95a92f215f4b	69440	2227	11	0	2226	0	0	516
+data\ini\object\neutral\ruinedtower.ini	_patch222.big	9e7a07468a80d69b849ee49c540927b21d94c619b35d365d0c72bdf01c558cab	14304	461	1	0	461	0	0	187
+data\ini\object\neutral\spiderlair.ini	_patch222.big	a964b88705dc38258f868aa804be77bd343d1489a21d89aa509527139b2c17af	7030	196	2	0	195	0	0	176
+data\ini\object\neutral\warglair.ini	_patch222.big	8b5c4691f8d3d7d6f76a474d11035793e1fa85e2655e06ce23d89722c25e52f8	3295	122	1	0	122	0	0	101
+data\ini\object\obsolete\obsolete.ini	_patch222.big	6b6da1bbb6f897cb6cd2f9da0e515659aad0c2a797f77b87bbbed1e1930393f3	71379	2534	54	0	2533	0	0	98
+data\ini\object\system\ai.ini	_patch222.big	3c47ee97b7c72028fb943c7a97731e3ac7087ae58fc63914c69e4ed4eb1b4eac	3593	171	39	0	170	0	0	166
+data\ini\object\system\buff.ini	_patch222.big	d8d222b53324d3c3b4b35d578a9170577d6363f0ad760b9a5bb23af91d0ac5e1	10350	425	17	0	425	0	0	75
+data\ini\object\system\system.ini	_patch222.big	df425f80866520a5e66905e6c6924b124bb60221b2bfda631002b2357c10fba4	41668	1315	31	0	1314	0	0	384
+data\ini\objectcreationlist.ini	_patch222.big	15b5a67696b8e774a00f6607b735d89b57afe56e37edc7f8f6525d9020d01cd2	254466	7717	576	0	7716	0	0	724
+data\ini\optionregistry.ini	_patch222.big	baaaba4efa2ef0a8700582e27d4bf1fe7e4c5c20acd4a8afcc79dc0d7ea4c37f	992	24	2	0	24	0	0	111
+data\ini\particlesystem.ini	_patch222.big	ddff81fca9543529201941c984c7f4a1c4aa1adbeb4c973b80b1428c0ff373fc	480688	18658	329	0	18658	0	0	65
+data\ini\pathfinder.ini	_patch222.big	12a7ddc0394c2efafee3344685ded800fb27b29b172673c8f3886ba228fb5f0c	257	7	1	0	7	0	0	79
+data\ini\playeraitypes.ini	_patch222.big	af19c9531e3418fba2fc57664999bfe4a2bed67639907c93810804ea910e5f40	1433	59	15	0	59	0	0	69
+data\ini\playertemplate.ini	_patch222.big	d4a0aceba52e6e2123aa3114e6f551e82703fb011c8f83ddd3ffcee838f02dc0	8367	198	7	0	198	0	0	154
+data\ini\rank.ini	_patch222.big	04a3a48fc2c266decd2ef691eb5bcab922b33f8c28761c76d6f11893fed092c8	11002	518	85	0	518	0	0	145
+data\ini\roads.ini	_patch222.big	3e4424f0890ab946a4e8996ba332385a8994c937be86a197c1fdebdc5ac960b1	8186	438	54	0	438	0	0	79
+data\ini\science.ini	_patch222.big	c60289447eae7490954e64ebef924beca195ec51c8d1c73eec5c39225c98a218	22249	513	49	0	512	0	0	724
+data\ini\shellmenuscheme.ini	_patch222.big	02d4603e820b1aab500c886292d06ddd1019fdb5f2aee410d9ca58da6aa27984	59	6	1	0	5	0	0	24
+data\ini\soundeffects.ini	_patch222.big	7af2c5268feb7f8544f3aae06d7a0c5f0e380678f445668bf12998d109408b59	343504	11468	988	0	11467	0	0	593
+data\ini\specialpower.ini	_patch222.big	de8f293bf6dfc3455c9c9276c60a12318e728d56cbe569f016513181c24e5f18	52294	1210	133	0	1209	0	0	724
+data\ini\speech.ini	_patch222.big	4e9649c2ddd4c8f021fc0d3bec3cf321087beac98e5ca2c54823505a26fff7e7	23722	1316	274	0	1315	0	0	86
+data\ini\terrain.ini	_patch222.big	3d27751e61b6b124427cdcb1932c3f9bb16f602be7f13bc1a3e035742aa773b2	116340	4449	886	0	4449	0	0	181
+data\ini\upgrade.ini	_patch222.big	8aac609551b519ad66750303cab0646629247c0da75f5d5613d5e360eef048ee	28308	1066	181	0	1065	0	0	137
+data\ini\victorysystem.ini	_patch222.big	5ff3c88df289f5912b66022dd541d33296c2850b7aa43887aefddb8656f659d7	7741	131	8	0	131	0	0	141
+data\ini\video.ini	_patch222.big	efd70ad75943b58a1014e8ffd4b0315f9674a5c53dd4994241ed0dec451cbfea	36385	1743	284	0	1743	0	0	101
+data\ini\voice.ini	_patch222.big	bc51c53e4dfea6b1d2aa681ead4f97ea78a6b533dbfd51ad9cede023acf9fbbe	1067864	42788	4323	0	42787	0	0	305
+data\ini\water.ini	_patch222.big	7e83f4f9d97c9ce361ad3bae05baf20bd4384143653c135c818caae78a8a22bb	2780	75	5	0	74	0	0	147
+data\ini\watertextures.ini	_patch222.big	c857bbd4417b87df476a90a20f90aeda3baca134a6286a71377d361811ac540b	1583	63	6	0	63	0	0	79
+data\ini\weapon.ini	_patch222.big	211066db1ed687f9a947420db95cb62504a68f03202400a31f611c4e0bfcd6bf	629114	15623	575	0	15622	0	0	724
+data\ini\weather.ini	_patch222.big	61447896d8b33f855307da40a37b98295a9fa8d04dd9343369f65ebe1783c201	2552	70	6	0	70	0	0	103
+data\ini\webpages.ini	_patch222.big	d26749c252c7f36d427a8f8f5fef71984c340698268c4f0326f075653e6812dc	738	27	6	0	27	0	0	114
+data\ini\windowtransitions.ini	_patch222.big	4b54dfb248f4c594fc93a0b063babafe85e873c13dcca7a5ef5748d791bc5647	64760	3189	70	0	3189	0	0	138
+maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini	_patch222maps.big	09397814c93e16a8a8dc0b8080c25abb166d6193f86fbc8a76272ae3c0fb92dd	955790	21831	902	0	21830	0	0	573
+maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini	_patch222maps.big	8e399b89c8723f338e328b7cce6ac3efa4269a79840497f5d72fd147857bfd02	945593	21457	901	0	21456	0	0	573
+maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini	_patch222maps.big	890778673ad9c0468c11f7c43a69881cd148fbe9d83129418245645c10c4d0d2	1138180	25728	1011	0	25727	0	0	573
+maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini	_patch222maps.big	dd7704ff12947d42d452a20bf21bb8ea7ebb5cc05b7bf2f48675212fa83d86e4	1405993	31984	1095	0	31983	0	0	573
+maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini	_patch222maps.big	0147ee93d8ecdac6182433abf72a87238df73fb2344df888f437dbe6f36d5d6f	1931190	44451	1353	0	44450	0	0	573
+maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini	_patch222maps.big	46d444e281b16e2dcd0e32fdd06e8ac35d0136992e31eeec74c8e5b8e7fa72fa	1053211	24195	920	0	24194	0	0	573
+maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini	_patch222maps.big	e7d9fd940ffb7f9293b0e7a2e40280871172511cb811e159c0e84afab2cd6e4f	1225894	27896	1054	0	27895	0	0	576
+maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini	_patch222maps.big	08aaaa60dd3a0438dfae160769bc471e6445e56e16485692997574a3c210de02	499807	10268	252	0	10268	0	0	516
+maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini	_patch222maps.big	3351fd555c56932ca2a4ea0e16d465c64f3a89db837cdc7e16c4dacced8032ec	578476	11539	266	0	11539	0	0	568
+maps\[GOOD Coop Campaign] Mission  03 Amon-Hen\map.ini	_patch222maps.big	091727a92bf1e5e61086ba0534d2e5654eaa28d77105a91e339a0bde3ba7c0f3	412884	8302	223	0	8301	0	0	516
+maps\[GOOD Coop Campaign] Mission  04 Fangorn\map.ini	_patch222maps.big	ab905c2e3c281cd40dd49388dcf4835bc7bb4cbc0492c700314a57c189e70455	361492	7259	176	0	7259	0	0	516
+maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini	_patch222maps.big	5d7317651063e0789f46948cbac3fc67ce500d1a1d246f766f0d05036093fd0c	808148	15716	337	0	15715	0	0	570
+maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini	_patch222maps.big	7390623355f654d82a465227cad8b20870dd3f9372c979b29ad1997aeafff65c	589512	11821	181	0	11820	0	0	516
+maps\[GOOD Coop Campaign] Mission  07 Ithilien\map.ini	_patch222maps.big	7dcf3d350ffea64f3913a9bb53a33aac6f862e64cf650babd9ce93ed52d96320	468612	8761	210	0	8760	0	0	516
+maps\[GOOD Coop Campaign] Mission  08 Osgiliath\map.ini	_patch222maps.big	2d09915b709263003b0dc9cd50ab155a9802a7d94b8ea02281d065f821fb7cef	500327	9253	159	0	9252	0	0	516
+maps\[GOOD Coop Campaign] Mission  09 Shelob's Lair\map.ini	_patch222maps.big	fd6456e2e12c76a80fc74c38482574f1dd6b84451e4ba765b127d264432a1068	342142	7264	244	0	7264	0	0	568
+maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini	_patch222maps.big	4ce4a85381cddd9b1edd3b5697374468b9c9db88b6403cd18043da54b79ea45a	1188255	23134	501	0	23133	0	0	570
+maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini	_patch222maps.big	7f96def566bc634f12adf2b846b47f5825a27721bf6658c8ec72e580a1103bf8	1207559	23320	327	0	23320	0	0	516
+maps\Balrog Training Map\map.ini	_patch222maps.big	61e2dcaaab49e76baeda0895b62cc807e1156e37b2e7ffff4a8d8ccbe4d36a56	6222	303	46	0	302	0	0	229
+maps\Creep Train Map\map.ini	_patch222maps.big	adb1f926b2e08c6d0fc32a11f071099d24a569d4c671f8cbbc3a2c303dfbdc19	24087	738	25	0	738	0	0	142
+maps\death or survival v2\desktop.ini	_patch222maps.big	f05e4b656216b888a4159ce2a718d7d61a32663fce262c5444f001959f4e032b	66	2	1	1	2	0	0	45
+maps\death or survival v2\map.ini	_patch222maps.big	0a035808c1a34483a208e5d19210f25b6006dda58cc68287020219faafd71369	59840	1853	90	0	1853	0	0	149
+maps\Helm Deep Survival\map.ini	_patch222maps.big	eaa2f652084de1b2eddeed0950b0a8fbddbe622a65e481d2ddd8a43289a20c04	448493	10900	266	0	10899	0	0	365
+maps\Hills_of_Rohan\map.ini	_patch222maps.big	723d2702444ab36fbd8b677702d0edd1ee3368dd76692cb1e2e6d8bdd3ad5003	3353	60	2	0	59	0	0	137
+maps\map evil amon hen\map.ini	_patch222maps.big	f0e6a6202b7d808293458c1d371f438d5aae80e407ff86b7540d3e94abfcb8b9	10571	376	30	0	376	0	0	124
+maps\map evil edoras\map.ini	_patch222maps.big	1bd930285c51ea10e5f059fb588afcdcc5b6429b35e2af2d3c52cb64800ecd8d	31152	1009	49	0	1008	0	0	128
+maps\map evil fangorn\map.ini	_patch222maps.big	05f4aac455fa28bbfebd8dc37581ca8ee9fe8e3799eef25c8dfcea81f9e2d72f	3713	144	14	0	143	0	0	102
+maps\map evil helms deep\map.ini	_patch222maps.big	95ee830e4f1487d79061fbc947554f8f5441cafc1a1818cbcff3ab94f4ed7679	58921	1745	75	0	1744	0	0	165
+maps\map evil isengard\map.ini	_patch222maps.big	125d2221d743e58c7e0d5b00ee5a1f903a682eff57bb62a3f92095562dfd7da3	12081	416	50	0	416	0	0	217
+maps\map evil minas tirith\map.ini	_patch222maps.big	63a2f161f7830b48f1ffec24122d4d66870050a522989d4c262430533f4fd03b	54737	2025	110	0	2025	0	0	138
+maps\map evil near harad\map.ini	_patch222maps.big	98981c795c8fb12cae5aeb313e90d9421eb4a1eaf5f7b0332926cf62f71e70eb	10206	288	19	0	287	0	0	221
+maps\map evil osgiliath\map.ini	_patch222maps.big	d3be7e502c0007ad0b0b55fb268a937e272fd06a5805909c5aa6845d33b8bd6e	32877	1224	43	0	1223	0	0	128
+maps\map evil shelobslair\map.ini	_patch222maps.big	c444f7e3ab6003dbce96ce46c40ea1865b91721881d3f1957c2faa3ea59e8c73	21177	813	28	0	813	0	0	217
+maps\map evil southern ithilien\map.ini	_patch222maps.big	7a653763b55ece2d01613eb83c4e8ad9dd00ab3991ce07b4d3303e29c6cc1635	49404	1480	46	0	1479	0	0	128
+maps\map good amon hen\map.ini	_patch222maps.big	5482c834910b24b2d6aa62c10232d3fab91f097ca512df9c9da41d371bd5c7a7	9480	303	24	0	302	0	0	119
+maps\map good black gate\map.ini	_patch222maps.big	4c39408cf79cb36974c36098bb850b55ab222ff7f50735f2bdbc7975b1871dec	25181	881	15	0	880	0	0	128
+maps\map good fangorn\map.ini	_patch222maps.big	a5342d9b81f80c49ad2ba928f5c94a3a9e4773c0bcee095f2b9b749cfe60a750	6470	252	20	0	251	0	0	128
+maps\map good helms deep\map.ini	_patch222maps.big	6950019753a98d7547eedf8a82cd47d9419782b7700f245e323adbf0b0e25ec4	22408	708	42	0	707	0	0	182
+maps\map good isengard\map.ini	_patch222maps.big	cab8fae84fd1926711b27ad5a79dddaf94ccad05ba36bd8601216f8b0fca8f85	13541	444	29	0	443	0	0	137
+maps\map good ithilien\map.ini	_patch222maps.big	7157647da293001ec6232460fdb69a6f60a932eba0b4df19a011a19f259e7ee0	11489	362	26	0	361	0	0	137
+maps\map good lothlorien\map.ini	_patch222maps.big	4725892e018f2db907c6d5e9717a26d0c825c658711158e3fc7790875a1b3550	3875	126	9	0	125	0	0	95
+maps\map good minas tirith\map.ini	_patch222maps.big	5850d23633b922547922691c6d80db7e6f06d1a7e0c37bf9f0a55d845186854d	36618	1334	48	0	1334	0	0	128
+maps\map good moria\map.ini	_patch222maps.big	dddfeb84142cca6a718c004f0b34d26495bf639c2a5d10fb414a7d6db85cbb59	15471	564	32	0	563	0	0	141
+maps\map good osgiliath\map.ini	_patch222maps.big	4f49493e61b6ed7ce7f6338792e51a5193195a031518a4fa2f8200c2c77d1ef2	25319	894	20	0	893	0	0	126
+maps\map good shelobslair\map.ini	_patch222maps.big	5787093e7acdb23ff0cbc3025bafc10e1273f04079ca0c3f5bb748d35eef931c	47976	1571	18	0	1570	0	0	184
+maps\map mp adorn river nm\desktop.ini	_patch222maps.big	d7b41c7e32ec80bc1b8cf01e197ce0f7ef38c23b973b36ae3ba30190d38fad67	67	2	1	1	2	0	0	46
+maps\map mp anorien winter\map.ini	_patch222maps.big	72884f156ae48ccf3ac1a2229e7d925ef67508c5187ea97463f273171c4f6da3	1232	29	1	0	28	0	0	102
+maps\map mp arnor\map.ini	_patch222maps.big	54a9cee61e1df2404719dd61960f1d2746da7ce7a2e05d3994d53adf02a4b2e2	1335	28	1	0	27	0	0	124
+maps\map mp cair andros\map.ini	_patch222maps.big	1f4744d1755e91601170eb1dae24026bb912776ad3a559d72cb031ede37aff92	689	38	2	0	38	0	0	51
+maps\map mp dead marshes ii\desktop.ini	_patch222maps.big	28a6879b29dc6623ae859636521e52aa8aa51e74050c69541b80238132fb1568	68	2	1	1	2	0	0	47
+maps\map mp dorwinion\map.ini	_patch222maps.big	f3be5364f56f558d288f8375a4d23b6e21dd5946f17892ce7aad1e3e7925eb31	186	7	1	0	6	0	0	57
+maps\map mp dorwinionffa\map.ini	_patch222maps.big	f3be5364f56f558d288f8375a4d23b6e21dd5946f17892ce7aad1e3e7925eb31	186	7	1	0	6	0	0	57
+maps\map mp edhellond\map.ini	_patch222maps.big	86ec741016f7053cc697c005bcecf5a204dcbb1f2d2bc7b09d6592a56784c26e	2008	160	20	0	159	0	0	51
+maps\map mp enedwaith ii nm\desktop.ini	_patch222maps.big	8dc830c8fc83914eeddb3892e5a2d84778f4e257a3f5109fbe9322d8493eba5a	68	2	1	1	2	0	0	47
+maps\map mp ered lithui\map.ini	_patch222maps.big	06b696e0196aa646c54261fa535ca19f0ded63aab6c73f4287d120c60851335b	1469	29	1	0	29	0	0	121
+maps\map mp eryn vorn\map.ini	_patch222maps.big	57cfa0805990d15ce740a6f5e4493556283174390ca462c4b34f2bd19c02c339	711	69	10	0	68	0	0	23
+maps\map mp fields of edhellond nm\map.ini	_patch222maps.big	0d2b87676df457b053a0e98611e37f7da5213b34743c845e827481a6aa063e16	40919	1608	81	0	1607	0	0	169
+maps\map mp fields of edhellond\map.ini	_patch222maps.big	0d2b87676df457b053a0e98611e37f7da5213b34743c845e827481a6aa063e16	40919	1608	81	0	1607	0	0	169
+maps\map mp fords of isen winter\map.ini	_patch222maps.big	72884f156ae48ccf3ac1a2229e7d925ef67508c5187ea97463f273171c4f6da3	1232	29	1	0	28	0	0	102
+maps\map mp gorgoroth\desktop.ini	_patch222maps.big	d23dd8cfdd7c700c923aa32e5761f7555a60087ba531d30d697f3936bd8e2633	62	2	1	1	2	0	0	41
+maps\map mp grey havens\map.ini	_patch222maps.big	1af1ce6ec89b0507aeb8f707efaa7aa3bdcd810cad2ea57ee85cc9b823ecba47	3597	309	38	0	308	0	0	62
+maps\map mp harlond winter\map.ini	_patch222maps.big	72884f156ae48ccf3ac1a2229e7d925ef67508c5187ea97463f273171c4f6da3	1232	29	1	0	28	0	0	102
+maps\map mp havens of umbar\map.ini	_patch222maps.big	34c1ee097636b1fbab974f40a748d8fd093dbb92b63c5754b8c8975658235f1a	2472	201	27	0	201	0	0	51
+maps\map mp khand\desktop.ini	_patch222maps.big	65273174df9743fead1b820e2a901a31afdbc2c4937a1103ee51017685f4fc92	58	2	1	1	2	0	0	37
+maps\map mp lamedon ii\desktop.ini	_patch222maps.big	5d90d0261d1cc81655ac7592163d7b367ed570a498143f2b157f57e5a33adaf5	63	2	1	1	2	0	0	42
+maps\map mp lebennin ii\desktop.ini	_patch222maps.big	053979c30542aced4e7fab0b19551afa23adaa12e3e782d03cd1a77abfeb7438	64	2	1	1	2	0	0	43
+maps\map mp lebennin winter nm\map.ini	_patch222maps.big	72884f156ae48ccf3ac1a2229e7d925ef67508c5187ea97463f273171c4f6da3	1232	29	1	0	28	0	0	102
+maps\map mp little lune\map.ini	_patch222maps.big	2f8fd182939b76d1afdefefb77ab792971a94bfa6f8f9fa2a2d84cc65b45b111	1339	28	1	0	27	0	0	124
+maps\map mp minhiriath\map.ini	_patch222maps.big	95e3ad9acbf2b1039e6242c69dd463d880b05534e603c23abfa4198894af93b1	77	5	1	0	4	0	0	35
+maps\map mp mouths of entwash2\map.ini	_patch222maps.big	0803204382626d5559577a95db4996c6f1185e0bca1e1cb430c771223ef236e6	681	38	2	0	38	0	0	51
+maps\map mp mouths of entwash\map.ini	_patch222maps.big	0803204382626d5559577a95db4996c6f1185e0bca1e1cb430c771223ef236e6	681	38	2	0	38	0	0	51
+maps\map mp nctest\map.ini	_patch222maps.big	e5ee4c268eb5b0e4c50165259c8385436c19de2fd6101be050394cfab7fa5b32	18914	498	74	0	497	0	0	145
+maps\map mp nimrodel\map.ini	_patch222maps.big	06b696e0196aa646c54261fa535ca19f0ded63aab6c73f4287d120c60851335b	1469	29	1	0	29	0	0	121
+maps\map mp nurn ii\desktop.ini	_patch222maps.big	051691145e4477ecdbf2e78f9f3325e254242bbaa440c669647b737e0c288471	60	2	1	1	2	0	0	39
+maps\map mp old brown lands ii\desktop.ini	_patch222maps.big	7b86ff867ca82985095f90db0fa87c3d119026a2da4b374be9829c05f5c7223d	71	2	1	1	2	0	0	50
+maps\map mp pelargir2\map.ini	_patch222maps.big	d2ca0e7f7ea90583bc1ddbef3c4e7b065d64de50727a3789d716e7847870724a	346	20	1	0	20	0	0	51
+maps\map mp pelargir\map.ini	_patch222maps.big	d2ca0e7f7ea90583bc1ddbef3c4e7b065d64de50727a3789d716e7847870724a	346	20	1	0	20	0	0	51
+maps\map mp rhun winter nm\map.ini	_patch222maps.big	72884f156ae48ccf3ac1a2229e7d925ef67508c5187ea97463f273171c4f6da3	1232	29	1	0	28	0	0	102
+maps\map mp test\map.ini	_patch222maps.big	2d880c1039cac2140a07be0303d86ee13d9416ca0060ecb782680eb3cf1826c2	229	5	1	0	4	0	0	145
+maps\map mp tharbad\map.ini	_patch222maps.big	cd3203540a5f5f4fb46ee2d75e4ec62b6c1021689e4431d4cbb069364fa692f6	1338	28	1	0	28	0	0	125
+maps\map mp tower hills\map.ini	_patch222maps.big	5104247fe9f90e67bc1b398b7a990c7e8dbc86caec1e6fd592b6af6657b80047	339	17	1	0	16	0	0	51
+maps\map mp withered heath\map.ini	_patch222maps.big	54a9cee61e1df2404719dd61960f1d2746da7ce7a2e05d3994d53adf02a4b2e2	1335	28	1	0	27	0	0	124
+maps\map mp wold winter\map.ini	_patch222maps.big	72884f156ae48ccf3ac1a2229e7d925ef67508c5187ea97463f273171c4f6da3	1232	29	1	0	28	0	0	102
+maps\map sps evil anfalas\map.ini	_patch222maps.big	c302a3e8bb1f200279b0789f3f79cfd48a97eaaeb72cc55a182f5672f03a9ade	11442	452	37	0	451	0	0	122
+maps\map sps evil anorien\map.ini	_patch222maps.big	c302a3e8bb1f200279b0789f3f79cfd48a97eaaeb72cc55a182f5672f03a9ade	11442	452	37	0	451	0	0	122
+maps\map sps evil belfalas\map.ini	_patch222maps.big	c302a3e8bb1f200279b0789f3f79cfd48a97eaaeb72cc55a182f5672f03a9ade	11442	452	37	0	451	0	0	122
+maps\map sps evil brown lands\map.ini	_patch222maps.big	c302a3e8bb1f200279b0789f3f79cfd48a97eaaeb72cc55a182f5672f03a9ade	11442	452	37	0	451	0	0	122
+maps\map sps evil cair andros\map.ini	_patch222maps.big	83e2824ee82b4f8c67f5809602f82dcbe702540b895966d54f2162f6a629e80b	11788	472	38	0	471	0	0	122
+maps\map sps evil central ithilien\map.ini	_patch222maps.big	c302a3e8bb1f200279b0789f3f79cfd48a97eaaeb72cc55a182f5672f03a9ade	11442	452	37	0	451	0	0	122
+maps\map sps evil crossroads\map.ini	_patch222maps.big	c302a3e8bb1f200279b0789f3f79cfd48a97eaaeb72cc55a182f5672f03a9ade	11442	452	37	0	451	0	0	122
+maps\map sps evil dead marshes\map.ini	_patch222maps.big	c302a3e8bb1f200279b0789f3f79cfd48a97eaaeb72cc55a182f5672f03a9ade	11442	452	37	0	451	0	0	122
+maps\map sps evil druadan forest\map.ini	_patch222maps.big	c302a3e8bb1f200279b0789f3f79cfd48a97eaaeb72cc55a182f5672f03a9ade	11442	452	37	0	451	0	0	122
+maps\map sps evil dunharrow\map.ini	_patch222maps.big	c302a3e8bb1f200279b0789f3f79cfd48a97eaaeb72cc55a182f5672f03a9ade	11442	452	37	0	451	0	0	122
+maps\map sps evil east emnet\map.ini	_patch222maps.big	e2d7e907df43a3ab11b7cfe9e54fc5bd352b75244f4d7238a7bfd5e839e5d33c	11618	462	38	0	461	0	0	122
+maps\map sps evil east rohan\map.ini	_patch222maps.big	c302a3e8bb1f200279b0789f3f79cfd48a97eaaeb72cc55a182f5672f03a9ade	11442	452	37	0	451	0	0	122
+maps\map sps evil eaves of fangorn\map.ini	_patch222maps.big	8a11a3839b6d8eeaaafc90f58b82bec6ef1830c4e37c3705a9533ad9b9d2929d	11362	447	36	0	446	0	0	122
+maps\map sps evil emyn arnen\map.ini	_patch222maps.big	c302a3e8bb1f200279b0789f3f79cfd48a97eaaeb72cc55a182f5672f03a9ade	11442	452	37	0	451	0	0	122
+maps\map sps evil emyn muil\map.ini	_patch222maps.big	cc110c73748fba1972756d5cfaa91d760ec6da7d50faa3d6b3bcdb1234a77819	11364	448	36	0	447	0	0	122
+maps\map sps evil enedwaith\map.ini	_patch222maps.big	cc110c73748fba1972756d5cfaa91d760ec6da7d50faa3d6b3bcdb1234a77819	11364	448	36	0	447	0	0	122
+maps\map sps evil fords of isen\map.ini	_patch222maps.big	ece11c06b30db6c3bdb15f04e39540c6148d45bb885be1334e3de26c0b54377c	11444	453	37	0	452	0	0	122
+maps\map sps evil gap of rohan\map.ini	_patch222maps.big	18b076a2fea986c5598e1ecfe3ffca92ff65bf387a00fe6d30e88d555f9d67ad	12739	492	40	0	491	0	0	122
+maps\map sps evil harlond\map.ini	_patch222maps.big	7892bba005e81bc06e43686012273d21e9914fd1af26a95d93dd142efb7c6d30	11391	447	36	0	446	0	0	122
+maps\map sps evil lebennin\map.ini	_patch222maps.big	f2d0b603336dcdf8ca3907957afd1f4c64cd531383f81369de5a6c12f00c832d	11386	447	36	0	446	0	0	122
+maps\map sps evil mirkwood\map.ini	_patch222maps.big	8a11a3839b6d8eeaaafc90f58b82bec6ef1830c4e37c3705a9533ad9b9d2929d	11362	447	36	0	446	0	0	122
+maps\map sps evil mouths of entwash\map.ini	_patch222maps.big	8a11a3839b6d8eeaaafc90f58b82bec6ef1830c4e37c3705a9533ad9b9d2929d	11362	447	36	0	446	0	0	122
+maps\map sps evil northern ithilien\map.ini	_patch222maps.big	8a11a3839b6d8eeaaafc90f58b82bec6ef1830c4e37c3705a9533ad9b9d2929d	11362	447	36	0	446	0	0	122
+maps\map sps evil pelargir\map.ini	_patch222maps.big	b42c7b132b1c2e2c7289b88cb59b8a4caed54879a3f60f50b5210b48d44253c0	12685	494	39	0	493	0	0	122
+maps\map sps evil rohan\map.ini	_patch222maps.big	7093b6ce78019d5258ba33b9a4e2269d514945cc7597ddce0f3d11ad0dac78fc	11279	443	35	0	442	0	0	122
+maps\map sps evil west emnet\map.ini	_patch222maps.big	8a11a3839b6d8eeaaafc90f58b82bec6ef1830c4e37c3705a9533ad9b9d2929d	11362	447	36	0	446	0	0	122
+maps\map sps evil westfold\map.ini	_patch222maps.big	c302a3e8bb1f200279b0789f3f79cfd48a97eaaeb72cc55a182f5672f03a9ade	11442	452	37	0	451	0	0	122
+maps\map sps good anorien\map.ini	_patch222maps.big	e8fa3ce95712af744bced908250a49d532de58d841e63df0b3fbcfbda096a72c	5740	237	23	0	236	0	0	119
+maps\map sps good cair andros\map.ini	_patch222maps.big	440a968b7d232d13d739ffb3cfd0510a764b68c467f32a9771db8d29d18e372f	5782	237	23	0	236	0	0	119
+maps\map sps good central ithilien\map.ini	_patch222maps.big	e8fa3ce95712af744bced908250a49d532de58d841e63df0b3fbcfbda096a72c	5740	237	23	0	236	0	0	119
+maps\map sps good crossroads\map.ini	_patch222maps.big	e8fa3ce95712af744bced908250a49d532de58d841e63df0b3fbcfbda096a72c	5740	237	23	0	236	0	0	119
+maps\map sps good dagorlad\map.ini	_patch222maps.big	3270ecae1965e1bbdfeed7e48e0c85bac9a1daed5a18a780e9511199ad068144	20947	823	24	0	822	0	0	119
+maps\map sps good dead marshes\map.ini	_patch222maps.big	e8fa3ce95712af744bced908250a49d532de58d841e63df0b3fbcfbda096a72c	5740	237	23	0	236	0	0	119
+maps\map sps good druadan forest\map.ini	_patch222maps.big	8e2478e8c062b910779c9713c810c95df94bd5957c800b89d93e007440be798e	5744	239	23	0	238	0	0	119
+maps\map sps good dunharrow\map.ini	_patch222maps.big	898fb041f5ac9e3c15d933e3f39b646cf64f4265d55c1d119f877e56aef53d85	7190	270	24	0	269	0	0	127
+maps\map sps good east emnet\map.ini	_patch222maps.big	c5f79c999d7f5ca8612408342cd1cbb301d876c0d0392d92533e5419c95e92f4	5403	218	22	0	217	0	0	119
+maps\map sps good east rohan\map.ini	_patch222maps.big	c5f79c999d7f5ca8612408342cd1cbb301d876c0d0392d92533e5419c95e92f4	5403	218	22	0	217	0	0	119
+maps\map sps good eastfold\map.ini	_patch222maps.big	79606f74f9c4a646c11265468cc95938768c8f21e65624fe762843611d36da7b	9453	383	32	0	382	0	0	119
+maps\map sps good emyn arnen\map.ini	_patch222maps.big	05a3e72afc316e85581856a24c6656f857692dcef6afe0757abfaddc1a0d07f3	5942	248	26	0	247	0	0	119
+maps\map sps good emyn muil\map.ini	_patch222maps.big	e8fa3ce95712af744bced908250a49d532de58d841e63df0b3fbcfbda096a72c	5740	237	23	0	236	0	0	119
+maps\map sps good fangorn\map.ini	_patch222maps.big	a54ec00f42668dfe93f9a93ac91014dd946c3455e520f76c98f93a5847142785	6959	309	32	0	308	0	0	119
+maps\map sps good halifirien\map.ini	_patch222maps.big	e8fa3ce95712af744bced908250a49d532de58d841e63df0b3fbcfbda096a72c	5740	237	23	0	236	0	0	119
+maps\map sps good harondor\map.ini	_patch222maps.big	440a968b7d232d13d739ffb3cfd0510a764b68c467f32a9771db8d29d18e372f	5782	237	23	0	236	0	0	119
+maps\map sps good mirkwood\map.ini	_patch222maps.big	3a5c8de489c9a78a7efd003747c74241bbd8f718fdcd93465bc6f33ccc2a1301	6660	287	30	0	286	0	0	119
+maps\map sps good mouths of entwash\map.ini	_patch222maps.big	e8fa3ce95712af744bced908250a49d532de58d841e63df0b3fbcfbda096a72c	5740	237	23	0	236	0	0	119
+maps\map sps good near harad\map.ini	_patch222maps.big	440a968b7d232d13d739ffb3cfd0510a764b68c467f32a9771db8d29d18e372f	5782	237	23	0	236	0	0	119
+maps\map sps good nurn\map.ini	_patch222maps.big	e8fa3ce95712af744bced908250a49d532de58d841e63df0b3fbcfbda096a72c	5740	237	23	0	236	0	0	119
+maps\map sps good rhun\map.ini	_patch222maps.big	e557404349118596648e103ac8d1ff08332e36ad2a0e109399e93477462a15ac	5786	239	23	0	238	0	0	119
+maps\map sps good rohan\map.ini	_patch222maps.big	c5f79c999d7f5ca8612408342cd1cbb301d876c0d0392d92533e5419c95e92f4	5403	218	22	0	217	0	0	119
+maps\map sps good southern ithilien\map.ini	_patch222maps.big	026b01390fd6a068ed06469d23972a1d59465c185e42f753a933f1859ddea823	5742	238	23	0	237	0	0	119
+maps\map sps good west emnet\map.ini	_patch222maps.big	c5f79c999d7f5ca8612408342cd1cbb301d876c0d0392d92533e5419c95e92f4	5403	218	22	0	217	0	0	119
+maps\map sps good westfold\map.ini	_patch222maps.big	c5f79c999d7f5ca8612408342cd1cbb301d876c0d0392d92533e5419c95e92f4	5403	218	22	0	217	0	0	119
+maps\map sps good wold\map.ini	_patch222maps.big	245805e58a7c3094c80065cfb84e1e81744d5361c02c13253e820952be9e6601	7459	296	26	0	295	0	0	119
+maps\MapCache.ini	_patch222maps.big	cd860385df12bd173ab14f00d709558e7933aa7e2190358bbffa22d65d10597c	304498	7484	292	0	7484	0	0	1042
+maps\Minas Tirith Evil - 7 Rings\map.ini	_patch222maps.big	5973a4e101f96ed7e5e9b9534b0e798a5d49ea0551a362d6e65456f15c53a569	111253	2700	151	0	2699	0	0	221
+maps\shellmap1\map.ini	_patch222maps.big	61855e8a4c85685764b9667ba9302f39711a96b2fa5610fa323b1ef7716abb2e	497	35	9	0	34	0	0	52
+maps\Siege Helms Deep\map.ini	_patch222maps.big	d66669799856e263973ada589048da01d9d154b534bb5ac786654898d5f96aba	16191	475	28	0	475	0	0	182
+maps\The Trilogy (Updated) Singleplayer\map.ini	_patch222maps.big	6cc74ba3e94d4105dd39351f0671a5c6ec53fb94e8a206e820b9c6e3d9a68a1c	16784	612	36	0	611	0	0	141
+maps\Tower Defense Map\map.ini	_patch222maps.big	e6736bd1c639a10e396431d235ef92752e716b95525367566a5ba401cbaa9df8	7656	257	29	0	257	0	0	130
+data\ini\neutralunits.ini	ini.big	4eb5eb032cddf290a43e4c6df071f5641d2275a5f22a66d28a54b2db09654032	79795	2538	11	0	2538	0	0	516

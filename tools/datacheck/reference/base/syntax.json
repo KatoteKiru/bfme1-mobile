@@ -1,0 +1,276 @@
+{
+ "set": "base",
+ "files": 275,
+ "lua": {
+  "blocks": 1783,
+  "files": 44,
+  "modules": 318,
+  "direct_in_module": 1783,
+  "by_module_type": [
+   {
+    "field": "draw",
+    "module_type": "W3DScriptedModelDraw",
+    "blocks": 1414
+   },
+   {
+    "field": "draw",
+    "module_type": "W3DHordeModelDraw",
+    "blocks": 300
+   },
+   {
+    "field": "draw",
+    "module_type": "W3DQuadrupedDraw",
+    "blocks": 48
+   },
+   {
+    "field": "draw",
+    "module_type": "W3DTruckDraw",
+    "blocks": 21
+   }
+  ],
+  "by_owner_field": {
+   "AnimationState": 1619,
+   "IdleAnimationState": 156,
+   "TransitionState": 8
+  },
+  "by_parent_kind": {
+   "Object": 1628,
+   "ChildObject": 90,
+   "ObjectReskin": 65
+  },
+  "top_files": [
+   [
+    "data\\ini\\object\\civilian\\civilianbuildings.ini",
+    354
+   ],
+   [
+    "data\\ini\\object\\evilfaction\\evilfactionunits.ini",
+    251
+   ],
+   [
+    "data\\ini\\object\\goodfaction\\goodfactionbuildings.ini",
+    167
+   ],
+   [
+    "data\\ini\\object\\goodfaction\\units\\ents\\entsinfantry.ini",
+    167
+   ],
+   [
+    "data\\ini\\object\\cinematic\\cinematicobjects.ini",
+    165
+   ],
+   [
+    "data\\ini\\object\\goodfaction\\units\\gondor\\gondorinfantry.ini",
+    108
+   ],
+   [
+    "data\\ini\\object\\evilfaction\\evilfactionbuildings.ini",
+    97
+   ],
+   [
+    "data\\ini\\object\\goodfaction\\units\\elven\\elveninfantry.ini",
+    77
+   ],
+   [
+    "data\\ini\\object\\goodfaction\\units\\rohan\\rohaninfantry.ini",
+    40
+   ],
+   [
+    "data\\ini\\object\\nature\\natureunits.ini",
+    34
+   ],
+   [
+    "data\\ini\\object\\goodfaction\\goodfactionsubobjects.ini",
+    28
+   ],
+   [
+    "data\\ini\\object\\goodfaction\\units\\rohan\\legolas.ini",
+    28
+   ],
+   [
+    "data\\ini\\object\\goodfaction\\units\\rohan\\frodo.ini",
+    25
+   ],
+   [
+    "data\\ini\\object\\civilian\\gondorbuildings.ini",
+    20
+   ],
+   [
+    "data\\ini\\object\\goodfaction\\units\\elven\\elrond.ini",
+    18
+   ]
+  ],
+  "after_begin_nonempty": 8,
+  "after_end_nonempty": 0,
+  "eof_before_end": [],
+  "nested_begin": [],
+  "endscript_substring": [],
+  "outside_module": [],
+  "not_in_analyzer": [],
+  "max_line_len": 151,
+  "max_line_at": "ini.big:data\\ini\\object\\neutral\\ruinedtower.ini:128",
+  "lines_over_zh_limit": 0,
+  "zh_ini_max_chars_per_line": 1028,
+  "lua_lines": 5065,
+  "files_with_lua_eol": {
+   "crlf": 44
+  },
+  "all_ini_eol": {
+   "crlf": 274,
+   "none": 1
+  },
+  "blocks_with_lua_end_line": 169,
+  "blocks_with_zh_end_token": 169,
+  "zh_end_token_lines": 272,
+  "blocks_with_semicolon": 255,
+  "zh_module_unknown": 1762,
+  "zh_module_known_owner_unknown": 21,
+  "zh_module_known_owner_known": 0,
+  "by_wrapper": {
+   "direct": 1783
+  },
+  "begin_case": {
+   "canonical": 1783,
+   "other": 0
+  },
+  "end_case": {
+   "canonical": 1783,
+   "other": 0
+  },
+  "body_eol": {
+   "crlf": 5065
+  }
+ },
+ "extensions": {
+  "include": {
+   "count": 0,
+   "example": null,
+   "zh": "падает"
+  },
+  "define": {
+   "count": 2046,
+   "example": "ini.big:data\\ini\\experiencelevels.ini:18",
+   "zh": "падает"
+  },
+  "undef": {
+   "count": 0,
+   "example": null,
+   "zh": "падает"
+  },
+  "other_directive": {
+   "count": 0,
+   "example": null,
+   "zh": "падает"
+  },
+  "arith": {
+   "count": 0,
+   "example": null,
+   "zh": "падает"
+  },
+  "macro_numeric": {
+   "count": 6283,
+   "example": "ini.big:data\\ini\\attributemodifier.ini:228",
+   "zh": "падает"
+  },
+  "macro_other": {
+   "count": 84,
+   "example": "ini.big:data\\ini\\neutralunits.ini:2153",
+   "zh": "молча ошибается"
+  },
+  "lua_block": {
+   "count": 1783,
+   "example": "ini.big:data\\ini\\neutralunits.ini:83",
+   "zh": "падает / молча ошибается"
+  },
+  "slash_comment": {
+   "count": 7,
+   "example": "ini.big:data\\ini\\object\\system\\system.ini:955",
+   "zh": "молча ошибается / падает"
+  },
+  "dash_comment": {
+   "count": 3,
+   "example": "ini.big:data\\ini\\object\\goodfaction\\units\\gondor\\faramir.ini:1200",
+   "zh": "молча ошибается"
+  },
+  "quotes": {
+   "count": 1305,
+   "example": "ini.big:data\\ini\\audiosettings.ini:62",
+   "zh": "частично"
+  },
+  "unbalanced_quotes": {
+   "count": 4,
+   "example": "ini.big:data\\ini\\credits.ini:464",
+   "zh": "молча ошибается"
+  },
+  "continuation": {
+   "count": 0,
+   "example": null,
+   "zh": "молча ошибается"
+  },
+  "comma_values": {
+   "count": 73,
+   "example": "ini.big:data\\ini\\credits.ini:168",
+   "zh": "зависит от поля"
+  },
+  "tabs": {
+   "count": 161243,
+   "example": "ini.big:data\\ini\\ambientstream.ini:23",
+   "zh": "поддерживает (release)"
+  },
+  "crlf": {
+   "count": 474968,
+   "example": "ini.big:data\\ini\\aidata.ini",
+   "zh": "поддерживает"
+  },
+  "lone_cr": {
+   "count": 0,
+   "example": null,
+   "zh": "молча ошибается"
+  },
+  "long_lines": {
+   "count": 0,
+   "example": null,
+   "zh": "молча ошибается"
+  },
+  "non_ascii": {
+   "count": 23,
+   "example": "ini.big:data\\ini\\credits.ini:686",
+   "zh": "поддерживает"
+  },
+  "end_case": {
+   "count": 1094,
+   "example": "ini.big:data\\ini\\armor.ini:1051",
+   "zh": "поддерживает"
+  },
+  "missing_end": {
+   "count": 0,
+   "example": null,
+   "zh": "падает"
+  },
+  "stray_end": {
+   "count": 0,
+   "example": null,
+   "zh": "падает"
+  },
+  "unknown_top_block": {
+   "count": 2757,
+   "example": "ini.big:data\\ini\\fxparticlesystem.ini:1",
+   "zh": "падает"
+  },
+  "unknown_module": {
+   "count": 4677,
+   "example": "ini.big:data\\ini\\crate.ini:187",
+   "zh": "падает"
+  },
+  "unknown_nested_block": {
+   "count": 16960,
+   "example": "ini.big:data\\ini\\neutralunits.ini:94",
+   "zh": "молча ошибается, потом падает"
+  },
+  "unknown_field": {
+   "count": 63380,
+   "example": "ini.big:data\\ini\\neutralunits.ini:65",
+   "zh": "молча ошибается"
+  }
+ }
+}

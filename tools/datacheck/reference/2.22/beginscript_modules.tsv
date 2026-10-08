@@ -1,0 +1,693 @@
+module_field	module_type	module_tag	module_wrapper	template_kind	template	module_at	first_beginscript_line	blocks
+draw	W3DScriptedModelDraw	ModuleTag_BodyDraw		Object	MordorBalrog	ini.big:data\ini\neutralunits.ini:11	83	1
+draw	W3DHordeModelDraw	ModuleTag_01		Object	NeutralWarg	ini.big:data\ini\neutralunits.ini:2146	2352	3
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_MordorWorker	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:112	126	20
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_Sam	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:541	570	11
+draw	W3DScriptedModelDraw	ModuleTag_LightController		Object	CINE_Sam	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:833	843	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_AttackTroll	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:1402	1458	29
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	CINE_GondorFaramir	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:5508	5542	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_GondorFighter	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:5814	6083	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_GondorFighterNoSword	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:6356	6623	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_MordorFighter	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:6896	7144	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_MordorFighterNoSwords	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:7352	7613	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_OrcMoranNoSwords	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:7838	8105	1
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	CINE_GondorTrebuchet	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:8403	8420	3
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_GondorGandalfCavalry	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:8880	9075	1
+draw	W3DTruckDraw	ModuleTag_01		Object	CINE_MordorCatapult_LR	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:9253	9274	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_GondorArcher	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:9593	9659	3
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_GondorBanner	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:10336	10516	1
+draw	W3DQuadrupedDraw	ModuleTag_01		Object	CINE_MordorMumakil	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:10720	10749	17
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_IsengardFighter_Walking	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:13173	13205	3
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	CINE_GondorAragorn_Swordfight	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:13591	13610	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_IsengardFighter_FlyingDeath	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:13717	13756	3
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_Gollum	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:14916	14965	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_RohanElvenWarrior	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:15087	15122	25
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_RohanElvenWarrior_Walking	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:15801	15836	25
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_RohanElvenWarrior_Prop	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:16529	16545	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_IsengardFighter_DIEA	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:16709	16741	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_IsengardFighter_DIEB	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:17201	17233	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_IsengardFighter_DIEC	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:17693	17725	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_IsengardFighter_DIEG	_patch222.big:data\ini\object\cinematic\cinematicobjects.ini:18185	18217	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	ElvenBarracks	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:1708	1752	6
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral01	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:2014	2045	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral02	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:2298	2317	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral03	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:2498	2517	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral04	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:2694	2714	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral05	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:2888	2909	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral06	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:3117	3136	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral07	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:3305	3326	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral08	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:3527	3546	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral09	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:3750	3770	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral11	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:4115	4133	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral12	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:4409	4429	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral13	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:4604	4624	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral14	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:4807	4828	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral15	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:5014	5035	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral16	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:5319	5340	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral17	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:5519	5539	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral18	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:5840	5859	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral19	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:6029	6050	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral20	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:6333	6354	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral21	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:6529	6550	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral22	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:6725	6746	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral23	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:6921	6940	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral24	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:7109	7130	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral25	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:7314	7335	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral26	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:7510	7531	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral27	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:7705	7726	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral28	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:7905	7926	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral29	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:8112	8132	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral30	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:8312	8332	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral31	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:8535	8553	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral32	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:8717	8738	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral33	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:9036	9054	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral34	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:9213	9234	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral35	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:9419	9440	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral36	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:9614	9635	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral37	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:9810	9830	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral38	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:10000	10021	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral39	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:10224	10245	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral40	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:10424	10445	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral41	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:10627	10648	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral42	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:10827	10848	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral43	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:11029	11049	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral44	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:11229	11250	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral45	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:11430	11451	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral46	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:11633	11654	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral47	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:11843	11864	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral48	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:12056	12077	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral49	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:12264	12285	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral50	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:12467	12488	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral51	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:12674	12695	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral52	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:12875	12896	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral53	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:13072	13093	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral54	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:13277	13298	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral55	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:13481	13502	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral56	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:13677	13698	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral57	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:13882	13903	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral58	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:14085	14106	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral59	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:14288	14309	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral60	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:14492	14513	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral61	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:14695	14716	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral62	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:14898	14919	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral63	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:15105	15126	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral64	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:15307	15328	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral65	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:15515	15536	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral66	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:15718	15739	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral67	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:15942	15963	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral68	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:16149	16170	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral69	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:16349	16367	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral70	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:16538	16557	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral71	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:16726	16747	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral72	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:16932	16953	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral73	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:17133	17154	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral74	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:17335	17356	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral75	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:17538	17559	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral76	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:17740	17761	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral77	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:17936	17957	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBuildingGeneral78	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:18138	18159	4
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	LumberMill	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:18532	18597	6
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	SlaughterHouse	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:19030	19102	6
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	Furnace	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:19565	19625	6
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	StructureRubblePileLarge	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:21413	21434	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	StructureRubblePileSmall	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:21455	21475	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorBattleTower_S	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:21876	21892	18
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	MordorCirithUngolGateDoor	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:25341	25357	2
+draw	W3DScriptedModelDraw	Draw_Wall		Object	TharbadWall	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:28221	28318	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	TharbadElevator	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:28557	28676	2
+draw	W3DScriptedModelDraw	Draw_Wall		Object	TharbadGate01	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:28934	29041	2
+draw	W3DScriptedModelDraw	Draw_Wall		Object	TharbadGate02	_patch222.big:data\ini\object\civilian\civilianbuildings.ini:29274	29381	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorTownsPair	_patch222.big:data\ini\object\civilian\civilianunit.ini:1518	1538	5
+draw	W3DScriptedModelDraw	Draw_Wall		Object	GondorCastleGateL	_patch222.big:data\ini\object\civilian\gondorbuildings.ini:18	125	2
+draw	W3DScriptedModelDraw	Draw_Wall		Object	GondorCastleGateR	_patch222.big:data\ini\object\civilian\gondorbuildings.ini:352	459	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorCastleElevator	_patch222.big:data\ini\object\civilian\gondorbuildings.ini:975	1094	2
+draw	W3DScriptedModelDraw	Draw_Trebuchet		Object	GondorCastleUpgrade	_patch222.big:data\ini\object\civilian\gondorbuildings.ini:1351	1370	2
+draw	W3DScriptedModelDraw	Draw_Decal		Object	GondorCastleUpgrade	_patch222.big:data\ini\object\civilian\gondorbuildings.ini:1480	1490	7
+draw	W3DScriptedModelDraw	Draw_PosternGate		Object	GondorCastleUpgrade	_patch222.big:data\ini\object\civilian\gondorbuildings.ini:1552	1564	1
+draw	W3DScriptedModelDraw	Draw_Tower		Object	GondorCastleUpgrade	_patch222.big:data\ini\object\civilian\gondorbuildings.ini:1632	1660	2
+draw	W3DScriptedModelDraw	Draw_Wall		Object	GondorCastleWall	_patch222.big:data\ini\object\civilian\gondorbuildings.ini:2103	2200	2
+draw	W3DScriptedModelDraw	Draw_Decal		Object	MinisWallBTUpgrade	_patch222.big:data\ini\object\civilian\minastirithstructureupgrades.ini:21	28	1
+draw	W3DScriptedModelDraw	Draw_Trebuchet		ChildObject	MinisWallAUpgrade	_patch222.big:data\ini\object\civilian\ministirithbuildings.ini:401	420	2
+draw	W3DScriptedModelDraw	Draw_PosternGate		ChildObject	MinisWallAUpgrade	_patch222.big:data\ini\object\civilian\ministirithbuildings.ini:501	513	1
+draw	W3DScriptedModelDraw	Draw_Tower		ChildObject	MinisWallAUpgrade	_patch222.big:data\ini\object\civilian\ministirithbuildings.ini:606	634	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	MinisGateDoor	_patch222.big:data\ini\object\civilian\ministirithbuildings.ini:3005	3081	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MinisBridgeDoor	_patch222.big:data\ini\object\civilian\ministirithbuildings.ini:4713	4757	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw02		Object	MMDGateA	_patch222.big:data\ini\object\civilian\moriamodules.ini:3953	3976	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw02		Object	MMDBalinDrB	_patch222.big:data\ini\object\civilian\moriamodules.ini:4206	4239	2
+draw	W3DScriptedModelDraw	Draw_Trebuchet		Object	RohanCastleUpgrade	_patch222.big:data\ini\object\civilian\rohanbuildings.ini:1004	1020	2
+draw	W3DScriptedModelDraw	Draw_Decal		Object	RohanCastleUpgrade	_patch222.big:data\ini\object\civilian\rohanbuildings.ini:1125	1135	7
+draw	W3DScriptedModelDraw	Draw_PosternGate		Object	RohanCastleUpgrade	_patch222.big:data\ini\object\civilian\rohanbuildings.ini:1197	1209	1
+draw	W3DScriptedModelDraw	Draw_Tower		Object	RohanCastleUpgrade	_patch222.big:data\ini\object\civilian\rohanbuildings.ini:1279	1306	2
+draw	W3DQuadrupedDraw	ModuleTag_01		Object	DEMOMordorMumakil	_patch222.big:data\ini\object\demotest\demotest.ini:2335	2364	13
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	EvilSentryTower	_patch222.big:data\ini\object\evilfaction\evilfactionbuildings.ini:20	71	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	WebbedHumanoidWithMordorFighterInside	_patch222.big:data\ini\object\evilfaction\evilfactionunits.ini:19	62	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	WebbedHumanoidWithMordorArcherInside	_patch222.big:data\ini\object\evilfaction\evilfactionunits.ini:136	179	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	WebbedHumanoidWithIsengardBeserkerInside	_patch222.big:data\ini\object\evilfaction\evilfactionunits.ini:256	299	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	IsengardArmory	_patch222.big:data\ini\object\evilfaction\structures\isengard\armory.ini:7	83	6
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	IsengardBattleTower	_patch222.big:data\ini\object\evilfaction\structures\isengard\battletower.ini:9	32	7
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	IsengardCampKeep	_patch222.big:data\ini\object\evilfaction\structures\isengard\campbuildings.ini:6	50	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	IsengardCastleBaseKeep	_patch222.big:data\ini\object\evilfaction\structures\isengard\campbuildings.ini:630	652	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	IsengardOutpostKeep	_patch222.big:data\ini\object\evilfaction\structures\isengard\campbuildings.ini:898	957	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	IsengardTowerOfOrthancMPSA	_patch222.big:data\ini\object\evilfaction\structures\isengard\orthanc.ini:99	120	3
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	IsengardOrthancDoor	_patch222.big:data\ini\object\evilfaction\structures\isengard\orthanc.ini:283	322	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	IsengardSiegeWorks	_patch222.big:data\ini\object\evilfaction\structures\isengard\siegeworks.ini:6	34	7
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	IsengardUrukPit	_patch222.big:data\ini\object\evilfaction\structures\isengard\urukpit.ini:6	23	7
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	IsengardWargPit	_patch222.big:data\ini\object\evilfaction\structures\isengard\wargpit.ini:10	32	7
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	MordorCampKeep	_patch222.big:data\ini\object\evilfaction\structures\mordor\campbuildings.ini:7	55	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	MordorOutpostKeep	_patch222.big:data\ini\object\evilfaction\structures\mordor\campbuildings.ini:802	864	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	MordorBattleTower	_patch222.big:data\ini\object\evilfaction\structures\mordor\campbuildings.ini:1137	1188	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	MordorCastleBaseKeep	_patch222.big:data\ini\object\evilfaction\structures\mordor\campbuildings.ini:1418	1440	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	HaradCampKeep	_patch222.big:data\ini\object\evilfaction\structures\mordor\campsandcastles.ini:69	82	3
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	MordorHaradrimPalace	_patch222.big:data\ini\object\evilfaction\structures\mordor\haradrimpalace.ini:6	31	7
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	MordorKingPalace	_patch222.big:data\ini\object\evilfaction\structures\mordor\haradrimpalace.ini:441	479	6
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	MordorMumakilPen	_patch222.big:data\ini\object\evilfaction\structures\mordor\mumakilpen.ini:20	29	7
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	MordorOrcPit	_patch222.big:data\ini\object\evilfaction\structures\mordor\orcpit.ini:6	23	8
+draw	W3DScriptedModelDraw	ModuleTag_Draw01		Object	MordorSiegeWorks	_patch222.big:data\ini\object\evilfaction\structures\mordor\siegeworks.ini:16	31	7
+draw	W3DScriptedModelDraw	ModuleTag_02		Object	MordorSiegeWorks	_patch222.big:data\ini\object\evilfaction\structures\mordor\siegeworks.ini:189	505	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	MordorTrollCage	_patch222.big:data\ini\object\evilfaction\structures\mordor\trollcage.ini:20	44	7
+draw	W3DTruckDraw	ModuleTag_01		Object	IsengardBallista	_patch222.big:data\ini\object\evilfaction\units\isengard\ballista.ini:8	21	5
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	IsengardBannerOrc	_patch222.big:data\ini\object\evilfaction\units\isengard\bannerorc.ini:9	123	9
+draw	W3DHordeModelDraw	ModuleTag_01		Object	IsengardRamCrew	_patch222.big:data\ini\object\evilfaction\units\isengard\batteringram.ini:8	57	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	IsengardBeserker	_patch222.big:data\ini\object\evilfaction\units\isengard\berserker.ini:8	25	10
+draw	W3DHordeModelDraw	ModuleTag_01		Object	IsengardUrukCrossbow	_patch222.big:data\ini\object\evilfaction\units\isengard\crossbow.ini:10	111	30
+draw	W3DHordeModelDraw	ModuleTag_01		Object	IsengardFighter	_patch222.big:data\ini\object\evilfaction\units\isengard\fighter.ini:8	62	2
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	IsengardGrima	_patch222.big:data\ini\object\evilfaction\units\isengard\grima.ini:10	35	8
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	IsengardLurtz	_patch222.big:data\ini\object\evilfaction\units\isengard\lurtz.ini:11	52	6
+draw	W3DHordeModelDraw	ModuleTag_01		Object	IsengardPikeman	_patch222.big:data\ini\object\evilfaction\units\isengard\pikeman.ini:10	66	11
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	IsengardSaruman	_patch222.big:data\ini\object\evilfaction\units\isengard\saruman.ini:11	45	2
+draw	W3DHordeModelDraw	ModuleTag_01		Object	IsengardSharku	_patch222.big:data\ini\object\evilfaction\units\isengard\sharku.ini:6	280	3
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	IsengardUgluk	_patch222.big:data\ini\object\evilfaction\units\isengard\ugluk.ini:11	38	3
+draw	W3DHordeModelDraw	ModuleTag_01		Object	IsengardWarg	_patch222.big:data\ini\object\evilfaction\units\isengard\warg.ini:12	219	3
+draw	W3DHordeModelDraw	ModuleTag_01		Object	IsengardWargRider	_patch222.big:data\ini\object\evilfaction\units\isengard\wargrider.ini:10	290	3
+draw	W3DHordeModelDraw	ModuleTag_01		Object	MordorArcher	_patch222.big:data\ini\object\evilfaction\units\mordor\archer.ini:9	107	8
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	HaradBanner	_patch222.big:data\ini\object\evilfaction\units\mordor\banner.ini:6	307	5
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorBannerOrc	_patch222.big:data\ini\object\evilfaction\units\mordor\bannerorc.ini:9	248	5
+draw	W3DHordeModelDraw	ModuleTag_01		ChildObject	MordorRamCrew	_patch222.big:data\ini\object\evilfaction\units\mordor\batteringram.ini:8	56	1
+draw	W3DTruckDraw	ModuleTag_01		Object	MordorCatapult	_patch222.big:data\ini\object\evilfaction\units\mordor\catapult.ini:9	38	10
+draw	W3DTruckDraw	ModuleTag_01		Object	MordorCatapultDEMO	_patch222.big:data\ini\object\evilfaction\units\mordor\catapult.ini:519	541	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorCaveTroll	_patch222.big:data\ini\object\evilfaction\units\mordor\cavetroll.ini:8	61	7
+draw	W3DHordeModelDraw	ModuleTag_01		Object	MordorCorsair	_patch222.big:data\ini\object\evilfaction\units\mordor\corsair.ini:9	57	5
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorDrummerTroll	_patch222.big:data\ini\object\evilfaction\units\mordor\drummertroll.ini:6	39	3
+draw	W3DHordeModelDraw	ModuleTag_01		Object	MordorEasterling	_patch222.big:data\ini\object\evilfaction\units\mordor\easterling.ini:8	53	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorFellBeast	_patch222.big:data\ini\object\evilfaction\units\mordor\fellbeast.ini:12	69	3
+draw	W3DHordeModelDraw	ModuleTag_01		Object	MordorFighter	_patch222.big:data\ini\object\evilfaction\units\mordor\fighter.ini:6	102	3
+draw	W3DHordeModelDraw	ModuleTag_01		ChildObject	MordorFighterCpt	_patch222.big:data\ini\object\evilfaction\units\mordor\fighter.ini:846	931	3
+draw	W3DHordeModelDraw	ModuleTag_01		ChildObject	MordorMorgulFighter	_patch222.big:data\ini\object\evilfaction\units\mordor\fighter.ini:1475	1560	3
+draw	W3DHordeModelDraw	ModuleTag_01		ChildObject	MordorShargat	_patch222.big:data\ini\object\evilfaction\units\mordor\fighter.ini:2066	2151	3
+draw	W3DHordeModelDraw	ModuleTag_01		Object	MordorGoblinArcher	_patch222.big:data\ini\object\evilfaction\units\mordor\goblinarcher.ini:10	125	3
+draw	W3DHordeModelDraw	ModuleTag_01		Object	MordorGoblinSwordsman	_patch222.big:data\ini\object\evilfaction\units\mordor\goblinswordsman.ini:8	132	3
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorGothmog	_patch222.big:data\ini\object\evilfaction\units\mordor\gothmog.ini:5	53	5
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorGothmogMultiplayer	_patch222.big:data\ini\object\evilfaction\units\mordor\gothmogmultiplayer.ini:5	53	5
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorGrondCrew	_patch222.big:data\ini\object\evilfaction\units\mordor\grond.ini:346	371	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorHaradrimArcher	_patch222.big:data\ini\object\evilfaction\units\mordor\haradrimarcher.ini:10	38	1
+draw	W3DHordeModelDraw	ModuleTag_01		Object	HaradrimArcher	_patch222.big:data\ini\object\evilfaction\units\mordor\haradrimarcher.ini:476	530	2
+draw	W3DHordeModelDraw	ModuleTag_01		ChildObject	HaradrimArcherMumakil	_patch222.big:data\ini\object\evilfaction\units\mordor\haradrimarcher.ini:1132	1186	2
+draw	W3DHordeModelDraw	ModuleTag_01		Object	MordorHaradrim	_patch222.big:data\ini\object\evilfaction\units\mordor\haradrimlancer.ini:9	56	14
+draw	W3DHordeModelDraw	ModuleTag_01		Object	MordorHaradrimRider	_patch222.big:data\ini\object\evilfaction\units\mordor\haradrimrider.ini:10	60	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorMountainTroll	_patch222.big:data\ini\object\evilfaction\units\mordor\mountaintroll.ini:9	73	8
+draw	W3DHordeModelDraw	ModuleTag_01		Object	MordorBlackRider	_patch222.big:data\ini\object\evilfaction\units\mordor\mountednazgul.ini:6	273	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorMouthOfSauron	_patch222.big:data\ini\object\evilfaction\units\mordor\mouthofsauron.ini:6	43	6
+draw	W3DQuadrupedDraw	ModuleTag_01		Object	MordorMumakil	_patch222.big:data\ini\object\evilfaction\units\mordor\mumakil.ini:9	47	18
+draw	W3DHordeModelDraw	ModuleTag_01		Object	MordorPikeman	_patch222.big:data\ini\object\evilfaction\units\mordor\pikeman.ini:10	93	11
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorSauron	_patch222.big:data\ini\object\evilfaction\units\mordor\sauron.ini:5	34	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorSiegeTowerCrew	_patch222.big:data\ini\object\evilfaction\units\mordor\siegetower.ini:542	568	10
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorWitchKing	_patch222.big:data\ini\object\evilfaction\units\mordor\witchking.ini:10	29	18
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	MordorWorker	_patch222.big:data\ini\object\evilfaction\units\mordor\worker.ini:8	39	27
+draw	W3DScriptedModelDraw	ModuleTag_01		ChildObject	MordorWorkerNoSelect	_patch222.big:data\ini\object\evilfaction\units\mordor\worker.ini:678	703	17
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	FarmInterface	_patch222.big:data\ini\object\goodfaction\goodfactionbuildings.ini:20	48	7
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanEdorasDoor	_patch222.big:data\ini\object\goodfaction\goodfactionbuildings.ini:387	442	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorCastleGateTower	_patch222.big:data\ini\object\goodfaction\goodfactionbuildings.ini:2208	2316	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorCampKeepSymbioticBase	_patch222.big:data\ini\object\goodfaction\goodfactionbuildings.ini:7744	7761	4
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanHeroStatueNoLeadership	_patch222.big:data\ini\object\goodfaction\goodfactionbuildings.ini:7972	7992	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanKeepTower	_patch222.big:data\ini\object\goodfaction\goodfactionbuildings.ini:8202	8258	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorCavalryRiderless	_patch222.big:data\ini\object\goodfaction\goodfactionsubobjects.ini:1462	1476	13
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorCavalryDeadRiderB	_patch222.big:data\ini\object\goodfaction\goodfactionsubobjects.ini:1734	1739	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorCavalryDeadRiderD	_patch222.big:data\ini\object\goodfaction\goodfactionsubobjects.ini:1814	1819	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	TheodenCavalryRiderless	_patch222.big:data\ini\object\goodfaction\goodfactionsubobjects.ini:1884	1891	11
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	TheodenCavalryDeadRiderB	_patch222.big:data\ini\object\goodfaction\goodfactionsubobjects.ini:2147	2152	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	TheodenCavalryDeadRiderD	_patch222.big:data\ini\object\goodfaction\goodfactionsubobjects.ini:2227	2232	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	ElvenFarm	_patch222.big:data\ini\object\goodfaction\structures\elves\farm.ini:7	46	6
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	EntMoot	_patch222.big:data\ini\object\goodfaction\structures\ents\entmoot.ini:10	42	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorArcherRange	_patch222.big:data\ini\object\goodfaction\structures\gondor\archeryrange.ini:5	33	8
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorBarracks	_patch222.big:data\ini\object\goodfaction\structures\gondor\barracks.ini:10	54	7
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorKeep	_patch222.big:data\ini\object\goodfaction\structures\gondor\campbuildings.ini:8	53	11
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GBMGateDoor	_patch222.big:data\ini\object\goodfaction\structures\gondor\campbuildings.ini:897	987	6
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorOutpost	_patch222.big:data\ini\object\goodfaction\structures\gondor\campbuildings.ini:1970	2026	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorCampKeep	_patch222.big:data\ini\object\goodfaction\structures\gondor\campbuildings.ini:2282	2325	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorCastleBaseKeep	_patch222.big:data\ini\object\goodfaction\structures\gondor\campbuildings.ini:2568	2662	3
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorForge	_patch222.big:data\ini\object\goodfaction\structures\gondor\forge.ini:21	92	8
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorHeroStatue	_patch222.big:data\ini\object\goodfaction\structures\gondor\herostatue.ini:5	24	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorHseHeal	_patch222.big:data\ini\object\goodfaction\structures\gondor\hseheal.ini:16	36	5
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorMarketPlace	_patch222.big:data\ini\object\goodfaction\structures\gondor\marketplace.ini:10	68	6
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorSentryTower	_patch222.big:data\ini\object\goodfaction\structures\gondor\sentrytower.ini:9	58	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorStable	_patch222.big:data\ini\object\goodfaction\structures\gondor\stables.ini:5	23	7
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorStoneMaker	_patch222.big:data\ini\object\goodfaction\structures\gondor\stonemaker.ini:10	63	6
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorWell	_patch222.big:data\ini\object\goodfaction\structures\gondor\well.ini:6	42	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	GondorWorkshop	_patch222.big:data\ini\object\goodfaction\structures\gondor\workshop.ini:5	14	7
+draw	W3DScriptedModelDraw	Draw_PosternGate		Object	HelmsDeepCulvert	_patch222.big:data\ini\object\goodfaction\structures\helmsdeep\culvert.ini:69	80	3
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	HelmsDeepGate	_patch222.big:data\ini\object\goodfaction\structures\helmsdeep\gate.ini:10	92	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RBHelmsDeepGateDoorBig	_patch222.big:data\ini\object\goodfaction\structures\helmsdeep\gatebig.ini:7	43	2
+draw	W3DScriptedModelDraw	Draw_PosternGate		Object	HelmsDeepGatehouseLeft	_patch222.big:data\ini\object\goodfaction\structures\helmsdeep\gatehouseleft.ini:61	72	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RBHelmsDeepGateDoorSmall	_patch222.big:data\ini\object\goodfaction\structures\helmsdeep\gatesmall.ini:7	43	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanArcherRange	_patch222.big:data\ini\object\goodfaction\structures\rohan\archeryrange.ini:6	37	7
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanArmory	_patch222.big:data\ini\object\goodfaction\structures\rohan\armory.ini:10	49	7
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanBattleTower	_patch222.big:data\ini\object\goodfaction\structures\rohan\battletower.ini:9	61	6
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanCampKeep	_patch222.big:data\ini\object\goodfaction\structures\rohan\campbuildings.ini:8	46	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanOutpost	_patch222.big:data\ini\object\goodfaction\structures\rohan\campbuildings.ini:284	339	2
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanCastleBaseKeep	_patch222.big:data\ini\object\goodfaction\structures\rohan\campbuildings.ini:966	1020	3
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanCastleKeep	_patch222.big:data\ini\object\goodfaction\structures\rohan\campbuildings.ini:3016	3041	5
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanCastleDoor	_patch222.big:data\ini\object\goodfaction\structures\rohan\campbuildings.ini:3483	3538	4
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanGoldenHall	_patch222.big:data\ini\object\goodfaction\structures\rohan\goldenhall.ini:6	44	6
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanHeroStatue	_patch222.big:data\ini\object\goodfaction\structures\rohan\herostatue.ini:5	25	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanSentryTower	_patch222.big:data\ini\object\goodfaction\structures\rohan\sentrytower.ini:9	63	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanStable	_patch222.big:data\ini\object\goodfaction\structures\rohan\stables.ini:6	39	6
+draw	W3DScriptedModelDraw	ModuleTag_02		Object	RohanStable	_patch222.big:data\ini\object\goodfaction\structures\rohan\stables.ini:211	226	1
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RohanWell	_patch222.big:data\ini\object\goodfaction\structures\rohan\well.ini:10	46	1
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	ElvenElrond	_patch222.big:data\ini\object\goodfaction\units\elven\elrond.ini:13	44	18
+draw	W3DHordeModelDraw	ModuleTag_01		Object	RohanElvenWarrior	_patch222.big:data\ini\object\goodfaction\units\elven\elveninfantry.ini:13	110	38
+draw	W3DHordeModelDraw	ModuleTag_01		ChildObject	RohanElvenWarrior_Summoned	_patch222.big:data\ini\object\goodfaction\units\elven\elveninfantry.ini:1857	1959	38
+draw	W3DHordeModelDraw	ModuleTag_01		Object	LAElvenWarrior	_patch222.big:data\ini\object\goodfaction\units\elven\elveninfantry.ini:3471	3536	39
+draw	W3DHordeModelDraw	ModuleTag_01		Object	RohanElvenNoldor	_patch222.big:data\ini\object\goodfaction\units\elven\elvennoldor.ini:6	71	39
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	ElvenHaldir	_patch222.big:data\ini\object\goodfaction\units\elven\haldir.ini:14	86	34
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	GondorIsildur	_patch222.big:data\ini\object\goodfaction\units\elven\isildur.ini:17	53	6
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RohanEntFir	_patch222.big:data\ini\object\goodfaction\units\ents\entsinfantry.ini:45	128	41
+draw	W3DScriptedModelDraw	ModuleTag_01		ObjectReskin	RohanEntBirch	_patch222.big:data\ini\object\goodfaction\units\ents\entsinfantry.ini:1172	1265	40
+draw	W3DScriptedModelDraw	ModuleTag_01		ChildObject	RohanEntBirch_Summoned	_patch222.big:data\ini\object\goodfaction\units\ents\entsinfantry.ini:1888	1981	41
+draw	W3DScriptedModelDraw	ModuleTag_01		ObjectReskin	RohanEntAsh	_patch222.big:data\ini\object\goodfaction\units\ents\entsinfantry.ini:2630	2721	5
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RohanTreeBerd	_patch222.big:data\ini\object\goodfaction\units\ents\treebeard.ini:8	104	40
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	GondorAragorn	_patch222.big:data\ini\object\goodfaction\units\gondor\aragorn.ini:17	86	2
+draw	W3DHordeModelDraw	ModuleTag_01		Object	GondorArcher	_patch222.big:data\ini\object\goodfaction\units\gondor\archer.ini:5	91	30
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorBanner	_patch222.big:data\ini\object\goodfaction\units\gondor\banner.ini:6	538	3
+draw	W3DScriptedModelDraw	ModuleTag_01		ChildObject	GondorBannerCavalry	_patch222.big:data\ini\object\goodfaction\units\gondor\banner.ini:888	1420	3
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	GondorBeregond	_patch222.big:data\ini\object\goodfaction\units\gondor\beregond.ini:17	248	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	GondorBoromir	_patch222.big:data\ini\object\goodfaction\units\gondor\boromir.ini:16	42	2
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	GondorCitadelGuard	_patch222.big:data\ini\object\goodfaction\units\gondor\citadelguard.ini:10	241	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	GondorDamrod	_patch222.big:data\ini\object\goodfaction\units\gondor\damrod.ini:19	255	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	GondorDenethor	_patch222.big:data\ini\object\goodfaction\units\gondor\denethor.ini:11	45	1
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	GondorFaramir	_patch222.big:data\ini\object\goodfaction\units\gondor\faramir.ini:17	248	10
+draw	W3DHordeModelDraw	ModuleTag_01		Object	GondorFighter	_patch222.big:data\ini\object\goodfaction\units\gondor\fighter.ini:7	478	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorGandalf	_patch222.big:data\ini\object\goodfaction\units\gondor\gandalf.ini:32	134	10
+draw	W3DScriptedModelDraw	ModuleTag_01		ChildObject	GondorGandalfWhite	_patch222.big:data\ini\object\goodfaction\units\gondor\gandalf.ini:1321	1380	10
+draw	W3DHordeModelDraw	ModuleTag_01		Object	GondorCavalry	_patch222.big:data\ini\object\goodfaction\units\gondor\gondorcavalry.ini:9	81	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	WebbedHumanoidWithGondorFighterInside	_patch222.big:data\ini\object\goodfaction\units\gondor\gondorinfantry.ini:21	65	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	WebbedHumanoidWithGondorArcherInside	_patch222.big:data\ini\object\goodfaction\units\gondor\gondorinfantry.ini:150	193	1
+draw	W3DHordeModelDraw	ModuleTag_01		Object	GondorGreyCompanyRanger	_patch222.big:data\ini\object\goodfaction\units\gondor\graycompany.ini:8	188	10
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorGwaihir	_patch222.big:data\ini\object\goodfaction\units\gondor\gwaihir.ini:18	129	3
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	GondorHalbarad	_patch222.big:data\ini\object\goodfaction\units\gondor\halbarad.ini:9	244	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	GondorImrahil	_patch222.big:data\ini\object\goodfaction\units\gondor\imrahil.ini:10	38	4
+draw	W3DHordeModelDraw	ModuleTag_01		Object	GondorRangerSwordsman	_patch222.big:data\ini\object\goodfaction\units\gondor\ithilienswordsman.ini:7	453	3
+draw	W3DHordeModelDraw	ModuleTag_01		Object	LAGondorArcher	_patch222.big:data\ini\object\goodfaction\units\gondor\laarcher.ini:5	88	29
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	LAGondorBanner	_patch222.big:data\ini\object\goodfaction\units\gondor\labanner.ini:6	487	3
+draw	W3DHordeModelDraw	ModuleTag_01		Object	LAGondorFighter	_patch222.big:data\ini\object\goodfaction\units\gondor\lafighter.ini:6	427	4
+draw	W3DHordeModelDraw	ModuleTag_01		Object	GondorRanger	_patch222.big:data\ini\object\goodfaction\units\gondor\ranger.ini:7	203	18
+draw	W3DHordeModelDraw	ModuleTag_01		Object	GondorRanger_Summoned	_patch222.big:data\ini\object\goodfaction\units\gondor\ranger.ini:791	971	10
+draw	W3DHordeModelDraw	ModuleTag_01		Object	GondorHorseArcher	_patch222.big:data\ini\object\goodfaction\units\gondor\rangerhorse.ini:10	75	2
+draw	W3DHordeModelDraw	ModuleTag_01		Object	GondorRangerNoStealth	_patch222.big:data\ini\object\goodfaction\units\gondor\rangernostealth.ini:8	153	13
+draw	W3DHordeModelDraw	ModuleTag_01		Object	GondorSwanKnight	_patch222.big:data\ini\object\goodfaction\units\gondor\swanknight.ini:10	55	2
+draw	W3DHordeModelDraw	ModuleTag_01		Object	GondorTowerShieldGuard	_patch222.big:data\ini\object\goodfaction\units\gondor\towerguard.ini:7	297	2
+draw	W3DTruckDraw	ModuleTag_DRAW		Object	GondorTrebuchet	_patch222.big:data\ini\object\goodfaction\units\gondor\trebuchet.ini:14	44	4
+draw	W3DHordeModelDraw	ModuleTag_01		Object	RohanArcher	_patch222.big:data\ini\object\goodfaction\units\rohan\archer.ini:7	97	29
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RohanBanner	_patch222.big:data\ini\object\goodfaction\units\rohan\banner.ini:6	304	5
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RohanEomer	_patch222.big:data\ini\object\goodfaction\units\rohan\eomer.ini:15	56	6
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	RohanEowyn	_patch222.big:data\ini\object\goodfaction\units\rohan\eowyn.ini:17	71	16
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		ChildObject	RohanEowynDisguised	_patch222.big:data\ini\object\goodfaction\units\rohan\eowyn.ini:1197	1483	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RohanFrodo	_patch222.big:data\ini\object\goodfaction\units\rohan\frodo.ini:16	164	12
+draw	W3DScriptedModelDraw	ModuleTag_01		ChildObject	RohanSamWithFrodoPowers	_patch222.big:data\ini\object\goodfaction\units\rohan\frodo.ini:1098	1230	13
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RohanGamlingCavalry	_patch222.big:data\ini\object\goodfaction\units\rohan\gamling.ini:15	200	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RohanGimli	_patch222.big:data\ini\object\goodfaction\units\rohan\gimli.ini:18	53	12
+draw	W3DScriptedModelDraw	ModuleTag_01_		Object	RohanLegolas	_patch222.big:data\ini\object\goodfaction\units\rohan\legolas.ini:17	50	28
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RohanMerry	_patch222.big:data\ini\object\goodfaction\units\rohan\merry.ini:16	103	13
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RohanPeasant1	_patch222.big:data\ini\object\goodfaction\units\rohan\peasant1.ini:6	269	2
+draw	W3DScriptedModelDraw	ModuleTag_01		ChildObject	RohanPeasant3	_patch222.big:data\ini\object\goodfaction\units\rohan\peasant1.ini:844	1113	2
+draw	W3DScriptedModelDraw	ModuleTag_01		ChildObject	RohanPeasant4	_patch222.big:data\ini\object\goodfaction\units\rohan\peasant1.ini:1256	1524	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RohanPippin	_patch222.big:data\ini\object\goodfaction\units\rohan\pippin.ini:17	102	13
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GondorGamlinng	_patch222.big:data\ini\object\goodfaction\units\rohan\rohangamling.ini:16	107	5
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	RohanRoyalGuardOnFoot	_patch222.big:data\ini\object\goodfaction\units\rohan\rohanroyalguardonfoot.ini:8	239	10
+draw	W3DHordeModelDraw	ModuleTag_01		Object	RohanRohirrim	_patch222.big:data\ini\object\goodfaction\units\rohan\rohirrim.ini:32	88	2
+draw	W3DHordeModelDraw	ModuleTag_01		ChildObject	RohanRohirrim_Summoned	_patch222.big:data\ini\object\goodfaction\units\rohan\rohirrim.ini:675	717	2
+draw	W3DHordeModelDraw	ModuleTag_01		Object	RohanRohirrimArcher	_patch222.big:data\ini\object\goodfaction\units\rohan\rohirrimarcher.ini:9	72	2
+draw	W3DHordeModelDraw	ModuleTag_01		Object	RohanRohirrimEomerGuard	_patch222.big:data\ini\object\goodfaction\units\rohan\rohirrimroyalguard.ini:7	49	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RohanSam	_patch222.big:data\ini\object\goodfaction\units\rohan\sam.ini:20	162	13
+draw	W3DHordeModelDraw	ModuleTag_01		Object	RohanSpearThrower	_patch222.big:data\ini\object\goodfaction\units\rohan\spearthrower.ini:9	55	14
+draw	W3DScriptedModelDraw	ModuleTag_DRAW		Object	RohanTheoden	_patch222.big:data\ini\object\goodfaction\units\rohan\theoden.ini:10	258	4
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	CINE_RohanTheodenCavalry	_patch222.big:data\ini\object\goodfaction\units\rohan\theoden.ini:981	1218	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RohanTheodred	_patch222.big:data\ini\object\goodfaction\units\rohan\theodred.ini:15	60	6
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GenericThrowableRock	_patch222.big:data\ini\object\nature\naturerocks.ini:74	87	2
+draw	W3DScriptedModelDraw	ModuleTag_01		ObjectReskin	RockGreyThrown01	_patch222.big:data\ini\object\nature\naturerocks.ini:152	170	2
+draw	W3DScriptedModelDraw	ModuleTag_01		ObjectReskin	RockGreyThrown02	_patch222.big:data\ini\object\nature\naturerocks.ini:203	221	2
+draw	W3DScriptedModelDraw	ModuleTag_01		ObjectReskin	RockGreyThrown03	_patch222.big:data\ini\object\nature\naturerocks.ini:254	272	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	RockBigTreeberd	_patch222.big:data\ini\object\nature\naturerocks.ini:307	325	2
+draw	W3DScriptedModelDraw	ModuleTag_01		ObjectReskin	EntThrownBuildingRock	_patch222.big:data\ini\object\nature\naturerocks.ini:406	425	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GoatMale	_patch222.big:data\ini\object\nature\natureunits.ini:442	461	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	GoatFemale	_patch222.big:data\ini\object\nature\natureunits.ini:615	634	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	ElkMale	_patch222.big:data\ini\object\nature\natureunits.ini:787	806	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	ElkFemale	_patch222.big:data\ini\object\nature\natureunits.ini:1001	1018	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	HorseGrazing	_patch222.big:data\ini\object\nature\natureunits.ini:1191	1215	2
+draw	W3DScriptedModelDraw	ModuleTag_01		ObjectReskin	HorseGrazing1	_patch222.big:data\ini\object\nature\natureunits.ini:1399	1423	2
+draw	W3DScriptedModelDraw	ModuleTag_01		ObjectReskin	HorseGrazing2	_patch222.big:data\ini\object\nature\natureunits.ini:1521	1545	2
+draw	W3DScriptedModelDraw	ModuleTag_01		ObjectReskin	HorseGrazing3	_patch222.big:data\ini\object\nature\natureunits.ini:1643	1667	2
+draw	W3DScriptedModelDraw	ModuleTag_01		ObjectReskin	HorseGrazing4	_patch222.big:data\ini\object\nature\natureunits.ini:1765	1789	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	Dog	_patch222.big:data\ini\object\nature\natureunits.ini:2427	2439	2
+draw	W3DScriptedModelDraw	ModuleTag_01		ObjectReskin	Dog1	_patch222.big:data\ini\object\nature\natureunits.ini:2591	2603	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	DeerMale	_patch222.big:data\ini\object\nature\natureunits.ini:2667	2684	2
+draw	W3DScriptedModelDraw	ModuleTag_01		ObjectReskin	DeerFemale	_patch222.big:data\ini\object\nature\natureunits.ini:2865	2882	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	Rabbit	_patch222.big:data\ini\object\nature\natureunits.ini:2977	2989	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	Raccoon	_patch222.big:data\ini\object\nature\natureunits.ini:3143	3155	1
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	Bear	_patch222.big:data\ini\object\nature\natureunits.ini:3310	3329	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	Pig	_patch222.big:data\ini\object\nature\natureunits.ini:3560	3577	2
+draw	W3DScriptedModelDraw	ModuleTag_01		Object	Boar	_patch222.big:data\ini\object\nature\natureunits.ini:3911	3930	2
+draw	W3DScriptedModelDraw	ModuleTag_BodyDraw		Object	MordorBalrog	_patch222.big:data\ini\object\neutral\neutralunits.ini:11	83	1
+draw	W3DHordeModelDraw	ModuleTag_01		Object	NeutralWarg	_patch222.big:data\ini\object\neutral\neutralunits.ini:1826	2033	3
+draw	W3DScriptedModelDraw	ModuleTag_Draw		Object	RuinedTower	_patch222.big:data\ini\object\neutral\ruinedtower.ini:11	126	10
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanLegolas	_patch222maps.big:maps\Helm Deep Survival\map.ini:8426	8460	28
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	ElvenHaldir	_patch222maps.big:maps\Helm Deep Survival\map.ini:8941	9017	34
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorFaramir	_patch222maps.big:maps\Helm Deep Survival\map.ini:10068	10296	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardSaruman	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:6642	6677	2
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardGrima	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:7276	7298	8
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardFighter	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:8086	8144	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardUrukCrossbow	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:8869	8965	30
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardPikeman	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:9644	9702	11
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardBannerOrc	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:10315	10430	9
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorWorker	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:11041	11075	27
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanArcher	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:12725	12799	29
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrim	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:13555	13606	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrimArcher	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:14154	14210	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanElvenWarrior	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:15001	15092	38
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEntFir	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:16953	17014	41
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEntBirch	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:17664	17725	41
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanBanner	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  01 Isengard\map.ini:18521	18845	5
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardSaruman	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:6790	6825	2
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardGrima	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:7421	7443	8
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardFighter	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:8231	8289	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardUrukCrossbow	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:9013	9109	30
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardBannerOrc	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:9696	9811	9
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorCaveTroll	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:10512	10571	7
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorWorker	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:11383	11417	27
+draw	W3DScriptedModelDraw	ModuleTag_Draw_CC	ReplaceModule	Object	SlaughterHouse	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:12764	12824	6
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanTreeBerd	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:13546	13614	40
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanElvenWarrior	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:14944	15035	38
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEntFir	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:16896	16957	41
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEntBirch	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:17607	17668	41
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanBanner	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  02 Fangorn\map.ini:18464	18788	5
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardLurtz	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:6757	6806	6
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardUgluk	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:7604	7636	3
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardFighter	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:8369	8427	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardUrukCrossbow	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:9152	9248	30
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardPikeman	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:9970	10028	11
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardBannerOrc	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:10641	10756	9
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorCaveTroll	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:11714	11773	7
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_GlowCC	ReplaceModule	Object	GondorAragorn	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:13047	13119	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanLegolas	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:13792	13818	28
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanGimli	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:14656	14682	12
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorBoromir	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:15422	15446	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanFrodo	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:16078	16191	12
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanSam	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:16961	17065	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanMerry	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:17755	17830	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPippin	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:18726	18801	13
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrim	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:20030	20081	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanElvenWarrior	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:20753	20844	38
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanBanner	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  03 Amon-Hen\map.ini:22445	22769	5
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardLurtz	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:6776	6825	6
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardUgluk	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:7625	7657	3
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardSharku	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:8161	8432	3
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardFighter	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:9082	9140	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardUrukCrossbow	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:9865	9961	30
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardPikeman	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:10683	10741	11
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardBeserker	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:11398	11416	10
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardWargRider	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:12171	12439	3
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardWarg	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:12715	12931	3
+draw	W3DTruckDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardBallista	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:13100	13112	5
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardRamCrew	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:13494	13547	1
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardBannerOrc	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:14620	14735	9
+draw	W3DScriptedModelDraw	ModuleTag_Draw_CC	ReplaceModule	Object	SlaughterHouse	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:16593	16653	6
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	RohanEowyn	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:17460	17510	16
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanTheodred	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:18550	18597	6
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPeasant1	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:19854	20089	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPeasant3	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:20169	20426	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPeasant4	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:20506	20772	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanArcher	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:21061	21135	29
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanSpearThrower	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:21847	21891	13
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrim	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:22709	22760	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrimArcher	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:23308	23364	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanElvenWarrior_Summoned	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:24166	24257	38
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	RohanRoyalGuardOnFoot	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:25978	26119	8
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanBanner	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:26523	26847	5
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	CINE_RohanRohirrim_Cheer	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:27713	27764	2
+draw	W3DScriptedModelDraw	Draw_Decal_CC	ReplaceModule	Object	RohanCastleUpgrade	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  04 Edoras\map.ini:29367	29376	7
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardSaruman	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:6865	6900	2
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardGrima	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:7492	7514	8
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardLurtz	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:8153	8202	6
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardUgluk	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:8994	9026	3
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardSharku	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:9526	9797	3
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardFighter	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:10447	10505	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardUrukCrossbow	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:11230	11326	30
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardPikeman	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:12048	12106	11
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardBeserker	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:12763	12781	10
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardWargRider	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:13536	13804	3
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardWarg	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:14080	14296	3
+draw	W3DTruckDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardBallista	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:14465	14477	5
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardRamCrew	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:14859	14912	1
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	IsengardBannerOrc	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:16652	16767	9
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorWorker	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:17635	17669	27
+draw	W3DScriptedModelDraw	ModuleTag_Draw_CC	ReplaceModule	Object	SlaughterHouse	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:19314	19374	6
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorGandalfWhite	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:20415	20506	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_GlowCC	ReplaceModule	Object	GondorAragorn	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:21516	21588	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanLegolas	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:22271	22297	28
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanGimli	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:23135	23161	12
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	RohanTheoden	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:23935	24180	4
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorGamlinng	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:24853	24877	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEomer	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:25624	25668	6
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	RohanEowyn	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:26569	26619	16
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	ElvenHaldir	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:27612	27684	34
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPeasant1	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:29585	29820	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPeasant3	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:29900	30157	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPeasant4	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:30237	30503	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanArcher	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:30792	30866	29
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanSpearThrower	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:31577	31621	13
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrim	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:32438	32489	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanRohirrim_Summoned	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:32830	32881	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrimArcher	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:33429	33485	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanElvenWarrior	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:34285	34376	38
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	RohanRoyalGuardOnFoot	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:36097	36238	8
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEntFir	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:36902	36963	41
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEntBirch	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:37613	37674	41
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanBanner	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:38473	38797	5
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	CINE_RohanRohirrim_Cheer	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  05 Helm_s Deep\map.ini:39663	39714	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorMouthOfSauron	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:7239	7283	6
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorFighter	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:8181	8288	3
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorArcher	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:9036	9115	8
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorPikeman	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:9739	9804	11
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorHaradrim	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:10545	10585	14
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorHaradrimRider	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:11403	11448	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorMountainTroll	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:11996	12059	8
+draw	W3DTruckDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorCatapult	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:12974	13007	10
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorRamCrew	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:13426	13478	1
+draw	W3DQuadrupedDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorMumakil	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:13945	13976	18
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorWorker	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:15303	15337	27
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorBannerOrc	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:15920	16148	5
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	HaradBanner	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:16457	16778	3
+draw	W3DQuadrupedDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	MordorMumakilForGI01	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:17401	17435	18
+draw	W3DScriptedModelDraw	ModuleTag_Draw_CC	ReplaceModule	Object	SlaughterHouse	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:19654	19714	6
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorTownsPair	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  06 Near Harad\map.ini:21983	22004	5
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorMouthOfSauron	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:6958	7002	6
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorFighter	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:7944	8051	3
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorArcher	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:8797	8876	8
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorPikeman	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:9499	9564	11
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorHaradrim	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:10295	10335	14
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorHaradrimRider	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:11143	11188	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorMountainTroll	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:11734	11797	8
+draw	W3DTruckDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorCatapult	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:12710	12743	10
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorRamCrew	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:13160	13212	1
+draw	W3DQuadrupedDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorMumakil	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:13669	13700	18
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorWorker	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:15027	15061	27
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorBannerOrc	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:15644	15872	5
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	HaradBanner	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:16181	16502	3
+draw	W3DScriptedModelDraw	ModuleTag_Draw_CC	ReplaceModule	Object	SlaughterHouse	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:17608	17668	6
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorFaramir	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:19332	19543	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorDamrod	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:20341	20433	5
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorRanger	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:21261	21453	18
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorRangerSwordsman	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:22021	22349	3
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorHorseArcher	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:22655	22709	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorBanner	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:23240	23777	3
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorBannerCavalry	_patch222maps.big:maps\[EVIL Coop Campaign] Mission  07 Ithilien\map.ini:23934	24471	3
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorGoblinSwordsman_Slaved	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini:1925	2037	3
+draw	W3DScriptedModelDraw	ModuleTag_BodyDraw_CC	ReplaceModule	Object	MordorBalrog	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini:2207	2274	1
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorGandalfWhite	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini:3807	3903	10
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorGandalf	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini:4510	4615	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_GlowCC	ReplaceModule	Object	GondorAragorn	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini:5366	5443	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanLegolas	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini:5841	5877	28
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanGimli	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini:6507	6542	12
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorBoromir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini:7016	7041	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanFrodo	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini:7473	7586	12
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanSam	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini:8202	8312	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanMerry	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini:8845	8937	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPippin	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  01 Moria\map.ini:9635	9727	13
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorGoblinSwordsman_Slaved	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini:1051	1163	3
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorGandalfWhite	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini:2775	2871	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_GlowCC	ReplaceModule	Object	GondorAragorn	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini:3628	3705	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanLegolas	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini:4085	4121	28
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanGimli	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini:4754	4789	12
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorBoromir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini:5266	5291	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanFrodo	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini:5719	5832	12
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanSam	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini:6442	6552	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanMerry	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini:7064	7156	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPippin	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini:7833	7925	13
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	ElvenHaldir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini:8593	8671	34
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanElvenWarrior	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  02 Lothlorien\map.ini:9784	9881	38
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorGandalfWhite	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  03 Amon-Hen\map.ini:2234	2330	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_GlowCC	ReplaceModule	Object	GondorAragorn	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  03 Amon-Hen\map.ini:3091	3168	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanLegolas	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  03 Amon-Hen\map.ini:3543	3579	28
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanGimli	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  03 Amon-Hen\map.ini:4220	4255	12
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorBoromir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  03 Amon-Hen\map.ini:4742	4767	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanFrodo	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  03 Amon-Hen\map.ini:5204	5317	12
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanSam	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  03 Amon-Hen\map.ini:5937	6047	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanMerry	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  03 Amon-Hen\map.ini:6481	6573	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPippin	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  03 Amon-Hen\map.ini:7163	7255	13
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardLurtz	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  03 Amon-Hen\map.ini:7808	7852	6
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanMerry	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  04 Fangorn\map.ini:1862	1954	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPippin	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  04 Fangorn\map.ini:2544	2636	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEomer	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  04 Fangorn\map.ini:3307	3351	6
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrim	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  04 Fangorn\map.ini:3945	3999	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanRohirrim_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  04 Fangorn\map.ini:4319	4373	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrimArcher	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  04 Fangorn\map.ini:4707	4771	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEntFir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  04 Fangorn\map.ini:5266	5328	41
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEntBirch	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  04 Fangorn\map.ini:6033	6107	40
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorGandalfWhite	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:2841	2937	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_GlowCC	ReplaceModule	Object	GondorAragorn	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:3760	3837	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanLegolas	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:4226	4262	28
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanGimli	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:4937	4972	12
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorBoromir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:5471	5496	2
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	RohanTheoden	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:5943	6180	4
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEomer	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:6634	6678	6
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	RohanEowyn	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:7345	7399	16
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	ElvenHaldir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:8101	8179	34
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPeasant1	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:9327	9547	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanPeasant3	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:9627	9861	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanPeasant4	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:9941	10180	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanArcher	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:10272	10355	29
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrim	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:10905	10959	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanRohirrim_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:11279	11333	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrimArcher	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:11667	11731	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanElvenWarrior	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:12210	12307	38
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanElvenWarrior_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  05 Helm's Deep\map.ini:13731	13828	38
+draw	W3DScriptedModelDraw	ModuleTag_Draw_CC	ReplaceModule	Object	EntMoot	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini:199	220	1
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanMerry	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini:2921	3013	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPippin	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini:3698	3778	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanTreeBerd	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini:4570	4648	40
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrim	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini:5372	5426	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanRohirrim_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini:5746	5800	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanElvenWarrior	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini:6165	6262	38
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanElvenWarrior_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini:7686	7783	38
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEntFir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini:9275	9344	41
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	ObjectReskin	RohanEntBirch	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini:10056	10132	40
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanEntBirch_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini:10790	10867	41
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	IsengardSaruman	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  06 Isengard\map.ini:11542	11581	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanFrodo	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  07 Ithilien\map.ini:2163	2276	12
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanSam	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  07 Ithilien\map.ini:2900	3010	13
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorFaramir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  07 Ithilien\map.ini:3557	3783	10
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorFighter	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  07 Ithilien\map.ini:4525	4961	4
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorArcher	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  07 Ithilien\map.ini:5160	5247	30
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorCavalry	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  07 Ithilien\map.ini:5821	5896	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorRanger	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  07 Ithilien\map.ini:6216	6401	18
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorRanger_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  07 Ithilien\map.ini:6751	6920	10
+draw	W3DTruckDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorTrebuchet	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  07 Ithilien\map.ini:7340	7366	4
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorFaramir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  08 Osgiliath\map.ini:1853	2079	10
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanElvenWarrior_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  08 Osgiliath\map.ini:2836	2933	38
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanEntBirch_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  08 Osgiliath\map.ini:4397	4474	41
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorFighter	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  08 Osgiliath\map.ini:5183	5619	4
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorArcher	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  08 Osgiliath\map.ini:5818	5905	30
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorCavalry	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  08 Osgiliath\map.ini:6479	6554	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorRanger	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  08 Osgiliath\map.ini:6874	7059	18
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorRanger_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  08 Osgiliath\map.ini:7409	7578	10
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorTowerShieldGuard	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  08 Osgiliath\map.ini:8058	8332	2
+draw	W3DTruckDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorTrebuchet	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  08 Osgiliath\map.ini:8394	8420	4
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanFrodo	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  09 Shelob's Lair\map.ini:3048	3161	12
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanSam	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  09 Shelob's Lair\map.ini:3744	3854	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CCC	ReplaceModule	ChildObject	RohanSamWithFrodoPowers	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  09 Shelob's Lair\map.ini:4369	4464	13
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorFighter	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  09 Shelob's Lair\map.ini:5049	5485	4
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorArcher	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  09 Shelob's Lair\map.ini:5696	5783	30
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorGandalfWhite	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:4677	4773	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_GlowCC	ReplaceModule	Object	GondorAragorn	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:5596	5673	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanLegolas	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:6062	6098	28
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanGimli	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:6783	6818	12
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorBoromir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:7317	7342	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanMerry	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:7788	7880	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPippin	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:8564	8656	13
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	RohanTheoden	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:9343	9580	4
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEomer	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:10033	10077	6
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	RohanEowyn	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:10744	10798	16
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorFaramir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:11587	11813	10
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrim	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:12598	12652	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanRohirrim_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:12961	13015	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrimArcher	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:13349	13413	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanElvenWarrior	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:13904	14001	38
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanElvenWarrior_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:15416	15513	38
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanEntBirch_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:16977	17054	41
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorFighter	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:17908	18344	4
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorArcher	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:18556	18643	30
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorCavalry	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:19229	19304	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorRanger	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:19637	19822	18
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorRanger_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:20172	20341	10
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorTowerShieldGuard	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:20828	21102	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorWitchKingOnFellBeast	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:22111	22191	4
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorGothmog	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  10 Minas Tirith\map.ini:22342	22398	5
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorGandalfWhite	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:4127	4223	10
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_GlowCC	ReplaceModule	Object	GondorAragorn	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:5022	5099	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanLegolas	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:5457	5493	28
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanGimli	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:6134	6169	12
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorBoromir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:6669	6694	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanMerry	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:7082	7174	13
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPippin	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:7819	7911	13
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	RohanTheoden	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:8577	8814	4
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanEomer	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:9256	9300	6
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	RohanEowyn	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:9934	9988	16
+draw	W3DScriptedModelDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorFaramir	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:10747	10973	10
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanPeasant1	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:11720	11940	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanPeasant3	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:12020	12254	2
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanPeasant4	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:12334	12573	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanArcher	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:12665	12748	29
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrim	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:13301	13355	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanRohirrim_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:13675	13729	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanRohirrimArcher	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:14071	14135	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	RohanElvenWarrior	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:14612	14709	38
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanElvenWarrior_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:16133	16230	38
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	ChildObject	RohanEntBirch_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:17690	17767	41
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorFighter	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:18633	19069	4
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorArcher	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:19281	19368	30
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorCavalry	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:19949	20024	2
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorRanger	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:20357	20542	18
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorRanger_Summoned	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:20892	21061	10
+draw	W3DHordeModelDraw	ModuleTag_01_CC	ReplaceModule	Object	GondorTowerShieldGuard	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:21548	21822	2
+draw	W3DTruckDraw	ModuleTag_DRAW_CC	ReplaceModule	Object	GondorTrebuchet	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:21890	21916	4
+draw	W3DScriptedModelDraw	ModuleTag_01_CC	ReplaceModule	Object	MordorMouthOfSauron	_patch222maps.big:maps\[GOOD Coop Campaign] Mission  11 Black Gate\map.ini:22746	22789	6
+draw	W3DHordeModelDraw	ModuleTag_012	AddModule	Object	MordorFighter	_patch222maps.big:maps\map evil minas tirith\map.ini:937	1022	3
+draw	W3DHordeModelDraw	ModuleTag_012	AddModule	Object	MordorFighter	_patch222maps.big:maps\map evil osgiliath\map.ini:164	249	3
+draw	W3DHordeModelDraw	ModuleTag_012	AddModule	Object	MordorFighter	_patch222maps.big:maps\map evil shelobslair\map.ini:113	198	3
+draw	W3DHordeModelDraw	ModuleTag_012	AddModule	Object	MordorFighter	_patch222maps.big:maps\map good black gate\map.ini:288	373	3
+draw	W3DHordeModelDraw	ModuleTag_012	AddModule	Object	MordorFighter	_patch222maps.big:maps\map good minas tirith\map.ini:9	94	3
+draw	W3DHordeModelDraw	ModuleTag_012	AddModule	Object	MordorFighter	_patch222maps.big:maps\map good osgiliath\map.ini:4	89	3
+draw	W3DHordeModelDraw	ModuleTag_012	AddModule	Object	MordorFighter	_patch222maps.big:maps\map good shelobslair\map.ini:4	89	3
+draw	W3DScriptedModelDraw	ModuleTag_01111	AddModule	Object	RohanSam	_patch222maps.big:maps\map good shelobslair\map.ini:681	813	13
+draw	W3DScriptedModelDraw	ModuleTag_01GG	AddModule	Object	LothlorienStatue02	_patch222maps.big:maps\map mp fields of edhellond nm\map.ini:596	606	1
+draw	W3DScriptedModelDraw	ModuleTag_01GG	AddModule	Object	TreeLothlorien03	_patch222maps.big:maps\map mp fields of edhellond nm\map.ini:622	631	1
+draw	W3DScriptedModelDraw	ModuleTag_01GG	AddModule	Object	TreeLothlorien04	_patch222maps.big:maps\map mp fields of edhellond nm\map.ini:652	661	1
+draw	W3DScriptedModelDraw	ModuleTag_01GG	AddModule	Object	TreeLothlorien05	_patch222maps.big:maps\map mp fields of edhellond nm\map.ini:677	686	1
+draw	W3DScriptedModelDraw	ModuleTag_DrawGG	AddModule	Object	LothlorienTreeHouse1	_patch222maps.big:maps\map mp fields of edhellond nm\map.ini:702	715	1
+draw	W3DScriptedModelDraw	ModuleTag_DrawGG	AddModule	Object	LothlorienTreeHouse2	_patch222maps.big:maps\map mp fields of edhellond nm\map.ini:740	753	1
+draw	W3DScriptedModelDraw	ModuleTag_01GG	AddModule	Object	ElvenBarracks	_patch222maps.big:maps\map mp fields of edhellond nm\map.ini:792	802	1
+draw	W3DScriptedModelDraw	ModuleTag_01GG	ReplaceModule	Object	ShelobWall01	_patch222maps.big:maps\map mp fields of edhellond nm\map.ini:819	828	1
+draw	W3DScriptedModelDraw	ModuleTag_01GG	ReplaceModule	Object	ShelobWall03	_patch222maps.big:maps\map mp fields of edhellond nm\map.ini:852	860	1
+draw	W3DHordeModelDraw	ModuleTag_01	AddModule	ChildObject	Statue01	_patch222maps.big:maps\map mp fields of edhellond nm\map.ini:1346	1398	5
+draw	W3DHordeModelDraw	ModuleTag_01	AddModule	ChildObject	Statue02	_patch222maps.big:maps\map mp fields of edhellond nm\map.ini:1483	1536	5
+draw	W3DScriptedModelDraw	ModuleTag_01GG	AddModule	Object	LothlorienStatue02	_patch222maps.big:maps\map mp fields of edhellond\map.ini:596	606	1
+draw	W3DScriptedModelDraw	ModuleTag_01GG	AddModule	Object	TreeLothlorien03	_patch222maps.big:maps\map mp fields of edhellond\map.ini:622	631	1
+draw	W3DScriptedModelDraw	ModuleTag_01GG	AddModule	Object	TreeLothlorien04	_patch222maps.big:maps\map mp fields of edhellond\map.ini:652	661	1
+draw	W3DScriptedModelDraw	ModuleTag_01GG	AddModule	Object	TreeLothlorien05	_patch222maps.big:maps\map mp fields of edhellond\map.ini:677	686	1
+draw	W3DScriptedModelDraw	ModuleTag_DrawGG	AddModule	Object	LothlorienTreeHouse1	_patch222maps.big:maps\map mp fields of edhellond\map.ini:702	715	1
+draw	W3DScriptedModelDraw	ModuleTag_DrawGG	AddModule	Object	LothlorienTreeHouse2	_patch222maps.big:maps\map mp fields of edhellond\map.ini:740	753	1
+draw	W3DScriptedModelDraw	ModuleTag_01GG	AddModule	Object	ElvenBarracks	_patch222maps.big:maps\map mp fields of edhellond\map.ini:792	802	1
+draw	W3DScriptedModelDraw	ModuleTag_01GG	ReplaceModule	Object	ShelobWall01	_patch222maps.big:maps\map mp fields of edhellond\map.ini:819	828	1
+draw	W3DScriptedModelDraw	ModuleTag_01GG	ReplaceModule	Object	ShelobWall03	_patch222maps.big:maps\map mp fields of edhellond\map.ini:852	860	1
+draw	W3DHordeModelDraw	ModuleTag_01	AddModule	ChildObject	Statue01	_patch222maps.big:maps\map mp fields of edhellond\map.ini:1346	1398	5
+draw	W3DHordeModelDraw	ModuleTag_01	AddModule	ChildObject	Statue02	_patch222maps.big:maps\map mp fields of edhellond\map.ini:1483	1536	5
+draw	W3DHordeModelDraw	ModuleTag_012	AddModule	Object	MordorFighter	_patch222maps.big:maps\map sps good dagorlad\map.ini:4	89	3
