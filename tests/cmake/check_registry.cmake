@@ -1,0 +1,13 @@
+# Fails if bfme_vfs_tests --list and the ctest list in tests/CMakeLists.txt differ.
+execute_process(COMMAND ${BIN} --list OUTPUT_VARIABLE out RESULT_VARIABLE rc)
+if(NOT rc EQUAL 0)
+    message(FATAL_ERROR "${BIN} --list failed: ${rc}")
+endif()
+string(REPLACE "\n" ";" listed "${out}")
+list(FILTER listed EXCLUDE REGEX "^$")
+list(SORT listed)
+set(expected ${EXPECTED})
+list(SORT expected)
+if(NOT listed STREQUAL expected)
+    message(FATAL_ERROR "test registry mismatch\n binary: ${listed}\n cmake:  ${expected}")
+endif()

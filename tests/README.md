@@ -19,6 +19,25 @@
 - `tests/perf/analyze_frames.py` — разбор `frames.csv` perf-run по TEST-PLAN §5.4, включая проверку темпа логики
   `logic_pace` (§5.4.1: 30 ± 1 тик/с); синтетические данные — `--synthetic`.
 - `tests/terrain/` — модель высот 16 бит (E1-25) без данных игры.
+- `tests/vfs/` — VFS BIG4/BIGF и порядок монтирования (E1-21, владелец кода: Форматы и данные), см. ниже.
 - `tests/reports/` — отчёты прогонов на устройствах.
 
 Все юнит-тесты (`tests/*/test_*.py`, stdlib unittest), из корня репозитория: `tools/replay-test selftest`.
+
+## vfs (E1-21): VFS BIG4/BIGF и порядок монтирования
+Отдельный CMake-проект без vcpkg и без линковки игры. Бинарник `bfme_vfs_tests` компилирует **настоящие** исходники VFS
+апстрима (`StdBIGFileSystem`, `ArchiveFileSystem`, `StdLocalFileSystem`, `RAMFile`, `AsciiString`, `CompressionManager` …)
+с дефайнами Linux-сборки ZH, плюс `formats/vfs`. Глобалы движка, которые эти файлы только упоминают, заглушены в `vfs/EngineStubs.cpp`.
+
+```bash
+git submodule update --init references/fbraz3-dxvk     # нужны только заголовки native/windows
+cmake -S tests -B build/tests -G Ninja && cmake --build build/tests
+ctest --test-dir build/tests -L unit                    # синтетика, для CI
+BFME_GAMEDATA=/workspace/bfme-mobile/gamedata BFME_ORACLE_DIR=/workspace/bfme-mobile/tools/oracle/out \
+  ctest --test-dir build/tests --output-on-failure      # + интеграционные (label gamedata)
+```
+
+- `unit`: синтетические BIG4/BIGF генерируются в тесте (`vfs/SyntheticBig.h`), данных EA нет.
+- `gamedata`: копия игры из `BFME_GAMEDATA` и выгрузки оракула OpenSAGE из `BFME_ORACLE_DIR`. Без них тест пропускается (код 77).
+  В `BFME_GAMEDATA` тесты ничего не пишут: отдельные архивы монтируются через симлинки во временном каталоге.
+- `vfs.registry_complete` проверяет, что каждый `TEST()` зарегистрирован в ctest.

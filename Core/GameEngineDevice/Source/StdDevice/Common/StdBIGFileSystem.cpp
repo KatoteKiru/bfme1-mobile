@@ -56,6 +56,11 @@
 #endif
 
 static const char *BIGFileIdentifier = "BIGF";
+// BFME: BFME1 archives carry the "BIG4" signature. The rest of the header is laid out exactly
+// like "BIGF" (archive size little-endian and unused here; entry count, first-entry offset and
+// every directory entry big-endian), so the parser below reads both unchanged.
+// See formats/vfs/README.md and docs/UPSTREAM-PATCHES.md.
+static const char *BIG4FileIdentifier = "BIG4";
 
 namespace {
 
@@ -540,7 +545,7 @@ ArchiveFile * StdBIGFileSystem::openArchiveFile(const Char *filename) {
 	char buffer[_MAX_PATH];
 	fp->read(buffer, 4); // read the "BIG" at the beginning of the file.
 	buffer[4] = 0;
-	if (strcmp(buffer, BIGFileIdentifier) != 0) {
+	if (strcmp(buffer, BIGFileIdentifier) != 0 && strcmp(buffer, BIG4FileIdentifier) != 0) { // BFME: accept BIG4
 		DEBUG_CRASH(("Error reading BIG file identifier in file %s", filename));
 		fp->close();
 		fp = nullptr;

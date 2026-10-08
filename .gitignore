@@ -130,6 +130,9 @@ android-staging/
 **/BFME1/
 **/bfme1-data/
 
+# Выгрузки из данных EA (имена скриптов и т. п.): строит tools/datacheck из gamedata/, в git не идут
+/docs/formats/data/bfme1_script_names_maps_big.tsv
+
 # Модели W3D только в тестовых фикстурах (и в уже существующих каталогах апстрима)
 *.w3d
 *.W3D

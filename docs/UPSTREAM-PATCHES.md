@@ -26,9 +26,13 @@
 | `GeneralsMD/Code/GameEngine/Source/Common/CommandLine.cpp` | `parseGxCrcLog` | опция командной строки | QA | удалить парсер и строку в `paramsForStartup` |
 | `GeneralsMD/Code/GameEngine/Source/GameLogic/System/GameLogic.cpp` | при `-gxCrcLog` — `getCRC(CRC_RECALC)` каждый кадр и `noteCrcPart` по секциям | тесты реплеев; Xfer в режиме CRC только читает, seed — локальная копия | QA | удалить строки `// BFME: QA`; `gxTraceParts` снова только `GXTrace::isNetEnabled()` |
 | `Core/GameEngine/Include/Common/ReplaySimulation.h`, `Core/GameEngine/Source/Common/ReplaySimulation.cpp` | проброс `-gxCrcLog` в команду воркера | родитель `-jobs` не копирует argv и сам файл не создаёт; каждый воркер открывает свой путь. Для QA рекомендуется `-jobs 1` | QA | удалить `setCrcLogPath` и `crcLogArg` в команде воркера |
+| `Core/GameEngineDevice/Source/StdDevice/Common/StdBIGFileSystem.cpp` | `openArchiveFile` принимает сигнатуру `BIG4`, а не только `BIGF` (константа `BIG4FileIdentifier` и одно условие, +6/−1 строк) | архивы BFME1 (`ini.big`, `maps.big`) имеют сигнатуру `BIG4`, их раскладка совпадает с BIGF (formats/vfs/README.md) | E1-21 | если апстрим сам начнёт принимать BIG4, удалить правку при слиянии |
 
 E1-25: полный аудит (94 места) в `docs/formats/e1-25-heights-audit.md`. Не портировано: WorldBuilder
 (`GeneralsMD/Code/Tools/WorldBuilder`, пишет `HeightMapData` v4 u8, после правки не собирается) и vanilla Generals (`Generals/`).
 В пресетах Linux и Android обе сборки выключены.
 
 **После E1-25 цели WorldBuilder и vanilla Generals на Windows не собираются** (решение Лида, отдельной задачи нет). WorldBuilder (`WHeightMapEdit`) обращается к фиксированным массивам `NUM_*` и `Short`-индексам `WorldHeightMap`, а они теперь в куче и `Int`. Правки blend в него не портированы.
+
+E1-21: не правили `Core/GameEngineDevice/Source/Win32Device/Common/Win32BIGFileSystem.cpp` (та же проверка `BIGF`). На Linux и Android
+он не собирается, а для Windows-сборки понадобится та же правка.
