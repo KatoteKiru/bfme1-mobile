@@ -34,7 +34,7 @@
 
 Без изменений относительно ZH (новых полей нет): `W3DDefaultDraw` 92 / 150 (`data\ini\default\object.ini:275`, у `DefaultThingTemplate`), `W3DPropDraw` 43 / 43 (только `ModelName`), `W3DDebrisDraw` 1 / 1.
 
-`W3DModelDraw` в данных BFME1 2.22 не встречается ни разу, и строки `W3DModelDraw` нет в `lotrbfme.exe`. Там есть `W3DNoDraw`, `W3DPowerDraw`, `W3DPoliceCarDraw`, `W3DRopeDraw`, `W3DSupplyDraw` и `AnimatedParticleSysBoneClientUpdate`, но в данных они не используются, так что заглушки им не нужны.
+`W3DModelDraw` в данных BFME1 2.22 не встречается ни разу (datacheck out-all, `ini.modules_declared`). Принимает ли это имя сам движок BFME1, **не подтверждено, проверить замером в игре**. OpenSAGE этого не решает: его таблица разбора общая для всех игр SAGE, `W3DModelDraw` в ней стоит без привязки к игре (`Logic/Object/Draw/DrawModule.cs:95`), а `W3dScriptedModelDraw` помечен `[AddedIn(SageGame.Bfme)]` (`W3dScriptedModelDraw.cs:10`). `W3DNoDraw`, `W3DPowerDraw`, `W3DPoliceCarDraw`, `W3DRopeDraw`, `W3DSupplyDraw` и `AnimatedParticleSysBoneClientUpdate` в данных 2.22 тоже не встречаются, так что заглушки им не нужны.
 
 **Всего в таблице: 11 имён** (7 новых + 4 модуля ZH с новыми полями).
 
