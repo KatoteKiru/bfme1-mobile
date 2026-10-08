@@ -165,7 +165,7 @@ read blends, (v>=6) threeWay, (v>=5) cliff  as idxBits[N] -> Int arrays;
 | Константа ZH | Значение | BFME1 max (115 карт) | Где лопнет | Предложение |
 |---|---|---|---|---|
 | `NUM_SOURCE_TILES` (`m_sourceTiles[]`, `m_edgeTiles[]`) | 1 024 | **2 036** textureCells | `readTexClass` пишет за край массива (порча памяти) | 4 096 (или динамический массив) |
-| `TEXTURE_WIDTH` атласа | 2 048 px, то есть 32×32 = 1 024 тайла 64 px | 2 036 тайлов | атлас террейна (`TerrainTextureClass`) | атлас 4 096 px (GLES 3.0 на Mali-G715 держит 8 192+) или 2D texture array; это E1-32 |
+| `TEXTURE_WIDTH` атласа | 2 048 px; шаг слота 64 + 8 = 72 px (`TILE_PIXEL_EXTENT` + поле `TILE_OFFSET`), 2048/72 = 28 в строке, сетка 28×28 = **784** слота тайлов 64 px (`WorldHeightMap.cpp:1760`, `:1762`; `TileData.h:48`, `:58`; `TerrainTex.h:38` @ `382223fc7`). 32×32 = 1 024 — это сетка без поля 8 px, пакер её не использует | 2 036 тайлов | атлас террейна (`TerrainTextureClass`) | атлас 4 096 px (GLES 3.0 на Mali-G715 держит 8 192+) или 2D texture array; это E1-32 |
 | `NUM_BLEND_TILES` (`m_blendedTiles[]`, `m_extraBlendedTiles[]`) | 16 192 | **34 143** | цикл 1129–1158 пишет за край | 65 536, **в куче** (2 × 20 Б × 64K ≈ 2.6 МБ) |
 | `NUM_CLIFF_INFO` (`m_cliffInfo[]`) | 32 384 | **102 443** | цикл 1159–1173 | 131 072, в куче (около 5.2 МБ) |
 | `NUM_TEXTURE_CLASSES` | 256 (assert < 200) | 115 | — | ок |
