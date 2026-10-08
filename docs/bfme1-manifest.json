@@ -1,0 +1,2114 @@
+{
+  "profiles": {
+    "patch-2.22v5.5.4": {
+      "files": [
+        {
+          "path": "_patch222.big",
+          "size": 82445787,
+          "sha256": "5c022eb9205815859974320bd55e3ae8ca6342f8945e4005aa52bfb5b0c74ebb",
+          "required": true
+        },
+        {
+          "path": "_patch222bases.big",
+          "size": 1277487,
+          "sha256": "8c28c1abc8d34d089636f80a720e1540ab2a486818b744aba7d3f0beec19bfa5",
+          "required": true
+        },
+        {
+          "path": "_patch222libraries.big",
+          "size": 647810,
+          "sha256": "0149e0bc41980dd778a3924b0d26cf63d3c89b897e2959af4d59e09ff960c7fd",
+          "required": true
+        },
+        {
+          "path": "_patch222maps.big",
+          "size": 302698541,
+          "sha256": "925cd6140549b5598f3d69c6fe878bd8953026aab74e9d29d0155441f004de02",
+          "required": true
+        },
+        {
+          "path": "_patch222textures.big",
+          "size": 203171893,
+          "sha256": "c90c6cea8a739979b441aeff4bde5b3b43a03f6fd6b192ef99fdc43f26d03ff0",
+          "required": true
+        },
+        {
+          "path": "ambientstreams.big",
+          "size": 52255209,
+          "sha256": "9311d41a21e0d9bb44a317aaa24f30fb54724e7e0e297fb5990d6648e6c18ba3",
+          "required": false
+        },
+        {
+          "path": "apt/aptlevel0.big",
+          "size": 2297,
+          "sha256": "92ba0956ff6ca5ba9e385082453d8a6373afe4d7c36ed1cc69251252eb7ee526",
+          "required": false
+        },
+        {
+          "path": "apt/background.big",
+          "size": 6331,
+          "sha256": "a6aafa91716e01d818457a101f469e7bda5ab4a4d90cc31bc85066984e957757",
+          "required": false
+        },
+        {
+          "path": "apt/bannerui.big",
+          "size": 15445,
+          "sha256": "3942f34c1c4d92795ccbfae526a63b4ac235f23d66d9dc9ddecd8d4891d82568",
+          "required": false
+        },
+        {
+          "path": "apt/campaignreview.big",
+          "size": 5415354,
+          "sha256": "a75d3adc2053562d9238320a50771681339a0b33435d027b2a310ca77c0aae76",
+          "required": false
+        },
+        {
+          "path": "apt/disconnectscreen.big",
+          "size": 1110154,
+          "sha256": "45d6c6eaa2a4f0dd92e7fe1a56f02038898f5aaa96ebf650317b6aa2adea0e17",
+          "required": false
+        },
+        {
+          "path": "apt/gamewindowgadgets.big",
+          "size": 123050,
+          "sha256": "4968f5f6fe660a5a489a7ff51de07216cf291a4676de90d0f3e466dc2a3fe40f",
+          "required": false
+        },
+        {
+          "path": "apt/guifx.big",
+          "size": 2499546,
+          "sha256": "776ac34054f20f07395d3e866e9e5f099f4eccabb38084625f67e48ee45ca350",
+          "required": false
+        },
+        {
+          "path": "apt/ingamechat.big",
+          "size": 2802418,
+          "sha256": "5d53f200d899aca5db267d30b69479b295e65b4015cb738bc44be3bbfd986062",
+          "required": false
+        },
+        {
+          "path": "apt/lanlobby.big",
+          "size": 887370,
+          "sha256": "7d40a5aeee6cfdff75df624a5625da7071f44194dcecad98de0064ec8a205fa2",
+          "required": false
+        },
+        {
+          "path": "apt/libprogressbar.big",
+          "size": 21526,
+          "sha256": "5613875ec0e07847875a40e0b7455b7194aac5e679d382ce0d07d4945f6bbeac",
+          "required": false
+        },
+        {
+          "path": "apt/livingworldui.big",
+          "size": 2948396,
+          "sha256": "5b8f7a6dfaefde2fe3953cfc8742bdb4a5e84cd99805ceca9836409ae08ca29f",
+          "required": false
+        },
+        {
+          "path": "apt/loadscreen.big",
+          "size": 291966,
+          "sha256": "7ac149da901adb4ff8240c5f8aa484d23ec618027813425a8920529b2f6c455f",
+          "required": false
+        },
+        {
+          "path": "apt/mainmenu.big",
+          "size": 12333050,
+          "sha256": "378822775400877642a71c2537ed07e774180fcaee682ce77b57b29c3a16b4a5",
+          "required": false
+        },
+        {
+          "path": "apt/menuexport.big",
+          "size": 7278334,
+          "sha256": "c65ae8031a1cbaceabac7a1caa76a48d809258274b686e9f9dbb0f48523e1130",
+          "required": false
+        },
+        {
+          "path": "apt/menuframeandbg.big",
+          "size": 6253,
+          "sha256": "35d62a3830bc475ec62b600e6477e669f4e2d31c31ba94f81843f93d12f1887b",
+          "required": false
+        },
+        {
+          "path": "apt/mpgamesetup.big",
+          "size": 49082,
+          "sha256": "43124681f2848e1e57544eeeb07003439905901809894fae79a38185b9ca3858",
+          "required": false
+        },
+        {
+          "path": "apt/objectives.big",
+          "size": 1373394,
+          "sha256": "e22ea46bcf3a142c26a22d208e47a94f8bb253274fb3c505e81c973c031d0148",
+          "required": false
+        },
+        {
+          "path": "apt/onlinechat.big",
+          "size": 3264726,
+          "sha256": "b0bdcde5309c684fddcad56deedefc18599df68660da00109588fe4dccf443d4",
+          "required": false
+        },
+        {
+          "path": "apt/onlinecustommatch.big",
+          "size": 2525258,
+          "sha256": "9b46784548c51f23305ec6b0c0f2158f705e2410c50f4b67ca1f8c5a8a21fcc6",
+          "required": false
+        },
+        {
+          "path": "apt/onlinehome.big",
+          "size": 454842,
+          "sha256": "47017add04643d1df4704d6546070d80c9145128244f776f162c171a78c0331d",
+          "required": false
+        },
+        {
+          "path": "apt/onlinelogin.big",
+          "size": 348306,
+          "sha256": "8993dcb41f703e9a6bb1ee489070ae199838fdc4fe82c11c883a8a860aed47ec",
+          "required": false
+        },
+        {
+          "path": "apt/onlineprofile.big",
+          "size": 48799,
+          "sha256": "92666037f78e2ea8126aa16b0cf1a796ac6c04016b6fe90f70612606f2eb59ae",
+          "required": false
+        },
+        {
+          "path": "apt/onlinequickmatch.big",
+          "size": 1415110,
+          "sha256": "da29b14d65a598af7d408ec3b512e0ca285e96c50625873d7c057f57d6d25598",
+          "required": false
+        },
+        {
+          "path": "apt/onlineshell.big",
+          "size": 1631618,
+          "sha256": "508668e04b470ddf2196e396925b03d22d308818a9c64615c51644a0ef25d1aa",
+          "required": false
+        },
+        {
+          "path": "apt/options.big",
+          "size": 516410,
+          "sha256": "3fce60754b4c15a9e28255d8e7606d1c053ab73cbae8981c8d491413665b3485",
+          "required": false
+        },
+        {
+          "path": "apt/palantir.big",
+          "size": 4979116,
+          "sha256": "46038e72b560ff74de7564635c00b8c9e1a9ce8684c7edc4e5d0d4505f292788",
+          "required": false
+        },
+        {
+          "path": "apt/palantirexport.big",
+          "size": 2076318,
+          "sha256": "fe0b422f211bdb6348c6a8f763bbff82a406883cbc263d9871fd7a5e6a930134",
+          "required": false
+        },
+        {
+          "path": "apt/playerstatus.big",
+          "size": 310606,
+          "sha256": "06e34809f6fec6c6ed4de67c069b2af6fa3e086ff82892eefc096fa52d2c06be",
+          "required": false
+        },
+        {
+          "path": "apt/quitmenu.big",
+          "size": 3626046,
+          "sha256": "8b41be552359c0eebfe9247b50a6a5fffd8cbe1063eb05dd2752ef4759fe75f7",
+          "required": false
+        },
+        {
+          "path": "apt/saveload.big",
+          "size": 2864790,
+          "sha256": "83da0fdaecb80b2903917b1cf0f1fe95ddcd1d8c73098396cdfe824d007ca409",
+          "required": false
+        },
+        {
+          "path": "apt/scorescreen.big",
+          "size": 4683730,
+          "sha256": "e13a60dd69f33c79db215da17d049beb996c3cf8bbd79c0a4bd112c730882aee",
+          "required": false
+        },
+        {
+          "path": "apt/skirmish.big",
+          "size": 2928846,
+          "sha256": "c14f890f9966adf1a706e595d7548607bb3ba7a4baa63d80dc874632a568c2ce",
+          "required": false
+        },
+        {
+          "path": "apt/spellstore.big",
+          "size": 5574372,
+          "sha256": "4db30401114b79a777936d89b04c900c22666a3ede3cbaaf5adf29fb71d7340a",
+          "required": false
+        },
+        {
+          "path": "asset.dat",
+          "size": 2237309,
+          "sha256": "8819573526a5952a271f642a5088d002ff87a670c3b8ecded038ac0610116f99",
+          "required": true
+        },
+        {
+          "path": "audio.big",
+          "size": 299550662,
+          "sha256": "113de1c2decc869b08050867aff192916d7e63b2d386121c7d6d4419086294f3",
+          "required": true
+        },
+        {
+          "path": "bases.big",
+          "size": 1279070,
+          "sha256": "669e231907f71bbd940d68b7dad98356dac75a4dddffc5ad48999bb53a43d719",
+          "required": true
+        },
+        {
+          "path": "data.big",
+          "size": 575420,
+          "sha256": "5ee6404750cf03529ab28cde65599f41d315a0d2513f46b32e117d917e4733c0",
+          "required": true
+        },
+        {
+          "path": "data/cursors/arrowupgrade.ani",
+          "size": 3350,
+          "sha256": "63f0caa5cf8a292efeb55431dc39e3dced05fdd89388774bbb9acab0565f60fc",
+          "required": true
+        },
+        {
+          "path": "data/cursors/beacon.cur",
+          "size": 4286,
+          "sha256": "006b3fb71d9760e5fb526ecc7342923ae6eee85fe3c3dcf282e609f482854eef",
+          "required": true
+        },
+        {
+          "path": "data/cursors/beam.ani",
+          "size": 3458,
+          "sha256": "277135d7f2c946c1ece3b56fbfb7847bc31a74e17a82e470019c928178b058a3",
+          "required": true
+        },
+        {
+          "path": "data/cursors/magnify.ani",
+          "size": 4286,
+          "sha256": "d7e0837588d522fca2d5551ad8e45ac854363117d0e8901de7ea0ae6e214641c",
+          "required": true
+        },
+        {
+          "path": "data/cursors/new_pointer.cur",
+          "size": 4286,
+          "sha256": "94fc0fb46cfcf427a06e176399c4c60b846d8d990ebc3e39fbce9d8bf2f95b5e",
+          "required": true
+        },
+        {
+          "path": "data/cursors/onering.ani",
+          "size": 19688,
+          "sha256": "cdf03ee23b98858bfd34d8c71a4818557174eb5eec8731e63191fa3ec3a5226e",
+          "required": true
+        },
+        {
+          "path": "data/cursors/onering.cur",
+          "size": 4286,
+          "sha256": "213e4b533738ab1ce6edee62e225c1a00620e86d8a54e500c21699a6309eb3f7",
+          "required": true
+        },
+        {
+          "path": "data/cursors/onering.ico",
+          "size": 4286,
+          "sha256": "02e9f80fd708e901372bc54bf6c3fda9c4cca23ab4310dd5b633b1e2da4a882e",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccattack.ani",
+          "size": 19784,
+          "sha256": "83e3a6d60fc6808fb88de0b97e5e9e6dbabbd5e2b0e2812b662fb315fc0b81bd",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccattack_bak.ani",
+          "size": 6398,
+          "sha256": "fa13992a0603390b0c8fa4200cfca7ee9eb0744cb55b87f49aebee55e5711216",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccattack_s.ani",
+          "size": 1666,
+          "sha256": "8e1a57bd031bc8565775f78a162eb0b2f81444d464466e57d43838a116b38ab2",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccattmagic.ani",
+          "size": 19792,
+          "sha256": "37ec2a6260c0a8268e93ef4520fab5ecde50758910387ddd7c99cec64abb64f8",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccattmov.ani",
+          "size": 29594,
+          "sha256": "1d7fbdbf4388d00a9eeb78fd9db751ef87f70451ab4d2a2c6dfe12d90ea3121a",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccattmov_s.ani",
+          "size": 1670,
+          "sha256": "b9c38e1c1a9294b3afcd029162a79bbbfc285770b5e1ff82998a604755ad7e19",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccaxe.ani",
+          "size": 13648,
+          "sha256": "c158543f49bf15c2a110e7964678f19cb6592ef23c00b6d0428fc9d3bd8c6534",
+          "required": true
+        },
+        {
+          "path": "data/cursors/scccashhack.ani",
+          "size": 7896,
+          "sha256": "b41565b664457a00d87efbd24b5681155967620df5ae64a54d28aa9780279385",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccenter.ani",
+          "size": 9902,
+          "sha256": "00a89b190b87b58c84f7f07687af55472c931949e70a4863cfbfb77612beff59",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccenter_s.ani",
+          "size": 2446,
+          "sha256": "858479b74fafd998f1496b69edf2e44245a0c2f8bc8dc6c7ecb9b90d62c7370f",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccevil.ani",
+          "size": 36150,
+          "sha256": "6030428d344d3715b849039149150b7107bc360884aad542ddf58f74de6b4c00",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccexit.ani",
+          "size": 2436,
+          "sha256": "590d419191ec781d97fa7e375498eb99270eeccf8d9ee75bb5c3c67e9dcb620a",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccfriendly.ani",
+          "size": 6344,
+          "sha256": "f7b424afb5575067fffe02cf1afdeb53f62f81ee85a12d581e2a76b5ab418652",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccfriendly_s.ani",
+          "size": 6358,
+          "sha256": "488b83907f2b12c35d1e3d688a3564acd309d4f2afa1185cade157aee40fc238",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccguard.ani",
+          "size": 1616,
+          "sha256": "fa8c51b348106c3ede587fc0a13deb63aa54a5db38ce8f582f03b761d57f6150",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccheal.ani",
+          "size": 2478,
+          "sha256": "32997e09311a684687ab8a339d63d3f075eab98def7e8e0c47b4519b9763a695",
+          "required": true
+        },
+        {
+          "path": "data/cursors/scchostile.ani",
+          "size": 3270,
+          "sha256": "78133602f6b1eceb6257895e9eaeadeb07ddbc9e969f6ac69b6bcbe16b5244ed",
+          "required": true
+        },
+        {
+          "path": "data/cursors/scchostile2.ani",
+          "size": 8634,
+          "sha256": "69a82c2f23d5608f039ce47cde2fe955ec1e4dc9971082ef2c24035f04d0738c",
+          "required": true
+        },
+        {
+          "path": "data/cursors/scchostile3.ani",
+          "size": 25792,
+          "sha256": "b86c5be45dbf421172de0d12f4f1b237ce1844ad67ce614620490d60a5cbc5b5",
+          "required": true
+        },
+        {
+          "path": "data/cursors/scchostile_s.ani",
+          "size": 1674,
+          "sha256": "73f2fb4c8871afbaa49d6a5cbd34c53e4f29cead68f571d7aab5a5b406c893ea",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccjoin.ani",
+          "size": 9926,
+          "sha256": "bdd120da7461ad33b96984c7bf637dd88eaae087b187854191157c144c71127d",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccknifeattack.ani",
+          "size": 3966,
+          "sha256": "922ba292078be4b9f697450bcf68e23b6bcd9344f433b64641c856f15cc040a1",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccmagic.ani",
+          "size": 2238,
+          "sha256": "959de02d085bd3c1756926e88f31668b159c8a329f2b623c86d3d1932826c6fe",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccmove.ani",
+          "size": 19784,
+          "sha256": "a7240ffb996991c16e5ba267bfbcf2b258cda30bf165e4cec21cb8e1d773fb62",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccmove_bak.ani",
+          "size": 5638,
+          "sha256": "edcc9a98a24e0e21bd89e45db2fcdf04c5d3ac359616db96ea6c33407df04c82",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccmove_s.ani",
+          "size": 1664,
+          "sha256": "0a60c8f9b6da230767f10275ca97a57347d65a39468f953db122e0f93b07793c",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccnoaction.ani",
+          "size": 3350,
+          "sha256": "16355b094b886c437976c70c7d071467032a35bd269f544d2ae8f93fb2d53a33",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccnoaction.cur",
+          "size": 4286,
+          "sha256": "28a2a64f1e7ecba0bee72242bc449c52465c523c67e0b84b5e86ad950ee702c2",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccnoaction_s.ani",
+          "size": 892,
+          "sha256": "2cfa77a51eb15ab54359c13c27b926d7b0f948f2c91d4a1928d139d70ceacb02",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccnobomb.ani",
+          "size": 886,
+          "sha256": "03e4cd887ab8283a8594b4ae54c0f73b159dce2ebf2df069923531de89be0d7a",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccnoentry.ani",
+          "size": 1676,
+          "sha256": "ab8fed4bf8bf5bf6ff8e79a40bc89afe9c6bc7c13e2b1f5577506bb48d017803",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccnoentry_s.ani",
+          "size": 1682,
+          "sha256": "2b76be67e3d75d0cc428efb1563c08c0a6f717d95ffdeb1696c70ba446c92c09",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccnoknife.ani",
+          "size": 886,
+          "sha256": "49d8a05655d9af4bf5c6ab3c7f15e2c86dc1037cc2c016c093d22eada35d75f0",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccoutrange.ani",
+          "size": 16460,
+          "sha256": "8539c4a441775dd7ccf5c1faf0cb79fdd5fb6c6797f7d7d3ca98768348429741",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccpickup.ani",
+          "size": 23062,
+          "sha256": "ca36a9fac2332347e8a48404406335835c62ac12a5ffd85c640f825007dffb18",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccplace.ani",
+          "size": 1680,
+          "sha256": "a149ac8f358c82b6fd89e2e3fef32b6b1d11adcfd846c3560fd388d75c166e0b",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccplacebeacon.ani",
+          "size": 16514,
+          "sha256": "7fba89009be21f21fd07c2395fe26be4e63b1187ca7f893508cb54ca17e8e63d",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccplacebeacon.ico",
+          "size": 4286,
+          "sha256": "03d4b695dff83e9b2cda6df25e3f6a54bc71349736343a2b58f470e398dde4e2",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccpointer.ani",
+          "size": 36214,
+          "sha256": "076e85ade0054209711c7b601e7d5518846b2a43c0540761759d26a6647d5cb2",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccpointer.cur",
+          "size": 4286,
+          "sha256": "3e0ea17de57a86e154f1e2544665555254e89a39cbddb2a4465a8a0b5418e0ee",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccpointer.ico",
+          "size": 4286,
+          "sha256": "40ca97e4244baf82a3947d0e0cbd5036b986840694fe311a4a090dd30793b458",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccrallypnt.ani",
+          "size": 13220,
+          "sha256": "edb52226358b299fda3d2f5dc25ffb50787b7268e79282ffc5543322a0b1be67",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccrallypnt_s.ani",
+          "size": 1668,
+          "sha256": "cfb1cd7baed30b94d5b47a659296738376cafeb4dc492dda6b2c9e5de534d1b9",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccremotechg.ani",
+          "size": 9412,
+          "sha256": "d60b49ac06ae56b56fc03e6cbbf6d1bdbf0bc66eaacec621d7cd0caffd300d6d",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccrepair.ani",
+          "size": 18080,
+          "sha256": "8ede6015789dce6d98c88a00c01448a4dd81047e7dab510c3d1eb09ac0be89c7",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccrepair2.ani",
+          "size": 27076,
+          "sha256": "153af12ba6488eaa16afa88eb253681c0a8cb5dbdfc8fbe369e2c139c7577da3",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccresumec.ani",
+          "size": 16522,
+          "sha256": "3148a0a18fb6d4109f2988b5ad69bebdced59a307f04b8c5433945e94cfaa585",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll0.ani",
+          "size": 3338,
+          "sha256": "1f038588c88eeabe579785b720f85a79ee99a19b09a8474759dc1a6110084926",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll0.cur",
+          "size": 4286,
+          "sha256": "906e9224cca7738231a32186a851b37200d2d491fcb35bcd1501f184defeda44",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll0.ico",
+          "size": 4286,
+          "sha256": "71e44aeeab4e40a4c9e71ed47621882693107b5e2d8922e5173caecc7cb056a5",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll1.ani",
+          "size": 3338,
+          "sha256": "7fef0d9dcb6cc141a6c3de7fb97f0dfbf7d7554ed56571f0f95b1d8d34cb5775",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll1.cur",
+          "size": 4286,
+          "sha256": "115c23462d472a4ddc8d76b86e11f8ad3ff18059cf99cbd3312858d50fb6bd13",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll1.ico",
+          "size": 4286,
+          "sha256": "ec460411306c9242eec860bd9735a93bc323abd003b0161b73957c6b98e2e034",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll2.ani",
+          "size": 3338,
+          "sha256": "e430b292db56529a1f06869d216cb39d606129ffd014f6e292f589aa4ee9e336",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll2.cur",
+          "size": 4286,
+          "sha256": "8da5eac278c0cb4399b8282042abf2d014492529f3e9980eb1b96528c7abfe43",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll2.ico",
+          "size": 4286,
+          "sha256": "76b55d2255031a51f385ad0937c64c7cdb2946fb40d14c6a9a09bab0033e2fc7",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll3.ani",
+          "size": 3338,
+          "sha256": "b7fecd1cb29e4ebd0923d76cc353e65661355fb73ee6d8413ab90ae07ba0f1c4",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll3.cur",
+          "size": 4286,
+          "sha256": "614bcbd9c716cfb8270d61213657fd32a7731c72b566f53e99a1ff6583bb2f05",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll3.ico",
+          "size": 4286,
+          "sha256": "0ad15768ab4137775a5a569850e9e29facce8dceed8f38294e83400d99666828",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll4.ani",
+          "size": 3338,
+          "sha256": "997f0a07d77492d8ccac5002191bdf18411d1e9edb9493f70fe8963687a6ef8c",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll4.cur",
+          "size": 4286,
+          "sha256": "27a8a6f016e410f5f18dc7dcf13fb48e5eb5f83db1699fdbbd8f6dc2571355ea",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll4.ico",
+          "size": 4286,
+          "sha256": "a8572cd8ef3bcecfaa1462ef7e46274167394cda6ef3fa0da6d89994d7b1f954",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll5.ani",
+          "size": 3338,
+          "sha256": "38a8f782e20002eff82ff4cfec3eaa1e84e42fd7219f3aa0b7466a6ccd44cde0",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll5.cur",
+          "size": 4286,
+          "sha256": "189b1fc7561676dd74c75649f51a34b9377a66f5f7d88fe1334afe9a3f211d3a",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll5.ico",
+          "size": 4286,
+          "sha256": "ffc17039d79e98d5a99ec64d7bb47854a4d26f1172f23fbed282abd61bccee92",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll6.ani",
+          "size": 3338,
+          "sha256": "7b5a3e547aef6903d7fde010f63889ac025c6ca12dee46c9fc657bab1ada1165",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll6.cur",
+          "size": 4286,
+          "sha256": "0e7e66db019a0a5bf3fff84e5439b9d6483f1c484536d77b5673ea29ee417771",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll6.ico",
+          "size": 4286,
+          "sha256": "b10302d2331fc61be611a5805757772724da30636fd1a03ed1045dba4cf2c593",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll7.ani",
+          "size": 3338,
+          "sha256": "71b34a5be14c185843b228434e5b6fdd3a42428c2786e7d61ce032bfe6ba80f0",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll7.cur",
+          "size": 4286,
+          "sha256": "92d4bf264ef5eac1f905b7e3da49be952faa7e30543318db74a5d3b0e925c98d",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccscroll7.ico",
+          "size": 4286,
+          "sha256": "d7d4fc7bcc8270ff7da1f3e9d3dd786bd0c3c9e1ee0ad2d81763c359d1185756",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccsdiuplink.ani",
+          "size": 16460,
+          "sha256": "11de6fad707df80023f91c011569de86705b2770cd1df5bb0394481bf5794fb5",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccselect.ani",
+          "size": 13220,
+          "sha256": "a2371e88a70efe931c960bafeebb2318b50c09059f2712009168f3396bccc952",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccsell.ani",
+          "size": 1672,
+          "sha256": "3a9dcadef511ad9a2dd1ca9b31eac33a7aa58b652554cd1d18c628c87fab1a4d",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccsniper.ani",
+          "size": 15636,
+          "sha256": "258ce022aa05087bd0772484d3aceff49b9beb532cd8a8d524f9eb97be57de80",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccspydrone.ani",
+          "size": 1632,
+          "sha256": "6a4302a4a897d6ded38ee0216bc45975406d40a73270eed12d13cb73c868ba34",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccstop.ani",
+          "size": 882,
+          "sha256": "ebd5c2968465f5e3898d38d3a737f2bda387be6be6ee246712a5081d703150a1",
+          "required": true
+        },
+        {
+          "path": "data/cursors/scctimedchg.ani",
+          "size": 8634,
+          "sha256": "727c0863496e777929a86425fcc849e7041b77e3209151f566fe233bf8a2bce6",
+          "required": true
+        },
+        {
+          "path": "data/cursors/scctntattack.ani",
+          "size": 4744,
+          "sha256": "e5c03a381c120e26d04c5c7495c88bf43224f51d89e9ca9d7dea84a5903285fd",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccwaypoint.ani",
+          "size": 13172,
+          "sha256": "0ddc31b288ca6404e0759ffb79d4fcf32a41585bd607577c9125da9aa158b79e",
+          "required": true
+        },
+        {
+          "path": "data/cursors/sccwaypoint_s.ani",
+          "size": 1682,
+          "sha256": "1c585e4c98e05ad6fa916f6d496dcac8673ee651a8cd6743319850e3d14bd4bc",
+          "required": true
+        },
+        {
+          "path": "data/movies/101_with_alpha.vp6",
+          "size": 1430664,
+          "sha256": "dbe6662ed3f63fa0008055cbb3daa87f3171ec53cbf0944d845d223f70d674e6",
+          "required": false
+        },
+        {
+          "path": "data/movies/102_with_alpha.vp6",
+          "size": 1493624,
+          "sha256": "3632a86c121b15dca38143cebbaf76da05f76034c223474f637e89005cfeebca",
+          "required": false
+        },
+        {
+          "path": "data/movies/103_with_alpha.vp6",
+          "size": 632760,
+          "sha256": "64497abb2c451288a9bd828620e8d29e2a477baeaa6bb43a6e82091b14c7aeac",
+          "required": false
+        },
+        {
+          "path": "data/movies/104_with_alpha.vp6",
+          "size": 1202520,
+          "sha256": "b09a0884bc40660218e17fa1e03a3ffa381e938efe8bbb0edf1da6e3856e36b1",
+          "required": false
+        },
+        {
+          "path": "data/movies/105_with_alpha.vp6",
+          "size": 1219244,
+          "sha256": "75198d233bb5c579c2069fab0d71052169da1c8a5b8369fef056a1812e5261d2",
+          "required": false
+        },
+        {
+          "path": "data/movies/106_with_alpha.vp6",
+          "size": 1609328,
+          "sha256": "c19d464b9fbb521bea5b33240f19471378f02e9a8ba05ade438eb64c8efe1a1f",
+          "required": false
+        },
+        {
+          "path": "data/movies/107_with_alpha.vp6",
+          "size": 1832372,
+          "sha256": "df2622544e590974ff82c685b37068dd77503d3eb87b3316516e17def4c8ebd1",
+          "required": false
+        },
+        {
+          "path": "data/movies/108_with_alpha.vp6",
+          "size": 1338092,
+          "sha256": "ce56c1b5c064f5dff5adc7f8b7fd1a7e8c9866ffaadb2b61c05872d5f0d0756b",
+          "required": false
+        },
+        {
+          "path": "data/movies/109_with_alpha.vp6",
+          "size": 971860,
+          "sha256": "31e6ec44ae80dcf3412023d166ed0a031bba9d045f6368b525d8290e5e783ca5",
+          "required": false
+        },
+        {
+          "path": "data/movies/110_with_alpha.vp6",
+          "size": 1765748,
+          "sha256": "d100b48a3e961623434fedb234dff33890752276c327651d2cd5cae9ef5fec37",
+          "required": false
+        },
+        {
+          "path": "data/movies/111_with_alpha.vp6",
+          "size": 1247480,
+          "sha256": "13d83bcac3adac2cf01294e128d4ec929a007c424fb3f69c5cae02dce3bccfdf",
+          "required": false
+        },
+        {
+          "path": "data/movies/112_with_alpha.vp6",
+          "size": 1497180,
+          "sha256": "b8113ca451f4090e0ec141520e7d725e6ed760ddf92c2d6c088266e832d3ed42",
+          "required": false
+        },
+        {
+          "path": "data/movies/113_with_alpha.vp6",
+          "size": 1211324,
+          "sha256": "ff4ab91d3f98ea7055dedbfd1c4fff7f80f28412d76c7544880a3e9d37dd9dc9",
+          "required": false
+        },
+        {
+          "path": "data/movies/114_with_alpha.vp6",
+          "size": 1676716,
+          "sha256": "48ac18a3b49cccbfe0634bef001e2c7306ea59078e38aca3b61a74c0072c6da6",
+          "required": false
+        },
+        {
+          "path": "data/movies/115_with_alpha.vp6",
+          "size": 1250792,
+          "sha256": "c75ad777c3fd4f5dfd5f7cf17d1b1d0e1eda1545c9c5dc28c4af648a9ce29c09",
+          "required": false
+        },
+        {
+          "path": "data/movies/116_with_alpha.vp6",
+          "size": 1753800,
+          "sha256": "db92c65cdaa7ab8c7f2aeb85771370ef21275f1ca82ac06038800b3de8b15c19",
+          "required": false
+        },
+        {
+          "path": "data/movies/117_with_alpha.vp6",
+          "size": 1097388,
+          "sha256": "3214da1624d2f1d425ded2ce219e093fa99fe772d0564a1ed9bb7157c21ba711",
+          "required": false
+        },
+        {
+          "path": "data/movies/118_with_alpha.vp6",
+          "size": 1560312,
+          "sha256": "0301777cb67a645b5010598ca9a72b86b51c24c7a4abf8e3bd587e900e73a8f0",
+          "required": false
+        },
+        {
+          "path": "data/movies/119_with_alpha.vp6",
+          "size": 1272036,
+          "sha256": "773c5afbb69797d3c54230eb58d3f18f6b2820da44a7813871cd1e2709a36a86",
+          "required": false
+        },
+        {
+          "path": "data/movies/120_with_alpha.vp6",
+          "size": 1140280,
+          "sha256": "960290dde014119e5024205ead9beb9d7fa64b3ee5c371e0c206f46b8c04971d",
+          "required": false
+        },
+        {
+          "path": "data/movies/122_with_alpha.vp6",
+          "size": 1263348,
+          "sha256": "a1a86aee9ec30bf4ab6c244e9de2a65e9adcb6770d565328eeb6a363de173d96",
+          "required": false
+        },
+        {
+          "path": "data/movies/123_with_alpha.vp6",
+          "size": 1563080,
+          "sha256": "f87d7c9c0418595c03a8d2d6405d41dcc2bc54cce04a958a22cb91d91b6ba44e",
+          "required": false
+        },
+        {
+          "path": "data/movies/124_with_alpha.vp6",
+          "size": 1474696,
+          "sha256": "2ef5602b2b0ee17fb0ed990638af7501952c7d10286e9eb39114e635972b79de",
+          "required": false
+        },
+        {
+          "path": "data/movies/125_with_alpha.vp6",
+          "size": 2027724,
+          "sha256": "25fb8956308f0ea0b63867987c0eedb1bddc337c2d219541b9ffa1eca10d43a2",
+          "required": false
+        },
+        {
+          "path": "data/movies/126_with_alpha.vp6",
+          "size": 889836,
+          "sha256": "210e10f26b56f9a6a7b52a1331c141dbaae9ab1ea51a326f77340b5550cf8c50",
+          "required": false
+        },
+        {
+          "path": "data/movies/129_with_alpha.vp6",
+          "size": 1147184,
+          "sha256": "c5e8f03483abcc2ba75b0e5f46e396fc5b985512e1e1b6dd65dc82777b048f6c",
+          "required": false
+        },
+        {
+          "path": "data/movies/130_with_alpha.vp6",
+          "size": 1641980,
+          "sha256": "b79ab16eece5e00d0b7b414afad9eca1593861399b356ad44853e94620ecb232",
+          "required": false
+        },
+        {
+          "path": "data/movies/131_with_alpha.vp6",
+          "size": 1322884,
+          "sha256": "292b5c0092e41fb607b601936df2ab5e36f45be67f95827cf577f9be608c3a33",
+          "required": false
+        },
+        {
+          "path": "data/movies/132_with_alpha.vp6",
+          "size": 1273556,
+          "sha256": "4c0c6467c2d4ad12f557b55fbe6e5a2d5b98d8381fdb3c51e2e2e105af3beaf3",
+          "required": false
+        },
+        {
+          "path": "data/movies/136_with_alpha.vp6",
+          "size": 1322708,
+          "sha256": "441484c8c84d7b05025c0d3abaa6665e1b9d88d4f946266bf0e745b739bfed94",
+          "required": false
+        },
+        {
+          "path": "data/movies/137_with_alpha.vp6",
+          "size": 1391500,
+          "sha256": "7450bfd610df8e1588e4944ef2b3c4b7855844e0d091563fb292ab68473079e3",
+          "required": false
+        },
+        {
+          "path": "data/movies/138_with_alpha.vp6",
+          "size": 438148,
+          "sha256": "0e420db1ae399114cbc292b7fb05cab718aaddbcfa7f1d9790e71b401683249c",
+          "required": false
+        },
+        {
+          "path": "data/movies/139_with_alpha.vp6",
+          "size": 1797548,
+          "sha256": "9082f58fd515d345d3398db246bba2822edf7571ee6d45b1e1e06028f50d747f",
+          "required": false
+        },
+        {
+          "path": "data/movies/140_with_alpha.vp6",
+          "size": 1139420,
+          "sha256": "d04b2cfc995e32c10fe4575fc62e3fc5197d7d86ce974709b9647a5617965c4b",
+          "required": false
+        },
+        {
+          "path": "data/movies/141_with_alpha.vp6",
+          "size": 1017636,
+          "sha256": "bcead894f355fa45f2ec9d98fd38a8f7fd2d389f1d07c9b6efe89c4c6f7c35ef",
+          "required": false
+        },
+        {
+          "path": "data/movies/142_with_alpha.vp6",
+          "size": 460180,
+          "sha256": "87b7f35fa7143f2fc00df3cd6c8900c39da4153952004706bcd42baf55dce98c",
+          "required": false
+        },
+        {
+          "path": "data/movies/143_with_alpha.vp6",
+          "size": 899360,
+          "sha256": "060a983e6f65a4f6326869d41364b397b3557923483a0cef73603eea5ffd4119",
+          "required": false
+        },
+        {
+          "path": "data/movies/145_with_alpha.vp6",
+          "size": 903356,
+          "sha256": "a4bb3a5198014489a8cd8c76aafcf602a3cb6a6e0bc745d5f0e608193cda63d4",
+          "required": false
+        },
+        {
+          "path": "data/movies/146_with_alpha.vp6",
+          "size": 1810180,
+          "sha256": "cb5ca1425663e1f7a00a617bf674a34d23aebf082b9b9bb7b21b7fd904cf3730",
+          "required": false
+        },
+        {
+          "path": "data/movies/147_with_alpha.vp6",
+          "size": 1991924,
+          "sha256": "d30cf2401c01563c9bc30493de0445105ebcad4f7d8c1fc6e794d276cd82db6a",
+          "required": false
+        },
+        {
+          "path": "data/movies/148_with_alpha.vp6",
+          "size": 1778096,
+          "sha256": "542c22b3439a12e85123b7ae945d066301d6d06b70b07c0d76572405ef31b208",
+          "required": false
+        },
+        {
+          "path": "data/movies/149_with_alpha.vp6",
+          "size": 1140404,
+          "sha256": "b610f84c2c62e1eaf15d439e9957ee597aebb1c7e7c42c44c920ac10e4902436",
+          "required": false
+        },
+        {
+          "path": "data/movies/150_with_alpha.vp6",
+          "size": 1536840,
+          "sha256": "63044acde5d7f5e2b30e054c898433e75478f7e3d89c804f625240e457cf70ed",
+          "required": false
+        },
+        {
+          "path": "data/movies/151_with_alpha.vp6",
+          "size": 661940,
+          "sha256": "308248ee7c2161b3a2b51fe54ea3e9f3f4630cb7ee3d100b70e69db7b6ef1697",
+          "required": false
+        },
+        {
+          "path": "data/movies/152_with_alpha.vp6",
+          "size": 1577276,
+          "sha256": "f0b6e20dd93193b0b45b33075f00f79fad7f87a59457728eba58cf7ce9932934",
+          "required": false
+        },
+        {
+          "path": "data/movies/153_with_alpha.vp6",
+          "size": 926172,
+          "sha256": "714bcbb7257e7c2dacd4262954c7855b10585b79bf52d3a24aea7930be87930c",
+          "required": false
+        },
+        {
+          "path": "data/movies/155_with_alpha.vp6",
+          "size": 1631884,
+          "sha256": "7a1ba29fa3836e13049fe08bdaea53d30d6ded7aca70d1ba1c4a914fc39a4b76",
+          "required": false
+        },
+        {
+          "path": "data/movies/157_with_alpha.vp6",
+          "size": 1537760,
+          "sha256": "3cacc62a302f5d7c7096ddb373703a19f78332b4cff73440cf7f44fb5fcf7671",
+          "required": false
+        },
+        {
+          "path": "data/movies/158_with_alpha.vp6",
+          "size": 2163364,
+          "sha256": "d1ce9c6cbeff44cae3ed2daad23fe16edc03654de1b59ac0b287c7c74f535211",
+          "required": false
+        },
+        {
+          "path": "data/movies/160_with_alpha.vp6",
+          "size": 1311504,
+          "sha256": "708bfac1d3335ef96b2771d17a88d8a7723734e7d472e8a09ff32072448b0feb",
+          "required": false
+        },
+        {
+          "path": "data/movies/161_with_alpha.vp6",
+          "size": 1097132,
+          "sha256": "470d6d88c20ea11c27aad3aa2dfafa8db951412ee304ac38ace1c2191e1ed4e8",
+          "required": false
+        },
+        {
+          "path": "data/movies/162_with_alpha.vp6",
+          "size": 1222404,
+          "sha256": "9dba2ddea019baf9dadd4a36cf219865f15d26f9d7d2cb4c8c1349e1c7694dc5",
+          "required": false
+        },
+        {
+          "path": "data/movies/163_with_alpha.vp6",
+          "size": 1183516,
+          "sha256": "60d443fa714ac4facaa9eb6105aa0dfa0220d9065c9db0920b5368f1990f6d5b",
+          "required": false
+        },
+        {
+          "path": "data/movies/164_with_alpha.vp6",
+          "size": 406508,
+          "sha256": "0acf2a8e0292b18d92d4c62984866771fdebca94139ddf83a6e3b1519b95d5c1",
+          "required": false
+        },
+        {
+          "path": "data/movies/165_with_alpha.vp6",
+          "size": 1295476,
+          "sha256": "41500a66adeb50863494bb4757bc2a27a820517a703111e73af919d7e0aeeefd",
+          "required": false
+        },
+        {
+          "path": "data/movies/166_with_alpha.vp6",
+          "size": 1368448,
+          "sha256": "7fc039e78b71664f47c9eb4d0dcdd00119b94feeaac1b9f053057c15b167d7cd",
+          "required": false
+        },
+        {
+          "path": "data/movies/167_with_alpha.vp6",
+          "size": 1759668,
+          "sha256": "4811e95d036f4f25e926ec40398c0293d3307d4d5c3f2d7b93b99de67cc658e7",
+          "required": false
+        },
+        {
+          "path": "data/movies/168_with_alpha.vp6",
+          "size": 1096540,
+          "sha256": "0757e485932cbf951480a8d29f60a5f21e12a6bd2f8b419b40c3e55d441e23a9",
+          "required": false
+        },
+        {
+          "path": "data/movies/169_with_alpha.vp6",
+          "size": 1728172,
+          "sha256": "c7b5779bf0c6070940885bb5d257092c2d825e2e52d81ca4085163db8034f04c",
+          "required": false
+        },
+        {
+          "path": "data/movies/170_with_alpha.vp6",
+          "size": 1859956,
+          "sha256": "f2b661c786ea2565712108ff4dac225ae651e44655740dc1134e29454934da05",
+          "required": false
+        },
+        {
+          "path": "data/movies/171_with_alpha.vp6",
+          "size": 1250924,
+          "sha256": "80125274a0992a07ae400c22f95fd4d51300244f5d72c89a4b2b73559fd6c025",
+          "required": false
+        },
+        {
+          "path": "data/movies/172_with_alpha.vp6",
+          "size": 1765340,
+          "sha256": "2bd121d7940fed88f026b80ce163f62a8971e086526e0a897c61bf3a67ddb67d",
+          "required": false
+        },
+        {
+          "path": "data/movies/173_with_alpha.vp6",
+          "size": 1414972,
+          "sha256": "e7ea6c087bf60c25a26d0993d448b153e751fb222dde9d91b61e6af43ab819cd",
+          "required": false
+        },
+        {
+          "path": "data/movies/174_with_alpha.vp6",
+          "size": 1637248,
+          "sha256": "388140a9f2d19e9803c039842f132a756d8a68417699cb2a686b2e80dfcb7a0b",
+          "required": false
+        },
+        {
+          "path": "data/movies/175_with_alpha.vp6",
+          "size": 985704,
+          "sha256": "0dba563411130f2eead3c775e8896d8ce9f26de0c15895484f1558517e95ae38",
+          "required": false
+        },
+        {
+          "path": "data/movies/176_with_alpha.vp6",
+          "size": 2015384,
+          "sha256": "fdaab0d0bf23fe4dabb451f2370374e0abf7d0534b0c49d501c0d66a9b16f2e5",
+          "required": false
+        },
+        {
+          "path": "data/movies/177_with_alpha.vp6",
+          "size": 1870824,
+          "sha256": "1b0ce2aa5e8f9a42848a2faca75642113bf5d706a7ea23dec7a43cfc467b075a",
+          "required": false
+        },
+        {
+          "path": "data/movies/179_with_alpha.vp6",
+          "size": 904584,
+          "sha256": "edbb6a68f1e2a4dd05156b6e49a202a969b89729ad33ed95f65574b2743e851a",
+          "required": false
+        },
+        {
+          "path": "data/movies/180_with_alpha.vp6",
+          "size": 1485736,
+          "sha256": "f224d48ff51d80ab1e5d37389c51c5b7c4213596c699309e76e5a0b234ebf029",
+          "required": false
+        },
+        {
+          "path": "data/movies/182_with_alpha.vp6",
+          "size": 1874188,
+          "sha256": "ee23d6409dc9bfadd6c2f56a43888cce1b5a7860b888bc060a70112399b3ba6d",
+          "required": false
+        },
+        {
+          "path": "data/movies/183_with_alpha.vp6",
+          "size": 818672,
+          "sha256": "afb32bf7c7d2a285bf32919c8f95b446e7c11d6efe10c022f07836a7b0adf8b9",
+          "required": false
+        },
+        {
+          "path": "data/movies/185_with_alpha.vp6",
+          "size": 1932060,
+          "sha256": "5eddc2bb88bfddd49056f2536f0d171f5e2a8691f5d27687da4f04430543cec8",
+          "required": false
+        },
+        {
+          "path": "data/movies/186_with_alpha.vp6",
+          "size": 1838064,
+          "sha256": "8859ffdecfc47f95b162cfe9551d250eb98910bcf97dfc73e29bd6043916d319",
+          "required": false
+        },
+        {
+          "path": "data/movies/187_with_alpha.vp6",
+          "size": 1523468,
+          "sha256": "5253fd94fa3532cb3562a276caddf88aa9682849211d8d48e21b0fb9af7b9192",
+          "required": false
+        },
+        {
+          "path": "data/movies/188_with_alpha.vp6",
+          "size": 1409616,
+          "sha256": "c361be82fcfe740620f6cefbf97d9a635cfbd6b199c9de59bffde4641d2722b6",
+          "required": false
+        },
+        {
+          "path": "data/movies/190_with_alpha.vp6",
+          "size": 1498344,
+          "sha256": "2b623e1a5dd63ce3c6a8c83b52ec375b27f3f988dd01b6c45fd4d9dce1feddb7",
+          "required": false
+        },
+        {
+          "path": "data/movies/191_with_alpha.vp6",
+          "size": 1895024,
+          "sha256": "46eb23a7969fd86cd8711e37055793567381b8762ea95a4750813ffa3e45551b",
+          "required": false
+        },
+        {
+          "path": "data/movies/192_with_alpha.vp6",
+          "size": 1721964,
+          "sha256": "54dcb2cd9df737d72bc9fdfc38b0b0ba3374bd4fc36a6252d8faccd6ccdf7e49",
+          "required": false
+        },
+        {
+          "path": "data/movies/193_with_alpha.vp6",
+          "size": 1085892,
+          "sha256": "d6532aa27cc27cf37d95380ae32fa47040372c78397075b905522aedd67f21ae",
+          "required": false
+        },
+        {
+          "path": "data/movies/194_with_alpha.vp6",
+          "size": 1563444,
+          "sha256": "485da6e37a577ae7347262e881d13672f48ea1267ac426a2000cba10e3ae97c0",
+          "required": false
+        },
+        {
+          "path": "data/movies/195_with_alpha.vp6",
+          "size": 1391228,
+          "sha256": "4c82500db5068fba521a635b8bab1233d9e6b7d7c8e4921e7c8b72b7898a234f",
+          "required": false
+        },
+        {
+          "path": "data/movies/197_with_alpha.vp6",
+          "size": 1268276,
+          "sha256": "1b4e11938b0e0f0d9922939f2c60935ba59cad0548bc1efc6cd24e35e8be4cd9",
+          "required": false
+        },
+        {
+          "path": "data/movies/198_with_alpha.vp6",
+          "size": 1883504,
+          "sha256": "31df719192d8cba493aa9b41e41525b9dd35fce7e8afb8b50221de7c97650bac",
+          "required": false
+        },
+        {
+          "path": "data/movies/200.vp6",
+          "size": 16431600,
+          "sha256": "a6b4e9478af177f14dd93c68a00e796ac4174f552c9ac807eeca8e6233eed052",
+          "required": false
+        },
+        {
+          "path": "data/movies/200_with_alpha.vp6",
+          "size": 1234020,
+          "sha256": "e9160525094388904c847494c525055771371d826c0d8ba4166a3f09fae91d43",
+          "required": false
+        },
+        {
+          "path": "data/movies/201.vp6",
+          "size": 16849272,
+          "sha256": "794fa933d25b6954b1c07b0a0f2e00d692544b4d5ef3258dfd26f8033a7b7c22",
+          "required": false
+        },
+        {
+          "path": "data/movies/201_with_alpha.vp6",
+          "size": 903568,
+          "sha256": "96156a644057e51d4b48ae218c6b627e01c7ad4b43db1ef2d20c7b36997c5eea",
+          "required": false
+        },
+        {
+          "path": "data/movies/202.vp6",
+          "size": 13607524,
+          "sha256": "5c7f03321800e475dcccbea7844b7e8b73603b611b2f978d65f73d4dbe0fefc8",
+          "required": false
+        },
+        {
+          "path": "data/movies/202_with_alpha.vp6",
+          "size": 1420976,
+          "sha256": "7e590720c4fbe4db0146d2794d44df33af11dc07a8f6a46b1f7428578c2c5d07",
+          "required": false
+        },
+        {
+          "path": "data/movies/203.vp6",
+          "size": 14628012,
+          "sha256": "b8b9ff3f437de6427dd8a821ee8703b6a3699501c3f22b539bcd1fe8b2aa84b8",
+          "required": false
+        },
+        {
+          "path": "data/movies/203_with_alpha.vp6",
+          "size": 1932060,
+          "sha256": "5eddc2bb88bfddd49056f2536f0d171f5e2a8691f5d27687da4f04430543cec8",
+          "required": false
+        },
+        {
+          "path": "data/movies/204.vp6",
+          "size": 18203608,
+          "sha256": "64a034980e980e7f2f5c11571cef4dadd8c90115e16b75a5de8ddc77909af69f",
+          "required": false
+        },
+        {
+          "path": "data/movies/205.vp6",
+          "size": 17133560,
+          "sha256": "7e7ffafe642575c6c2059329d38515becd00334293093569f375148ee9ae361d",
+          "required": false
+        },
+        {
+          "path": "data/movies/206.vp6",
+          "size": 10708800,
+          "sha256": "c11bd789ef7e5272912fd5d1d779d8c3c67bd1bf945587fbcaf5b538419788de",
+          "required": false
+        },
+        {
+          "path": "data/movies/207.vp6",
+          "size": 7120736,
+          "sha256": "3f70e7f8a9e7cfc3e2cf0dca52baafeb58cc74f2e7bb2c320f2d278faf62898c",
+          "required": false
+        },
+        {
+          "path": "data/movies/207_with_alpha.vp6",
+          "size": 1106480,
+          "sha256": "0a9160f2cd8ceaaecdea03d7bd465dbf91ea8016894ddfe799fe4ebbf070acbb",
+          "required": false
+        },
+        {
+          "path": "data/movies/208.vp6",
+          "size": 23108388,
+          "sha256": "8b9326848d591501fbd63a67f3613dfe202142163b7ba882244fa260ecc09f9c",
+          "required": false
+        },
+        {
+          "path": "data/movies/209.vp6",
+          "size": 7035068,
+          "sha256": "564892e0f6aedd08f8efb1476263cf9a278d4ce53ae1e0aef56930780e230493",
+          "required": false
+        },
+        {
+          "path": "data/movies/210.vp6",
+          "size": 18712268,
+          "sha256": "085d34b56f3bce24824daabc5a8f60255ab4f7bd0975b10328e95bef3207d539",
+          "required": false
+        },
+        {
+          "path": "data/movies/211.vp6",
+          "size": 14537864,
+          "sha256": "70e148fbb10fa9161aee6d8866d2d7f014f34fc5c4cbf9fb0297c2a58ba699ca",
+          "required": false
+        },
+        {
+          "path": "data/movies/211_with_alpha.vp6",
+          "size": 1246040,
+          "sha256": "57ce1bb96f309324b4e87d8a686d34c7b2f76ff34edbcc6a0d281d66c93f912c",
+          "required": false
+        },
+        {
+          "path": "data/movies/212.vp6",
+          "size": 16108364,
+          "sha256": "5a3d1fa7c58e159510ea11ba97ce2a25b2b1a449e183af280800d62a41690704",
+          "required": false
+        },
+        {
+          "path": "data/movies/213.vp6",
+          "size": 11847656,
+          "sha256": "37e009d96220534d627530b94b762da84ed8d116452607f85940df8d34f5fdcf",
+          "required": false
+        },
+        {
+          "path": "data/movies/213_with_alpha.vp6",
+          "size": 1291064,
+          "sha256": "40c9ea87bee1c611ae1ec021b5f1dfc96eb980a7d7a4932d297945d9d777a4db",
+          "required": false
+        },
+        {
+          "path": "data/movies/214.vp6",
+          "size": 17577620,
+          "sha256": "789133abd23350955fcdf3ca543e9a5202ea154605ebe3ff73a450748b844555",
+          "required": false
+        },
+        {
+          "path": "data/movies/215.vp6",
+          "size": 13361332,
+          "sha256": "78aa0616acc0c7b9086a557c56fe0a986e315d0272fd292e2b0325659f7b2f2d",
+          "required": false
+        },
+        {
+          "path": "data/movies/215_with_alpha.vp6",
+          "size": 1583648,
+          "sha256": "0b85ca9d1f171db96657d02f344af37d03d3a26672e733d8745ce198ec839381",
+          "required": false
+        },
+        {
+          "path": "data/movies/216.vp6",
+          "size": 7495252,
+          "sha256": "49f7d97c78f46da74b1a726dfae92b7958dbc392b2b4400d88fccf0c9fd54033",
+          "required": false
+        },
+        {
+          "path": "data/movies/217.vp6",
+          "size": 7934412,
+          "sha256": "25a725681b0f193f8ad81d31ce1a0a280c9c069b199fd124a172553f9d371e92",
+          "required": false
+        },
+        {
+          "path": "data/movies/218.vp6",
+          "size": 18549248,
+          "sha256": "f4e7eea3b2b26afed857530e572bdbb4dc3715e9bdf480637c57e83d47176132",
+          "required": false
+        },
+        {
+          "path": "data/movies/218_with_alpha.vp6",
+          "size": 1039508,
+          "sha256": "84faf0a5c3ff40a298acf2f56b26d92dbdeb90d4ed4b0236b1a381d898da0c96",
+          "required": false
+        },
+        {
+          "path": "data/movies/219.vp6",
+          "size": 18384024,
+          "sha256": "c5b6322052296511eb6d570233e899cd2f372c0f050c7aed11f6f27a11c759d3",
+          "required": false
+        },
+        {
+          "path": "data/movies/219_with_alpha.vp6",
+          "size": 1681444,
+          "sha256": "fe26a48f7746bc0b2debf15e0c0ba6b2ca87d090d86e912c590a9ff0d0f0c361",
+          "required": false
+        },
+        {
+          "path": "data/movies/220.vp6",
+          "size": 16444160,
+          "sha256": "1b4f3d08ff84872b3981659d121484852277a0dfbc6d6acf31de3f11f0ae0591",
+          "required": false
+        },
+        {
+          "path": "data/movies/221.vp6",
+          "size": 9160836,
+          "sha256": "e02c635362df32c1491c74d42abbe8eb1d149054e1620a5a71f4058b61173c4e",
+          "required": false
+        },
+        {
+          "path": "data/movies/221_with_alpha.vp6",
+          "size": 1268320,
+          "sha256": "f06d277d5a1e45e27c7beac5f678dd1b6931526081c6094a257ebd07790406ea",
+          "required": false
+        },
+        {
+          "path": "data/movies/222.vp6",
+          "size": 17060348,
+          "sha256": "7ebf075965ccd1cd8495ca2a23a58ac77796211bd960659a6e2b328ec1912bfa",
+          "required": false
+        },
+        {
+          "path": "data/movies/223.vp6",
+          "size": 16011324,
+          "sha256": "a9eae6c87a9240d7d4ece182977c28676ed7cc8a1c83ff680c27d3958e84d34d",
+          "required": false
+        },
+        {
+          "path": "data/movies/224.vp6",
+          "size": 9480252,
+          "sha256": "cc21e053529fe5b67cb6db7425cf944df779c9c67513ad100c89a369ece5ddfd",
+          "required": false
+        },
+        {
+          "path": "data/movies/225.vp6",
+          "size": 24499520,
+          "sha256": "65ca4dc94a9694f98851099a554cc5faa1a6730f96194b788a4af68e8e914763",
+          "required": false
+        },
+        {
+          "path": "data/movies/226.vp6",
+          "size": 21335060,
+          "sha256": "24ec119375169126a733ef6449210bdc4eee85d86801bd683f8d1e9c5983e90e",
+          "required": false
+        },
+        {
+          "path": "data/movies/227.vp6",
+          "size": 19946388,
+          "sha256": "8be616d351c5ed5b40932e044c13d407f8c35cdca90039fc06a93d949ca9b029",
+          "required": false
+        },
+        {
+          "path": "data/movies/228.vp6",
+          "size": 8334556,
+          "sha256": "38065ff75b7f5c02cfb2e73c8edd96e29e0a2792160cdbbe235c11734887fdf5",
+          "required": false
+        },
+        {
+          "path": "data/movies/229.vp6",
+          "size": 11820876,
+          "sha256": "33d34d83791fe54a5c9db787d552a2882e2fc12771cd58a348d1eb9c2fe78d97",
+          "required": false
+        },
+        {
+          "path": "data/movies/230.vp6",
+          "size": 28840300,
+          "sha256": "d09ea7cd9ebf3cfeb49970476a648a8d47d0317d200b0cf69994b89f069af043",
+          "required": false
+        },
+        {
+          "path": "data/movies/231.vp6",
+          "size": 18620880,
+          "sha256": "9c06416342ce8c85dc0697c40d4f327c1a7010d1e24c4168b8d04c89be51d0ba",
+          "required": false
+        },
+        {
+          "path": "data/movies/232.vp6",
+          "size": 20900868,
+          "sha256": "9ca4fb4616a487c4f002a5edca75a6cfef7180a2f6903c22ea19edc02a968cd3",
+          "required": false
+        },
+        {
+          "path": "data/movies/233.vp6",
+          "size": 21857640,
+          "sha256": "482eb2c42869bd961f30be5f9d49b5fe70145484468a2b1d33c55cfa6aae0897",
+          "required": false
+        },
+        {
+          "path": "data/movies/234.vp6",
+          "size": 8928252,
+          "sha256": "971c2de365565896c2669df995f6489025774cd49ebe515a5627d09f52b95ae9",
+          "required": false
+        },
+        {
+          "path": "data/movies/235.vp6",
+          "size": 6946592,
+          "sha256": "5ca183bffc5cfe9c8220a6b8a464c905121c27837fc29ae7dcb84c6f86f8d55f",
+          "required": false
+        },
+        {
+          "path": "data/movies/236.vp6",
+          "size": 11879428,
+          "sha256": "4e725189e872e852268c51dfb65f0c28ae0ff20bf00e0b924eaaa993cf48cf72",
+          "required": false
+        },
+        {
+          "path": "data/movies/237.vp6",
+          "size": 6748468,
+          "sha256": "3b5ee29349411d6b9a7c990c0085b69fc808f508a37dd78d7774d24e006d275b",
+          "required": false
+        },
+        {
+          "path": "data/movies/238.vp6",
+          "size": 7718616,
+          "sha256": "c0fb24e5d14fe8a770401dbcb7a56d6c1917d5db60a1152fe09ad6a19f362549",
+          "required": false
+        },
+        {
+          "path": "data/movies/239.vp6",
+          "size": 8862124,
+          "sha256": "590a2070694621fcf56dfcc2b6c9d7f3321b850e730e142270366f999ce070fe",
+          "required": false
+        },
+        {
+          "path": "data/movies/501_with_alpha.vp6",
+          "size": 1535660,
+          "sha256": "4547b9569457ab547c124e771590dea31b2bc1da1adfce6ce812616c6a7b8bc4",
+          "required": false
+        },
+        {
+          "path": "data/movies/502_with_alpha.vp6",
+          "size": 1717464,
+          "sha256": "94e69b61602479d1f055c527a8ca4d9f8dc41e977d70423b384d2d425f6b4c06",
+          "required": false
+        },
+        {
+          "path": "data/movies/504_with_alpha.vp6",
+          "size": 2171268,
+          "sha256": "90cd63b6a987c7ed3137b6027e059ea425afbce96b7146362d05e26840774355",
+          "required": false
+        },
+        {
+          "path": "data/movies/505_with_alpha.vp6",
+          "size": 2318844,
+          "sha256": "11f3d479d469e73471c8e1c73b966c7cfe004b9241abfc36be9cf2b8f7701aef",
+          "required": false
+        },
+        {
+          "path": "data/movies/506_with_alpha.vp6",
+          "size": 1767468,
+          "sha256": "34a679a5bce372557c9c7c939e997a46975cb0ca709379e17e8349bb45963ed8",
+          "required": false
+        },
+        {
+          "path": "data/movies/507_with_alpha.vp6",
+          "size": 1993468,
+          "sha256": "f9aa4e2121232cff0116463634ca5feeff30f2a077acbb127aee4f4d399c7b8e",
+          "required": false
+        },
+        {
+          "path": "data/movies/508_with_alpha.vp6",
+          "size": 1585660,
+          "sha256": "6c5bf16de9536613f381cf742fa050fa425629f9084a32cbbf55bf3fbf8e8bce",
+          "required": false
+        },
+        {
+          "path": "data/movies/509_with_alpha.vp6",
+          "size": 1087064,
+          "sha256": "2df5159876bf45217e0f9548299938dca04f53fee4d2013d3da4159cb99690e8",
+          "required": false
+        },
+        {
+          "path": "data/movies/510_with_alpha.vp6",
+          "size": 1307740,
+          "sha256": "6f0c7e7992f69c4264fb88e670ae6bf76dd209555194212c3a9d8ec1b931c79f",
+          "required": false
+        },
+        {
+          "path": "data/movies/511_with_alpha.vp6",
+          "size": 1105916,
+          "sha256": "6feaf7d717ba0bad62c0380b2d2f4c6fa39d3567d3e390ba4426d8ea13e6deef",
+          "required": false
+        },
+        {
+          "path": "data/movies/512_with_alpha.vp6",
+          "size": 1539880,
+          "sha256": "85c4b72a70b909e97994bf83689ffa0fd19134537d44a47cb81e06467869b40c",
+          "required": false
+        },
+        {
+          "path": "data/movies/513_with_alpha.vp6",
+          "size": 2470160,
+          "sha256": "716e1193dd08e77cebb7e32f2df88ac5b148725dca4c88ce0b1a7312bdad814f",
+          "required": false
+        },
+        {
+          "path": "data/movies/514_with_alpha.vp6",
+          "size": 817152,
+          "sha256": "4e45e7df1a0566cc922768a33b4254fce111d483809a9d74b367f88b17f9ed08",
+          "required": false
+        },
+        {
+          "path": "data/movies/515_with_alpha.vp6",
+          "size": 1621344,
+          "sha256": "e82e93592ae4002376198e8d97dca110a3872f85b4adf609c4979f4c9fab67d7",
+          "required": false
+        },
+        {
+          "path": "data/movies/516_with_alpha.vp6",
+          "size": 626944,
+          "sha256": "d0f6fbb14570f84cb6de4e6d6620d02faaf9a79e55a3ed989291ce8e42b1ce6b",
+          "required": false
+        },
+        {
+          "path": "data/movies/517_with_alpha.vp6",
+          "size": 987964,
+          "sha256": "14a66c88b12c22f34e3a49442e8aed9ea459d186433a269b510c4ccc181e03aa",
+          "required": false
+        },
+        {
+          "path": "data/movies/601_with_alpha.vp6",
+          "size": 1271568,
+          "sha256": "3c1e1a4d45ae0265f8447e9aa61221753ce530b8b2cb67e530a9b0a6d46f2930",
+          "required": false
+        },
+        {
+          "path": "data/movies/602_with_alpha.vp6",
+          "size": 2097696,
+          "sha256": "9e1d8d002f172a0d8203697622f301dddac44b376e445e5c89a035cbbadb99e7",
+          "required": false
+        },
+        {
+          "path": "data/movies/603_with_alpha.vp6",
+          "size": 707460,
+          "sha256": "61b2683727e3c416e1acc2607b90bc6697916724cbafbdc16c5b9aca5826abb1",
+          "required": false
+        },
+        {
+          "path": "data/movies/604_with_alpha.vp6",
+          "size": 1054560,
+          "sha256": "2584d2bb5c02ef78985acd878de5fcfe1da3a22cb5abbaa710a64483b75d1b76",
+          "required": false
+        },
+        {
+          "path": "data/movies/605_with_alpha.vp6",
+          "size": 1962944,
+          "sha256": "6d3d82e6896be3e94f100882f74721a732aa87ed65707bd6bed5e6077b9f07f6",
+          "required": false
+        },
+        {
+          "path": "data/movies/606_with_alpha.vp6",
+          "size": 1288916,
+          "sha256": "8fa1908160cff4aeff5847116a0e962d65091e408f95bd58b8f6dde12124be1a",
+          "required": false
+        },
+        {
+          "path": "data/movies/607_with_alpha.vp6",
+          "size": 1798020,
+          "sha256": "3203088ff87ccc9d702e9cb7b8687674203cda049247cd8ee2c759be51a5b9e9",
+          "required": false
+        },
+        {
+          "path": "data/movies/big_movie_with_alpha.vp6",
+          "size": 14799228,
+          "sha256": "caaa889752a1d5266553e450752da0e9a540d37d3404531e3185f3dd045b4d28",
+          "required": false
+        },
+        {
+          "path": "data/movies/bookclose.vp6",
+          "size": 2542576,
+          "sha256": "d6f63baa54a3cd277b3e8242e944cedfb2d07766496b2e88457ae588f218ba1f",
+          "required": false
+        },
+        {
+          "path": "data/movies/bookflipback.vp6",
+          "size": 1230836,
+          "sha256": "8bee259995a25396526ff40c6e6818631647c6bfd0724a662d6994fce699b658",
+          "required": false
+        },
+        {
+          "path": "data/movies/bookflipforward.vp6",
+          "size": 1241684,
+          "sha256": "3e91c2fce847cf4fc7cc9aa0d1d524acfa95c90d1426023bcf8de5a9b5e54152",
+          "required": false
+        },
+        {
+          "path": "data/movies/bookopen.vp6",
+          "size": 2700912,
+          "sha256": "c63d6f9e4ef9c5d3feff4f49aedaed036901c38f3583e5e78ea89f55a801409b",
+          "required": false
+        },
+        {
+          "path": "data/movies/credits_with_alpha.vp6",
+          "size": 17151604,
+          "sha256": "5a549450e4d8952e7cc6668ba2f0014f05818cfd7f5603974c80c46df330217d",
+          "required": false
+        },
+        {
+          "path": "data/movies/gondorflag_with_alpha.vp6",
+          "size": 1591084,
+          "sha256": "c57518c8e5af2b88771a43dc1910b86e96f2e77ab193a36eeb4becc83bedcb9d",
+          "required": false
+        },
+        {
+          "path": "data/movies/isengardflag_with_alpha.vp6",
+          "size": 2302512,
+          "sha256": "988bfc2cf851cce7a67d0259ed6b594c70db92d26356c0ff8fbc9d826a394b40",
+          "required": false
+        },
+        {
+          "path": "data/movies/loadingring.vp6",
+          "size": 506660,
+          "sha256": "d4a7705fefba4227d7ea5ecf6e220b4532b9b333d6130e890389d209215b67ee",
+          "required": false
+        },
+        {
+          "path": "data/movies/maplivingmap_01_with_alpha.vp6",
+          "size": 7189212,
+          "sha256": "7215a9d2d4b90263bf4e072e67e910fbb099749b5bda835ad30f1b844fa011df",
+          "required": false
+        },
+        {
+          "path": "data/movies/mordorflag_with_alpha.vp6",
+          "size": 2438384,
+          "sha256": "2a69babc52db2eb70431918d9410d479aeb3d3550f3acc0f3a2cd5ad468dc52a",
+          "required": false
+        },
+        {
+          "path": "data/movies/movieonlinehomegondor.vp6",
+          "size": 703184,
+          "sha256": "6efc6f9a6aa683f4ebc1578621f1f59fba57e40e1a5ed87c0f703ff84605d769",
+          "required": false
+        },
+        {
+          "path": "data/movies/movieonlinehomeisengard.vp6",
+          "size": 1009064,
+          "sha256": "e5a07086a0572fd81ad564b9d137daec27e2baf5539cd23df585c9f3184ec117",
+          "required": false
+        },
+        {
+          "path": "data/movies/movieonlinehomemordor.vp6",
+          "size": 398936,
+          "sha256": "6c812111a74c91c9327e840045c749bfc60de6c2eb58a4db5ec543d50cc49d59",
+          "required": false
+        },
+        {
+          "path": "data/movies/movieonlinehomeneutral.vp6",
+          "size": 406996,
+          "sha256": "82e5730b705e85467866ba1cc8353638bde82a8eff54618ac94ba2069e91c9ad",
+          "required": false
+        },
+        {
+          "path": "data/movies/movieonlinehomerohan.vp6",
+          "size": 1032332,
+          "sha256": "762628e5261ba74187c4d6755b35dd59b26f926aa31b78b32bd48f57b4ab5848",
+          "required": false
+        },
+        {
+          "path": "data/movies/moviequickmatchfound.vp6",
+          "size": 299968,
+          "sha256": "f7c304b91b3eaf6a239a2adffb5ae530c8644e1b6bee0838f3d16dcaec5c205b",
+          "required": false
+        },
+        {
+          "path": "data/movies/moviequickmatchsearching.vp6",
+          "size": 1022408,
+          "sha256": "81ed7d6bed9003e8aa828ab18c50ef6cb935dbbb529f3dbd2da5f0e8335b726b",
+          "required": false
+        },
+        {
+          "path": "data/movies/movieskirmishgondor.vp6",
+          "size": 281028,
+          "sha256": "f9167aa14ca5ed883d92b6ec6e67ed29fda6eb56b990abc49800db1e8097277f",
+          "required": false
+        },
+        {
+          "path": "data/movies/movieskirmishisengard.vp6",
+          "size": 364560,
+          "sha256": "15480f59a4a941cc414131ab59b2b94d69deb613341cc3acc65f73940e58674e",
+          "required": false
+        },
+        {
+          "path": "data/movies/movieskirmishmordor.vp6",
+          "size": 167572,
+          "sha256": "16077964ef8f0511c378b537fa616fb137e7932817cd44106808a73b6fa02f33",
+          "required": false
+        },
+        {
+          "path": "data/movies/movieskirmishneutral.vp6",
+          "size": 255708,
+          "sha256": "80a81abe29eb7dcc2247655360e2bfe0c2e957d08c0c31aced07be257b218241",
+          "required": false
+        },
+        {
+          "path": "data/movies/movieskirmishrohan.vp6",
+          "size": 385320,
+          "sha256": "3ca9a03eff53246a6eca958524ea5a056b1bf984cfd2cc25ff384742983a09f4",
+          "required": false
+        },
+        {
+          "path": "data/movies/rohanflag_with_alpha.vp6",
+          "size": 1638180,
+          "sha256": "93157b6805dc6da57aa8cf62389a3fbd7f8518f67c501641710ddbc3d85189ce",
+          "required": false
+        },
+        {
+          "path": "data/movies/smallring.vp6",
+          "size": 203004,
+          "sha256": "65ecf80b115fd1b0104093fcff2f91f437a3f163a27b9ad9e7fbc442728d0f0c",
+          "required": false
+        },
+        {
+          "path": "data/movies/tutorialbasesandunits.vp6",
+          "size": 74053260,
+          "sha256": "ddbf627fa1e4f8b69002dfccf36e67b411d72cc50b6b641fb603a929dc4393a0",
+          "required": false
+        },
+        {
+          "path": "data/movies/tutorialheroes.vp6",
+          "size": 38625132,
+          "sha256": "21807bbd0f36b2d67148a6496ba1c1e22be2d9561b0ba1c83ae01ba67ac23ee3",
+          "required": false
+        },
+        {
+          "path": "data/movies/tutorialmovesandattacks.vp6",
+          "size": 54024668,
+          "sha256": "6a9b26fe11417c1593a1512afb542a9467684a286d1b6e9ea67850529736c476",
+          "required": false
+        },
+        {
+          "path": "data/movies/tutorialspecialpowers.vp6",
+          "size": 46717604,
+          "sha256": "09853636cf74c161a908b459e1279f57e9b168cde11b54269f8c6d1795313adc",
+          "required": false
+        },
+        {
+          "path": "data/movies/tutorialveterancy.vp6",
+          "size": 36989924,
+          "sha256": "21c7e43c4348dfcbfe291c68a06dbbb64201cf50ae0e2f0cbd9c7ed0e2485529",
+          "required": false
+        },
+        {
+          "path": "data/movies/tutorialworldmap.vp6",
+          "size": 51757740,
+          "sha256": "5e53c979b4af74b804e2c44406e00b60cf959c04f74afb8716cb11e0ed7c1f7a",
+          "required": false
+        },
+        {
+          "path": "dbghelp.dll",
+          "size": 860160,
+          "sha256": "c56d5893e2b12048f51f612a63c21a2b6b9f1640b1af200882db454b5456bf9b",
+          "required": false
+        },
+        {
+          "path": "debugwindowlite.dll",
+          "size": 172032,
+          "sha256": "517f55cbb7323b4f3c24b44d381057f323505026abb1cd4dd76349bf6f623b22",
+          "required": false
+        },
+        {
+          "path": "dsoal-aldrv.dll",
+          "size": 990208,
+          "sha256": "1b0e24057f68fe03c4b57e882baf317cf2073aef2b1ba9fa237c5b3237053465",
+          "required": false
+        },
+        {
+          "path": "dsound.dll",
+          "size": 273422,
+          "sha256": "f34903b2272a1a2393b3f261fc77255b2a0627aded10571ef18531ab2d8d4966",
+          "required": false
+        },
+        {
+          "path": "dsound.ini",
+          "size": 65,
+          "sha256": "d2b62270d2873689880a0f9756299a9d239f90a44b121a38f48a76caf499ec84",
+          "required": false
+        },
+        {
+          "path": "englishsplash.jpg",
+          "size": 79243,
+          "sha256": "18347e1153a7fdbfb8eff52ffce43a69594abafb216aa522c502c40cd87e935c",
+          "required": false
+        },
+        {
+          "path": "ini.big",
+          "size": 13513985,
+          "sha256": "f5220a9357c467d5ed8499dc9140d2d995e487abd8ba08216dba7496782e8156",
+          "required": true
+        },
+        {
+          "path": "lang/english.big",
+          "size": 1655161,
+          "sha256": "0715109a54e4202c3d97dcd4fcedf880c6d5453fd8d6f4522d3a20c06f4475d4",
+          "required": true
+        },
+        {
+          "path": "lang/englishaudio.big",
+          "size": 410572917,
+          "sha256": "05ebf35a12dd71de69b79c34174c9a40596ec20943a09d50ac5500bbb49154c5",
+          "required": true
+        },
+        {
+          "path": "langdata.dat",
+          "size": 56776,
+          "sha256": "4dd74874af0598e2ff33b11d2cfc04c8ae0562351fbcf3d095ed2a5ca2020b1d",
+          "required": false
+        },
+        {
+          "path": "libraries.big",
+          "size": 319409,
+          "sha256": "43e1708d3f0a6c04eaddbdbf3ae420508767049b0a8a5f15c05a9eb19140de96",
+          "required": true
+        },
+        {
+          "path": "livingworld.txt",
+          "size": 537,
+          "sha256": "d4196ba8a9f2122ca7fbc87ed90e9a68c1259a9d39f7f520032c77f3d03a1727",
+          "required": false
+        },
+        {
+          "path": "lotrbfme.exe",
+          "size": 16433152,
+          "sha256": "c1a907c44b84df129c1f18dc7365ea25ba438f9b8f39a374b86ed852936ff0a9",
+          "required": false
+        },
+        {
+          "path": "maps.big",
+          "size": 94265671,
+          "sha256": "499d60ebd3c37d556dfbba4b0f0cb92bc893c94f8ca3d720b4a7125a91a368d4",
+          "required": true
+        },
+        {
+          "path": "mfc71.dll",
+          "size": 1060864,
+          "sha256": "4da5efdc46d126b45daeee8bc69c0ba2aa243589046b7dfd12a7e21b9bee6a32",
+          "required": false
+        },
+        {
+          "path": "mss/mssdsp.flt",
+          "size": 113664,
+          "sha256": "099b42f4e25418e4baf505d6641bd0c93302b883ae4f0a4b0e8174f6c060c4f3",
+          "required": false
+        },
+        {
+          "path": "mss/msseax.m3d",
+          "size": 143872,
+          "sha256": "cf8a75167ce825804da64265de8ac8723415e337704128d2eb26f1d9f6a6c812",
+          "required": false
+        },
+        {
+          "path": "mss/mssmp3.asi",
+          "size": 149504,
+          "sha256": "7a56667de3680c14a78abeca815b410dff6be45e3a812effc63dd441727bca46",
+          "required": false
+        },
+        {
+          "path": "mss/msssoft.m3d",
+          "size": 79360,
+          "sha256": "f6f328d875e07296eec678400e9e43d215d566a3a1e582e1befd5a58cea0bfa5",
+          "required": false
+        },
+        {
+          "path": "mss/mssvoice.asi",
+          "size": 214528,
+          "sha256": "cbec9a07693987a2ac2b0c64ae4696c654c4ff5183fafad8a88e044d976b79df",
+          "required": false
+        },
+        {
+          "path": "mss32.dll",
+          "size": 374272,
+          "sha256": "f2099aaa3d7a72375f7e6dd8430ebdd3ab11240a28323642a6330d92a9cec28b",
+          "required": false
+        },
+        {
+          "path": "msvcp71.dll",
+          "size": 499712,
+          "sha256": "df96156f6a548fd6fe5672918de5ae4509d3c810a57bffd2a91de45a3ed5b23b",
+          "required": false
+        },
+        {
+          "path": "msvcr71.dll",
+          "size": 348160,
+          "sha256": "8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe",
+          "required": false
+        },
+        {
+          "path": "music.big",
+          "size": 257369903,
+          "sha256": "1f15b962b4c1c5ccd08e799621f7ed41313af72c207cf6d8edaf18e31ad503de",
+          "required": false
+        },
+        {
+          "path": "shaders.big",
+          "size": 9957,
+          "sha256": "24c177ac4df9c5a69e9c45c706f7853cd06984327de433546fcd1896ffb2d608",
+          "required": true
+        },
+        {
+          "path": "terrain.big",
+          "size": 188034883,
+          "sha256": "02d89cac7cb3bead1ad4468cb2187c70201eac41b473c7c1c8fc22c4f3f54b8d",
+          "required": true
+        },
+        {
+          "path": "textures.big",
+          "size": 224746172,
+          "sha256": "a3b7aea4a4ee98ab0a41b926e46d95846be6647b14a75e678f43fe98ef067486",
+          "required": true
+        },
+        {
+          "path": "w3d.big",
+          "size": 486611983,
+          "sha256": "8e8a988bb7018683b5a30e306f4e690ea89565fc75804f1c315dc7dcb88e2540",
+          "required": true
+        },
+        {
+          "path": "window.big",
+          "size": 694006,
+          "sha256": "53020f0fd15f3ac5c2a3fa78ebb68c4c825acce3965d6263c52eeea2450b4941",
+          "required": false
+        },
+        {
+          "path": "worldbuilder.dbgcmd",
+          "size": 67,
+          "sha256": "78f7e96ed3ea21ec7be4162839a9947ef9fe040f0176d9c94f7b3aec6f9cca93",
+          "required": false
+        },
+        {
+          "path": "worldbuilder.exe",
+          "size": 18300928,
+          "sha256": "5be8adf1807f7ba38acd598d89685e231eb90b8808b0650770557191a3b8192f",
+          "required": false
+        }
+      ]
+    }
+  }
+}
