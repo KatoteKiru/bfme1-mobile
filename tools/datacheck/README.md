@@ -165,3 +165,19 @@ python3 schema/gen_zh_schema.py /workspace/bfme-mobile/src/GeneralsGameCode sche
 - **Механики, файл:строка** (`datacheck/gameplay.py`, список `FEATURES`): продажа, стойки, пополнение орд, доход ферм. Поиск по итоговым (выигравшим в VFS) INI с владельцем (блок верхнего уровня) и модулем. Для 2.22 запускать без `--archives` (см. `out-all/`). Шаблоны легко дополнить.
 - **Скирмиш** (`datacheck/recruit.py`): PlayerTemplate → герои/CastleToUnpackForFaction → CommandSet (с наследованием и CommandSetUpgrade) → CommandButton (UNIT_BUILD, FOUNDATION_CONSTRUCT …) → Object → HordeContain (RankInfo/InitialPayload), рекурсивно. По каждой фракции: достижимые объекты по классам и частоты модулей по итоговым объектам (`module_frequency(final, names=...)`).
 - **Сверка с gp-scratch** (`--gp-scratch DIR` или `BFME_GP_SCRATCH`): расхождения с их подсчётом по регулярке и объяснение по каждой строке.
+
+## E1-26, срез M1 (terrain.ini / water.ini / roads.ini)
+
+`datacheck.terrainmap` разбирает три INI своей схемой и сопоставляет классы текстур
+BlendTileData карты с файлами в `terrain.big` и `textures.big`. Это срез E1-26 под
+критерий M1 (Fords of Isen), не весь E1-23 и не атлас (E1-51). OpenSAGE rev 588ac477
+(GPL-3.0) — только оракул, код оракула не копируется.
+
+```sh
+cd tools/datacheck
+BFME_GAMEDATA=/path/to/gamedata python3 -m datacheck.terrainmap --report /tmp/e1-26.md
+python3 -m unittest tests.test_terrainmap -v
+```
+
+Отчёт, который можно коммитить (счётчики, имена текстур, пути внутри архивов):
+`docs/bfme/E1-26-M1.md`. Тест на `BFME_GAMEDATA` сверяет его с повторным прогоном.
