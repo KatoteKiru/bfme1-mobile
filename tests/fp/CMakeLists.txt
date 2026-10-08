@@ -2,7 +2,9 @@
 #
 #   cmake -S tests/fp -B build/tests-fp -G "Unix Makefiles" && cmake --build build/tests-fp -j2
 #   ctest --test-dir build/tests-fp --output-on-failure
-# Verification builds need an explicit -DBFME_FP_CI=ON: GitHub Actions are off, so ENV{CI} does not enable it.
+# This standalone project does not read the BFME_FP_CI option. The CI binary
+# is always built with BFME_FP_CI=1. -DBFME_FP_CI is for the game build
+# (core_gamemath), not for this standalone project.
 cmake_minimum_required(VERSION 3.25)
 project(bfme_fp_thread_tests CXX)
 
@@ -56,6 +58,7 @@ bfme_fp_test_binary(bfme_fp_tests_release)
 target_compile_definitions(bfme_fp_tests_release PRIVATE NDEBUG)
 
 # CI without debug: mismatch and unbound are fatal. Rebind from another thread is not.
+# BFME_FP_CI=1 is fixed on this binary. -DBFME_FP_CI configures core_gamemath, not this project.
 bfme_fp_test_binary(bfme_fp_tests_ci)
 target_compile_definitions(bfme_fp_tests_ci PRIVATE NDEBUG BFME_FP_CI=1)
 

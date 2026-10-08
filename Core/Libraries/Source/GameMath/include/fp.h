@@ -85,6 +85,8 @@ struct Stats {
 	std::uint32_t lastFrame;
 };
 
+// Stats limitation: stats() and resetStats() do not check the thread.
+// g_stats is not atomic.
 const Stats& stats();
 void resetStats();
 
