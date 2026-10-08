@@ -1,6 +1,6 @@
 # ADR-0003: детерминизм логики (плавающая точка, математика, RNG, порядок)
 
-- **Статус:** Предложено, 02.10.2026. Черновик Геймплея, приведён к решениям Лида движка от 02.10.2026 и к уточнению интерфейса `fp::`, согласованному с Android-платформой в тот же день. Утверждают Лид движка и QA.
+- **Статус:** Предложено, 02.10.2026; дополнено 08.10.2026 (§2.7). Черновик Геймплея, приведён к решениям Лида движка от 02.10.2026 и к уточнению интерфейса `fp::`, согласованному с Android-платформой в тот же день. Утверждают Лид движка и QA.
 - **Авторы:** Геймплей (черновик), Лид движка (решения), Android-платформа (интерфейс `fp::`).
 - **Владельцы:** Лид движка (правила, ревью хуков в апстримных файлах); Геймплей (своя GameMath, E1-49, 5–7 дней; перевод логики; заглушки в `wwmath.h`; вызовы `fp::` в `GameLogic`; `Stats` в оверлее; флаг `-gxFpCheck`; хелперы `int32_t`; запрет `long double` / `lroundf` / `long` в логике и сериализации); Android-платформа (проверка, что флаги из `cmake/compilers.cmake` попали в `compile_commands.json`; запрет `-ffast-math`/`-Ofast` с проверкой в CI; реализации `fp::` по архитектурам; `fp::Guard` на `newDrawable` и создании ресурсов рендера из логики; хаос-режим `-gxFpChaos`); QA (E1-45 после E1-49, синтетический сценарий, разбор `SpectreGunshipUpdate` вместе с Геймплеем; `m_pulsePhase` закрыт).
 - **Проверка:** E1-45 идёт **после** E1-49 (`docs/E1-BACKLOG.md`). До готовности GameMath — контрольный прогон с флагами компилятора при `SAGE_USE_DETERMINISTIC_MATH=OFF`. Сравнение CRC архитектур — headless Linux x86_64 против arm64, на устройстве прогон на Pixel 8 Pro. Реплея ZH нет: планируем без покупки (E1-BACKLOG §6 п. 6). Затем реплей-тесты QA в CI с Э2 (`PLAN.md` §3 «QA: детерминизм», §5 риск «Детерминизм и рассинхроны»; `docs/TEST-PLAN.md`).
@@ -88,7 +88,7 @@
 
 - В логике и сериализации запрещены `lroundf`, `lrintf`, `lround`, `lrint`, типы `long` / `unsigned long` и `long double`. `long` — 32 бита на Windows и 64 бита на arm64/x86_64 Linux и Android. `long double` на arm64 Android — программный fp128 (compiler-rt), на x86 — x87; это отдельный источник расхождения (R6). Запрет входит в E1-49 и проверяется в CI.
 - Вместо `lroundf` и приведений к `long` — хелперы в GameMath с `int32_t`: `GameMath::roundToInt32`, `floorToInt32`, `ceilToInt32`, `truncToInt32`. Поведение на краях, которое фиксируем в коде и тестах: насыщение до `INT32_MIN`/`INT32_MAX`, NaN → 0.
-- Сейчас `fast_float2long_round` лежит в `Core/Libraries/Include/Lib/BaseType.h:180` и возвращает `long`. Ветка `_MSC_VER && _M_IX86` вызывает `lroundf` (`:190`). Не-Windows ветка (`:192–208`) уже не вызывает `lroundf`: она берёт `roundf` и при выходе за диапазон возвращает 0, а не насыщение. `REAL_TO_INT_CEIL`/`FLOOR` определены там же (`:292–296`). Пример в логике: `Core/GameEngine/Include/GameLogic/AIPathfind.h:1015–1016`. Перевод `REAL_TO_INT_*` на хелперы — правка апстрима с `// BFME:`, ревью Лида. Файла `Core/Libraries/Include/Lib/BaseFunctions.h` в дереве нет.
+- Сейчас `fast_float2long_round` лежит в `Core/Libraries/Include/Lib/BaseType.h:180` и возвращает `long`. Ветка `_MSC_VER && _M_IX86` вызывает `lroundf` (`:190`). Не-Windows ветка (`:192–208`) уже не вызывает `lroundf`: она берёт `roundf` и при выходе за диапазон возвращает 0, а не насыщение. `REAL_TO_INT_CEIL`/`FLOOR` определены там же (`:292–296`). Пример в логике: `Core/GameEngine/Include/GameLogic/AIPathfind.h:1015–1016`. `REAL_TO_INT_*` на хелперы не переводим и не меняем: на них держатся реплеи и CRC ZH (§2.7, с 08.10.2026). Хелперы — для нового кода BFME. Файла `Core/Libraries/Include/Lib/BaseFunctions.h` в дереве нет.
 - Тип `long` в `GeneralsMD/Code/GameEngine/Source/GameLogic` на `f79e624` — две локальные переменные `PartitionManager.cpp:95–96`. Поиск слова `long` даёт 40 строк в `*.cpp` этого каталога, почти все — английское слово в комментариях. CI-шаблон не должен считать комментарий нарушением. Ищем тип и функции: `\b(lroundf|lrintf|lround|lrint)\b`, объявления `long`/`unsigned long`, `\blong\s+double\b`, по каталогам `GameLogic/`, `engine/bfme/` и включаемым ими общим заголовкам, с явным списком исключений.
 
 ### 2.5 Общие правила для логики (из GAMEPLAY-GAP §4)
@@ -147,6 +147,13 @@
 3. **Поля клиентского RNG в `crc()` не пишем, в `xfer()` они остаются.** Обе CRC идут через `crc()`. `xfer()` модулей в CRC не участвует (§2.5 п. 5).
 4. **Уровень героя BFME — отдельный счётчик 1–10** в модуле BFME, со своей сериализацией и CRC. `enum VeterancyLevel` не трогаем: в `Core/GameEngine/Include/Common/GameCommon.h:198–210` это `LEVEL_REGULAR`, `LEVEL_VETERAN`, `LEVEL_ELITE`, `LEVEL_HEROIC`. Для старых эффектов ZH — одностороннее отображение уровня героя в `VeterancyLevel`. Обратного отображения нет. Это правило Э2: E1-BACKLOG (раунд 2, п. 4) не добавляет под него строку в таблицы Э1.
 5. **ClientBehavior (ZH-ключ `ClientUpdate`, `MODULETYPE_CLIENT_UPDATE`) сохраняется с `Drawable` и в CRC логики не входит** (§2.5 п. 8). Ни лёгкая CRC, ни `XferDeepCRC` его не хешируют.
+
+### 2.7 Известные особенности апстрима
+
+1. **`REAL_TO_INT_FLOOR` и `REAL_TO_INT_CEIL` в сборке ZH неточны на целых.** Без `RTS_GENERALS` `REAL_TO_INT_FLOOR(x)` — это `fast_float2long_round(fast_float_floor(x))` (`Core/Libraries/Include/Lib/BaseType.h:296`), `REAL_TO_INT_CEIL(x)` — `fast_float2long_round(fast_float_ceil(x))` (`:295`). Ветка Generals на `floorf`/`ceilf` — `:292–293`. `fast_float_floor` (`:261–267`) для отрицательного аргумента вычитает 0,99999994 (`0x3F7FFFFF`) и обрезает, `fast_float_ceil` (`:270–276`) для неотрицательного прибавляет столько же и обрезает. Сумма округляется к ближайшему, поэтому для отрицательного целого −n при n ≥ 1 `REAL_TO_INT_FLOOR` даёт −n−1, а `REAL_TO_INT_CEIL` для положительного целого n даёт n+1. Для нецелых, 0 и −0 результат совпадает с `floor`/`ceil`. Проверено 08.10.2026 перебором n = 1…2^24 на x86_64 SSE: отклонение на 1 при 1 ≤ n < 2^24, при n = 2^24 сумма округляется к чётному и результат точный. Номера строк сверены с деревом `e9292c9c5`.
+2. **Поведение детерминировано.** Это одно сложение float с округлением к ближайшему и битовая обрезка, поэтому результат одинаков на x86 SSE, x87 с PC_24 и ARM64, если режим FP выставлен `setFPMode` (§2.3).
+3. **Менять нельзя.** На этом поведении стоят реплеи и CRC ZH: `AIPathfind` (`worldToCell`, `AIPathfind.h:1015–1016`; `classifyFence`, `internal_classifyObjectFootprint`, `PathfindLayer::classifyCells`), `PartitionManager`, `TerrainLogic::flattenTerrain` и `createCraterInTerrain`. Тесты `tests/heights` (#10) фиксируют это поведение для flatten.
+4. **В новом коде BFME**, где нужен точный floor или ceil, — отдельный хелпер (`GameMath::floorToInt32`/`ceilToInt32`, §2.4), а не `REAL_TO_INT_*`. CI-проверка E1-49 помечает `REAL_TO_INT_FLOOR`/`CEIL` в апстримных файлах как «не исправлять»: это известная особенность, а не ошибка.
 
 ## 3. Варианты, которые не выбраны
 
@@ -215,3 +222,10 @@
 ## Изменения 02.10.2026 (`m_pulsePhase` закрыт QA)
 
 `StealthUpdate::crc` (`:1131`) поле не хеширует. QA: единственное чтение — `:691`, на логику не влияет. Перевод на `GameLogicRandomValue` не нужен. Вопрос §5 п. 3 закрыт. Проверка реплеем: два прогона, клиентский сид 0 и 12345 либо фаза 0 и π/2; CRC по кадрам должны совпасть. `SpectreGunshipUpdate.cpp:656–657` остаётся открытым (§5 п. 4).
+
+## Изменения 08.10.2026 (известные особенности апстрима)
+
+Сверено с деревом `e9292c9c5`. Код не менялся.
+
+1. **Новый §2.7.** `REAL_TO_INT_FLOOR` и `REAL_TO_INT_CEIL` в сборке ZH (`BaseType.h:295–296`, `fast_float_floor` `:261–267`, `fast_float_ceil` `:270–276`) дают −n−1 для отрицательных целых −n и n+1 для положительных целых n. Поведение детерминировано на x86 SSE, x87 PC_24 и ARM64 при `setFPMode`. На нём стоят реплеи и CRC ZH (AIPathfind `worldToCell` и `classify*`, PartitionManager, TerrainLogic flatten и crater), поэтому его не меняем. В новом коде BFME — отдельный хелпер, CI-проверка E1-49 помечает эти макросы как «не исправлять».
+2. **§2.4.** Перевод `REAL_TO_INT_*` на хелперы GameMath отменён. Хелперы `int32_t` остаются для нового кода BFME.
