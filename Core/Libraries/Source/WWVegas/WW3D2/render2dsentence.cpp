@@ -41,6 +41,7 @@
 #include "wwmemlog.h"
 #include "dx8wrapper.h"
 #include "GXTrace.h"
+#include <vector> // BFME: E1-05 std::vector в RTL-коде нужен на всех платформах, не только на Android
 #if defined(__ANDROID__)
 // GeneralsX @perf Android port 09/05/2026 - draw-category / UI-timing hooks
 #include "d3d8gles.h"

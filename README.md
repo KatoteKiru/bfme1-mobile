@@ -61,6 +61,13 @@ git checkout bfme && git merge main   # слияние делает Лид дв�
 Остальные каталоги (`Core/`, `Generals/`, `GeneralsMD/` и др.) взяты из апстрима как есть.
 Правки в чужой области вносятся только после ревью её владельца.
 
+## Сборка
+
+- APK (Android, arm64-v8a): `tools/build-apk.sh`, подробности в [`docs/bfme/ANDROID_BUILD.md`](docs/bfme/ANDROID_BUILD.md).
+- Десктоп Linux x86_64 (`linux64-deploy`, DXVK → Vulkan, SDL3) для отладки движка: `tools/build-linux.sh`, дым под Xvfb
+  на Mesa lavapipe: `tools/build-linux.sh --smoke-only`. Нужен только Docker, GPU не нужен.
+  Подробности и требования: [`docs/bfme/LINUX_BUILD.md`](docs/bfme/LINUX_BUILD.md).
+
 ## Цели устройств
 
 arm64-v8a, Android 10 и новее, по умолчанию GLES 3.0 (Vulkan включается по желанию). Первый приоритет —
