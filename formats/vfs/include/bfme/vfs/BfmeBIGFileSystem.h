@@ -40,6 +40,9 @@ public:
 
 	virtual void init() override;
 
+	// BFME: the ZH community patch is a GeneralsOnline archive, not a BFME layer.
+	virtual Bool mountsGeneralsOnlineCommunityPatch() const override { return FALSE; }
+
 	// True when BFME_GAMEDATA is set: the hook a game factory uses to pick this file system.
 	static bool isRequestedByEnvironment();
 

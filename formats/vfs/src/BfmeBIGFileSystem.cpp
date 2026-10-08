@@ -10,6 +10,23 @@
 #include <cstdio>
 #include <cstdlib>
 
+namespace {
+
+// BFME: StdBIGFileSystem::init() reports a missing ZH asset root with
+// DEBUG_ASSERTCRASH ("No BIG files were loaded for the primary game assets.").
+// That macro is empty in a release build, so a failed rules file or an empty
+// mount used to return with no message (and mountedAny tripped -Wunused-variable).
+// Log the cause and leave the process in every build.
+[[noreturn]] void failBfmeVfsInit(const char* message)
+{
+	fprintf(stderr, "[bfmevfs] FATAL: %s\n", message);
+	fflush(stderr);
+	DEBUG_ASSERTCRASH(false, ("[bfmevfs] FATAL: %s", message));
+	std::_Exit(EXIT_FAILURE);
+}
+
+} // namespace
+
 bool BfmeVfsConfig::fromEnvironment(BfmeVfsConfig& out, std::string* error)
 {
 	const char* root = getenv("BFME_GAMEDATA");
@@ -64,21 +81,21 @@ void BfmeBIGFileSystem::init()
 {
 	DEBUG_ASSERTCRASH(TheLocalFileSystem != nullptr, ("TheLocalFileSystem must be initialized before TheArchiveFileSystem."));
 	if (TheLocalFileSystem == nullptr) {
-		return;
+		failBfmeVfsInit("TheLocalFileSystem must be initialized before TheArchiveFileSystem.");
 	}
 	if (!m_configured) {
 		std::string error;
 		if (!BfmeVfsConfig::fromEnvironment(m_config, &error)) {
-			fprintf(stderr, "[bfmevfs] not configured: %s\n", error.c_str());
-			return;
+			failBfmeVfsInit(error.c_str());
 		}
 		m_configured = true;
 	}
 
 	const bfme::vfs::MountRules rules = bfme::vfs::resolveLayerDirs(m_config.rules, m_config.gameRoot);
 	m_plan = bfme::vfs::planMount(bfme::vfs::scanArchives(m_config.gameRoot, rules), rules);
-	const Bool mountedAny = mountPlan(m_plan);
-	DEBUG_ASSERTCRASH(mountedAny, ("No BFME archives were mounted from %s", m_config.gameRoot.c_str()));
+	if (!mountPlan(m_plan)) {
+		failBfmeVfsInit(("No BFME archives were mounted from " + m_config.gameRoot).c_str());
+	}
 
 	// Loose files (Data\..., maps) resolve against the game root, as StdBIGFileSystem does for ZH.
 	TheLocalFileSystem->setAssetRootPath(AsciiString(m_config.gameRoot.c_str()));

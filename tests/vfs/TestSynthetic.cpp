@@ -8,7 +8,10 @@
 #include "SyntheticBig.h"
 #include "TestHarness.h"
 
+#include "Common/ArchiveFile.h"
+#include "Common/file.h"
 #include "Compression.h"
+#include "StdDevice/Common/StdBIGFileSystem.h"
 #include "bfme/vfs/BfmeBIGFileSystem.h"
 #include "bfme/vfs/BigArchiveReader.h"
 #include "bfme/vfs/MountOrder.h"
@@ -17,6 +20,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+#include <sys/wait.h>
+#include <unistd.h>
 
 using namespace bfmetest;
 using namespace bfme::vfs;
@@ -44,6 +49,124 @@ std::string lower(std::string s)
 	std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return char(std::tolower(c)); });
 	return s;
 }
+
+std::string readAll(ArchiveFileSystem& fs, const char* path)
+{
+	File* f = fs.openFile(path, File::READ | File::BINARY);
+	REQUIRE(f != nullptr);
+	const Int n = f->size();
+	std::string out(size_t(n > 0 ? n : 0), '\0');
+	const Int got = n > 0 ? f->read(&out[0], n) : 0;
+	f->close();
+	REQUIRE_EQ(got, n);
+	return out;
+}
+
+// stderr is fully buffered once it is a pipe, so the code under test must fflush.
+class StderrCapture {
+public:
+	StderrCapture()
+	{
+		REQUIRE(pipe(fds_) == 0);
+		saved_ = dup(STDERR_FILENO);
+		REQUIRE(saved_ >= 0);
+		REQUIRE(dup2(fds_[1], STDERR_FILENO) >= 0);
+	}
+	~StderrCapture()
+	{
+		if (saved_ >= 0) {
+			fflush(stderr);
+			dup2(saved_, STDERR_FILENO);
+			close(saved_);
+			close(fds_[0]);
+			close(fds_[1]);
+		}
+	}
+	std::string stop()
+	{
+		fflush(stderr);
+		dup2(saved_, STDERR_FILENO);
+		close(saved_);
+		saved_ = -1;
+		close(fds_[1]);
+		std::string text;
+		char buf[1024];
+		ssize_t n = 0;
+		while ((n = read(fds_[0], buf, sizeof(buf))) > 0) {
+			text.append(buf, size_t(n));
+		}
+		close(fds_[0]);
+		return text;
+	}
+
+private:
+	int fds_[2] = {-1, -1};
+	int saved_ = -1;
+};
+
+struct ChildExit {
+	int status = 0;
+	std::string err;
+};
+
+template <class F>
+ChildExit exitInChild(F fn)
+{
+	int fds[2];
+	REQUIRE(pipe(fds) == 0);
+	const pid_t pid = fork();
+	REQUIRE(pid >= 0);
+	if (pid == 0) {
+		dup2(fds[1], STDERR_FILENO);
+		close(fds[0]);
+		close(fds[1]);
+		fn();
+		std::_Exit(0);
+	}
+	close(fds[1]);
+	ChildExit result;
+	char buf[1024];
+	ssize_t n = 0;
+	while ((n = read(fds[0], buf, sizeof(buf))) > 0) {
+		result.err.append(buf, size_t(n));
+	}
+	close(fds[0]);
+	REQUIRE(waitpid(pid, &result.status, 0) == pid);
+	return result;
+}
+
+struct EnvRestore {
+	bool hadRoot;
+	std::string root;
+	bool hadRules;
+	std::string rules;
+	EnvRestore()
+	{
+		const char* g = getenv("BFME_GAMEDATA");
+		hadRoot = g != nullptr;
+		if (hadRoot) {
+			root = g;
+		}
+		const char* r = getenv("BFME_VFS_MOUNT_ORDER");
+		hadRules = r != nullptr;
+		if (hadRules) {
+			rules = r;
+		}
+	}
+	~EnvRestore()
+	{
+		if (hadRoot) {
+			setenv("BFME_GAMEDATA", root.c_str(), 1);
+		} else {
+			unsetenv("BFME_GAMEDATA");
+		}
+		if (hadRules) {
+			setenv("BFME_VFS_MOUNT_ORDER", rules.c_str(), 1);
+		} else {
+			unsetenv("BFME_VFS_MOUNT_ORDER");
+		}
+	}
+};
 
 } // namespace
 
@@ -413,6 +536,95 @@ TEST(bfme_gamedata_requests_bfme_filesystem)
 	BfmeVfsConfig cfg;
 	REQUIRE(BfmeVfsConfig::fromEnvironment(cfg, &error));
 	REQUIRE_EQ(cfg.gameRoot, std::string("/tmp/bfme-not-a-real-gamedata"));
+}
+
+// 500_900_CommunityPatch_CoreINI.big sorts ahead of _patch222 ('5' < '_'), so its
+// data\ini\* would win. BfmeBIGFileSystem must not mount it, marker file or not.
+// loadMods() calls loadGeneralsOnlineCommunityPatch() with the user-data directory.
+TEST(bfme_skips_zh_community_patch)
+{
+	TempDir root;
+	TempDir user;
+	writeBig(root.path() / "ini.big", {{"data\\ini\\gamedata.ini", "BASE"}});
+	writeBig(root.path() / "_patch222core.big", {{"data\\ini\\gamedata.ini", "PATCH222"}});
+	const std::filesystem::path patch = user.path() / "GeneralsOnlineGameData" / "500_900_CommunityPatch_CoreINI.big";
+	writeBig(patch, {{"data\\ini\\gamedata.ini", "ZHCP"}});
+	REQUIRE(std::filesystem::exists(patch));
+	REQUIRE(!std::filesystem::exists(user.path() / "gx_no_community_patch.txt"));
+	ensureLocalFileSystem();
+
+	{
+		StdBIGFileSystem zh;
+		REQUIRE(zh.mountsGeneralsOnlineCommunityPatch());
+		REQUIRE(zh.loadBigFilesFromDirectory(AsciiString(root.str().c_str()), "*.big", FALSE));
+		StderrCapture cap;
+		zh.loadGeneralsOnlineCommunityPatch(AsciiString(user.str().c_str()));
+		const std::string log = cap.stop();
+		REQUIRE(log.find("community patch skipped (BFME)") == std::string::npos);
+		REQUIRE(log.find("community patch mounted") != std::string::npos);
+		REQUIRE_EQ(readAll(zh, "data\\ini\\gamedata.ini"), std::string("ZHCP"));
+		ArchiveFile* winner = zh.getArchiveFile("data\\ini\\gamedata.ini");
+		REQUIRE(winner != nullptr);
+		REQUIRE(std::string(winner->getName().str()).find("500_900") != std::string::npos);
+	}
+
+	{
+		MountedVfs vfs(configFor(root));
+		REQUIRE(!vfs.fs().mountsGeneralsOnlineCommunityPatch());
+		std::string before;
+		REQUIRE(vfs.read("data\\ini\\gamedata.ini", before));
+		REQUIRE_EQ(before, std::string("PATCH222"));
+		StderrCapture cap;
+		vfs.fs().loadGeneralsOnlineCommunityPatch(AsciiString(user.str().c_str()));
+		const std::string log = cap.stop();
+		REQUIRE(log.find("community patch skipped (BFME)") != std::string::npos);
+		REQUIRE(log.find("community patch mounted") == std::string::npos);
+		std::string data;
+		REQUIRE(vfs.read("data\\ini\\gamedata.ini", data));
+		REQUIRE_EQ(data, std::string("PATCH222"));
+		REQUIRE(vfs.winner("data\\ini\\gamedata.ini").find("500_900") == std::string::npos);
+		REQUIRE(vfs.winner("data\\ini\\gamedata.ini").find("_patch222") != std::string::npos);
+	}
+}
+
+// A rules file that does not parse must not return from init() in a release build.
+TEST(bfme_init_exits_when_rules_do_not_parse)
+{
+	TempDir root;
+	TempDir rulesDir;
+	writeBig(root.path() / "ini.big", {{"data\\ini\\gamedata.ini", "BASE"}});
+	const std::filesystem::path rules = rulesDir.path() / "bad.cfg";
+	writeFile(rules, "not a layer\n");
+	ensureLocalFileSystem();
+	EnvRestore restore;
+	setenv("BFME_GAMEDATA", root.str().c_str(), 1);
+	setenv("BFME_VFS_MOUNT_ORDER", rules.string().c_str(), 1);
+
+	const ChildExit child = exitInChild([] {
+		BfmeBIGFileSystem fs;
+		fs.init();
+	});
+	REQUIRE(WIFEXITED(child.status));
+	REQUIRE(WEXITSTATUS(child.status) != 0);
+	REQUIRE(child.err.find("[bfmevfs] FATAL:") != std::string::npos);
+	REQUIRE(child.err.find("unknown keyword 'not'") != std::string::npos);
+}
+
+// An empty game root mounts nothing. Same loud exit as a missing ZH asset root.
+TEST(bfme_init_exits_when_no_archive_mounts)
+{
+	TempDir root;
+	ensureLocalFileSystem();
+	BfmeVfsConfig config;
+	config.gameRoot = root.str();
+
+	const ChildExit child = exitInChild([config] {
+		BfmeBIGFileSystem fs(config);
+		fs.init();
+	});
+	REQUIRE(WIFEXITED(child.status));
+	REQUIRE(WEXITSTATUS(child.status) != 0);
+	REQUIRE(child.err.find("[bfmevfs] FATAL: No BFME archives were mounted from " + root.str()) != std::string::npos);
 }
 
 // --- RefPack stays in CompressionManager -----------------------------------------------------

@@ -237,9 +237,19 @@ void ArchiveFileSystem::loadIntoDirectoryTree(ArchiveFile *archiveFile, Bool ove
 	}
 }
 
-void ArchiveFileSystem::loadMods()
+void ArchiveFileSystem::loadGeneralsOnlineCommunityPatch(const AsciiString& userDataIn)
 {
 #if RTS_ZEROHOUR
+	// BFME: selected BfmeBIGFileSystem does not mount the Zero Hour community
+	// patch. The name starts with '5' and '_' sorts after digits, so
+	// data\ini\* in 500_900_CommunityPatch_CoreINI.big would beat _patch222.
+	// The marker file is not this switch.
+	if (!mountsGeneralsOnlineCommunityPatch()) {
+		fprintf(stderr, "[gxbig] community patch skipped (BFME)\n");
+		fflush(stderr);
+		return;
+	}
+
 	// GeneralsX @bugfix Android port 13/09/2026 Mount the GeneralsOnline community
 	// data patch, which is why this port could not join a single PC-hosted lobby.
 	//
@@ -268,7 +278,7 @@ void ArchiveFileSystem::loadMods()
 	// -- and land on it honestly, because the simulation is then reading the same
 	// unit data, which is the whole point of the checksum.
 	{
-		AsciiString userData = TheGlobalData->getPath_UserData();
+		AsciiString userData = userDataIn;
 		if (userData.isNotEmpty() && !userData.endsWith("/") && !userData.endsWith("\\"))
 			userData.concat('/');
 
@@ -316,6 +326,17 @@ void ArchiveFileSystem::loadMods()
 		}
 		fflush(stderr);
 	}
+#else
+	(void)userDataIn;
+#endif
+}
+
+void ArchiveFileSystem::loadMods()
+{
+#if RTS_ZEROHOUR
+	// BFME: BfmeBIGFileSystem logs "community patch skipped (BFME)" and returns
+	// before the archive is opened. See loadGeneralsOnlineCommunityPatch().
+	loadGeneralsOnlineCommunityPatch(TheGlobalData->getPath_UserData());
 #endif
 
 	if (TheGlobalData->m_modBIG.isNotEmpty())

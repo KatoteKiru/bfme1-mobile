@@ -130,6 +130,8 @@ set(BFME_VFS_TESTS
     engine_layer_priority_base_patch_mobile engine_layer_priority_beats_names
     engine_intra_layer_first_by_stricmp_wins engine_layer_patch222_over_base engine_mobile_layer_case_and_slashes engine_mobile_layer_outside_root engine_skips_broken_archive
     bfme_gamedata_requests_bfme_filesystem
+    bfme_skips_zh_community_patch bfme_init_exits_when_rules_do_not_parse
+    bfme_init_exits_when_no_archive_mounts
     refpack_roundtrip_compression_manager
     gamedata_ini_big_matches_oracle gamedata_maps_big_matches_oracle gamedata_m1_map_refpack
     gamedata_all_maps_refpack gamedata_full_mount_follows_plan gamedata_patch222_over_base

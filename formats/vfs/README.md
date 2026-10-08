@@ -94,10 +94,17 @@ VFS отдаёт **сохранённые** байты, без распаков�
 ## Подключение в игре (E1-21b)
 `SDL3GameEngine::createArchiveFileSystem()` (`GeneralsMD/Code/GameEngineDevice/Source/SDL3GameEngine.cpp`)
 смотрит `BfmeBIGFileSystem::isRequestedByEnvironment()`:
-- `BFME_GAMEDATA` задана и не пустая — возвращается `BfmeBIGFileSystem`. `init()` монтирует архивы по
-  `bfme1-mount-order.cfg` (`ini.big`, `maps.big`, `_patch222*.big`, `MobileLayer/`) и пишет в stderr
+- `BFME_GAMEDATA` задана и не пустая — возвращается `BfmeBIGFileSystem`. Во время работы `init()` читает
+  **вкомпилированную** копию правил (`BfmeVfsConfig::rules`, по умолчанию `defaultBfme1MountRules()` — тот же
+  текст, что в `bfme1-mount-order.cfg`). Файл правил с диска читается только если задан `BFME_VFS_MOUNT_ORDER`
+  (`BfmeVfsConfig::fromEnvironment`). Сканируются все `*.big` под корнем и в абсолютных каталогах слоёв
+  (`scanArchives`); каждый относится к слою по каталогу и маске, и монтируются все, кому слой нашёлся, а не
+  только `ini.big`, `maps.big` и `_patch222*.big`. В stderr пишутся строки
   `[bfmevfs] mounted #N (слой, приоритет): путь`.
 - переменная не задана или пустая — возвращается `StdBIGFileSystem`, как в апстриме ZH.
 
-Исходники `formats/vfs/src` входят в `z_gameenginedevice`. Это вторая правка апстрима (`// BFME:` в
-`SDL3GameEngine.cpp`, `# BFME:` в `CMakeLists.txt`), строка в `docs/UPSTREAM-PATCHES.md`.
+Исходники `formats/vfs/src` входят в `z_gameenginedevice` при `if(NOT IS_VS6_BUILD)` (у VS6 нет C++17 и
+`StdBIGFileSystem`). Правки апстрима: `// BFME:` в `SDL3GameEngine.cpp` и в Core
+(`ArchiveFileSystem`: в режиме `BfmeBIGFileSystem` community patch ZH не монтируется), `# BFME:` в
+`CMakeLists.txt`, строки в `docs/UPSTREAM-PATCHES.md`. Если `TheLocalFileSystem` ещё нет, файл правил
+не разобрался или не смонтирован ни один архив, `init()` пишет `[bfmevfs] FATAL` и завершает процесс.
