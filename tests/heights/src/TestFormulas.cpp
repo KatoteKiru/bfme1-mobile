@@ -184,7 +184,7 @@ TEST(formula_flatten_rounding_boundaries)
 		REQUIRE_EQ(double(whole), k * 0.625);
 		// at the exact x.5 point avg/0.625 is exactly k+0.5, so the upstream rounding gives k+1 (heights
 		// are >= 0). Below 0 REAL_TO_INT_FLOOR (fast_float_floor: f - 0.99999994, then trunc) maps an
-		// integral -n to -n-1 once n >= 2: an upstream quirk, the same before and after, checked below.
+		// integral -n to -n-1 once n >= 1: an upstream quirk, the same before and after, checked below.
 		if (k >= 0) {
 			REQUIRE_EQ(flattenRawOld(half), k + 1);
 			REQUIRE_EQ(flattenCenterOld(whole), k);

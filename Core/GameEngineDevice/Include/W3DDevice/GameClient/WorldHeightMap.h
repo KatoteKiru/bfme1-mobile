@@ -258,6 +258,7 @@ protected:
 	TileData *getEdgeTile(UnsignedInt ndx) { if (ndx<(UnsignedInt)m_tileCapacity) return(m_edgeTiles[ndx]); return(nullptr); };
 	void allocateTileTables(Int tileCapacity, Int numBlendedTiles, Int numCliffInfo);	// BFME: E1-25
 	void freeTileTables();	// BFME: E1-25
+	void freeMapArrays();	// BFME: E1-25 review #10, all arrays (destructor and constructor failure path)
 	/// UV mapping data for a cell to map into the terrain texture.
 	void getUVForNdx(Int ndx, float *minU, float *minV, float *maxU, float*maxV);
 	Bool getUVForTileIndex(Int ndx, Short tileNdx, float U[4], float V[4]);

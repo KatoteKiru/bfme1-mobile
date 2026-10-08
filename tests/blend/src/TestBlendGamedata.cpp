@@ -14,6 +14,7 @@
 #include "BlendLoader.h"
 #include "Sha256.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -235,6 +236,16 @@ TEST(gamedata_blend_all_maps_vs_oracle_and_datacheck)
 			std::to_string(b.stats.flagsOutside0x3) + " (masked), customBlendEdgeClass without edge classes " +
 			std::to_string(b.stats.edgeClassWithoutClasses) + " / out of range " + std::to_string(b.stats.edgeClassOutOfRange);
 		REQUIRE(capturedLog().find(summary) != std::string::npos);
+		// review #10: per-case lines only for the first 16 of each kind (Rhun: 711 dangling tiles -> 16 lines)
+		auto lines = [](const std::string& what) {
+			int n = 0;
+			for (size_t p = capturedLog().find(what); p != std::string::npos; p = capturedLog().find(what, p + 1)) ++n;
+			return n;
+		};
+		REQUIRE_EQ(lines("BlendTileData: dangling tile #"), std::min(b.stats.danglingTiles, 16));
+		REQUIRE_EQ(lines("outside &0x3 (#"), std::min(b.stats.flagsOutside0x3, 16));
+		REQUIRE_EQ(lines("edge classes (#"), std::min(b.stats.edgeClassOutOfRange, 16));
+		REQUIRE_EQ(lines("not 0/1 (#"), std::min(b.stats.dirBytesNot01, 16));
 		if (b.stats.danglingTiles || b.stats.flagsOutside0x3 || b.stats.edgeClassOutOfRange)
 			std::printf("  %s: v%d, dangling tiles %d, flags outside &0x3 %d, edge class without classes %d\n", entry.c_str(),
 				b.blendVersion, b.stats.danglingTiles, b.stats.flagsOutside0x3, b.stats.edgeClassWithoutClasses);

@@ -368,10 +368,10 @@ const ThingTemplate *MapObject::getThingTemplate() const
 
 TileData *WorldHeightMap::m_alphaTiles[NUM_ALPHA_TILES]={0};
 
-//
-// WorldHeightMap destructor .
-//
-WorldHeightMap::~WorldHeightMap()
+// BFME: E1-25 review #10 every array a map owns, freed and nulled: the body of the upstream destructor,
+// also run by WorldHeightMap(ChunkInputStream*) when it throws (the destructor does not run for an object
+// whose constructor throws). Safe on a partly loaded map: arrays not allocated yet are nullptr.
+void WorldHeightMap::freeMapArrays()
 {
 	delete[](m_data);
 	m_data = nullptr;
@@ -401,6 +401,14 @@ WorldHeightMap::~WorldHeightMap()
 	m_cellCliffState = nullptr;
 
 	freeTileTables();	// BFME: E1-25 heap tables and v10+ masks
+}
+
+//
+// WorldHeightMap destructor .
+//
+WorldHeightMap::~WorldHeightMap()
+{
+	freeMapArrays();	// BFME: E1-25 review #10, the array frees moved there (shared with the constructor)
 
 	int i;
 	for (i=0; i<NUM_ALPHA_TILES; i++) {
@@ -538,6 +546,13 @@ WorldHeightMap::WorldHeightMap(ChunkInputStream *pStrm, Bool logicalDataOnly):
 	memset(&m_blendStats, 0, sizeof(m_blendStats));	// BFME: E1-25
 	m_blendStats.version = -1;
 	memset(&m_objectsZStats, 0, sizeof(m_objectsZStats));
+	// BFME: E1-25 review #10 the chunk parsers throw on corrupt data (and MSGNEW on out of memory) after
+	// some arrays are allocated, and ~WorldHeightMap does not run when the constructor throws: this guard
+	// frees them while the exception leaves the constructor. Dismissed at the end of the constructor.
+	struct FreeArraysOnThrow {
+		WorldHeightMap *map;
+		~FreeArraysOnThrow() { if (map) map->freeMapArrays(); }
+	} freeArraysOnThrow = { this };
 	if (TheGlobalData && TheGlobalData->m_stretchTerrain) {
 		m_drawWidthX=STRETCH_DRAW_WIDTH;
 		m_drawHeightY=STRETCH_DRAW_HEIGHT;
@@ -593,6 +608,7 @@ WorldHeightMap::WorldHeightMap(ChunkInputStream *pStrm, Bool logicalDataOnly):
 
 	TheSidesList->validateSides();
 	setupAlphaTiles();
+	freeArraysOnThrow.map = nullptr;	// BFME: E1-25 review #10 loaded, the destructor owns the arrays now
 }
 
 /** Optimized version of method to get triangle flip state of a terrain cell.  Use this
@@ -1133,6 +1149,28 @@ static Bool textureClassEnd(const TXTextureClass &tc, Int *end)
 	return true;
 }
 
+// BFME: E1-25 review #10 BlendTileData anomaly log: a DEBUG_LOG line for each of the first
+// BLEND_ANOMALY_LOG_LIMIT cases of every kind per map, then only the per-map summary with the totals.
+// Without DEBUG_LOGGING (RTS_DEBUG_LOGGING off, release) DEBUG_LOG is compiled out and the summary goes
+// to stderr (the release log) as one line per map, only when at least one counter is not zero.
+static const Int BLEND_ANOMALY_LOG_LIMIT = 16;
+
+#ifndef DEBUG_LOGGING
+static Bool hasBlendAnomalies(const BlendTileDataStats &s)
+{
+	return (s.danglingTiles | s.flagsOutside0x3 | s.edgeClassWithoutClasses | s.edgeClassOutOfRange |
+		s.dirBytesNot01 | s.danglingBlend | s.dangling3Way | s.danglingCliff) != 0;
+}
+#endif
+
+static void formatBlendAnomalies(char *buf, size_t size, const BlendTileDataStats &s)
+{
+	snprintf(buf, size, "dangling tiles %d (clamped), flags outside &0x3 %d (masked), customBlendEdgeClass without edge classes %d / "
+		"out of range %d (-> -1), direction bytes not 0/1 %d, dangling blend/3-way/cliff %d/%d/%d",
+		s.danglingTiles, s.flagsOutside0x3, s.edgeClassWithoutClasses, s.edgeClassOutOfRange, s.dirBytesNot01,
+		s.danglingBlend, s.dangling3Way, s.danglingCliff);
+}
+
 /**
 * WorldHeightMap::ParseBlendTileData - read a blend tile info chunk.
 * Format is the newer CHUNKY format.
@@ -1142,7 +1180,8 @@ static Bool textureClassEnd(const TXTextureClass &tc, Int *end)
 * BFME: E1-25 also BlendTileData v9..v15 of BFME1 (docs/formats/BFME1_vs_ZH.md §2.4.3): u32 blend / 3-way /
 * cliff indices from v14, the v10+ masks (stored only), v16+ rejected. Tile, blend and cliff tables are
 * sized from the map counts. Dangling tile indices are clamped, `inverted` is masked &0x3, a
-* customBlendEdgeClass without such an edge class becomes -1; each case is counted (m_blendStats) and logged.
+* customBlendEdgeClass without such an edge class becomes -1; each case is counted (m_blendStats) and logged
+* (the first BLEND_ANOMALY_LOG_LIMIT of each kind, then the per-map summary).
 */
 Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
@@ -1160,13 +1199,20 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 	if (m_dataSize != len) {
 		throw ERROR_CORRUPT_FILE_FORMAT	;
 	}
-	// BFME: E1-25 a second BlendTileData chunk replaces the first one (upstream leaked it).
+	// BFME: E1-25 a second BlendTileData chunk replaces the first one (upstream leaked it). Nulled at once
+	// (review #10): if a MSGNEW below throws, freeMapArrays() must not delete them a second time.
 	delete[] m_tileNdxes;
+	m_tileNdxes = nullptr;
 	delete[] m_cliffInfoNdxes;
+	m_cliffInfoNdxes = nullptr;
 	delete[] m_blendTileNdxes;
+	m_blendTileNdxes = nullptr;
 	delete[] m_extraBlendTileNdxes;
+	m_extraBlendTileNdxes = nullptr;
 	delete[] m_cellFlipState;
+	m_cellFlipState = nullptr;
 	delete[] m_cellCliffState;
+	m_cellCliffState = nullptr;
 	freeTileTables();
 
 	m_tileNdxes = MSGNEW("WorldHeightMap_ParseBlendTileData") Short[m_dataSize];
@@ -1250,8 +1296,10 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 		if ((tile >> 2) < m_numBitmapTiles) continue;
 		const Int clamped = (MAX(m_numBitmapTiles, 1) - 1) << 2 | (tile & 3);
 		m_blendStats.danglingTiles++;
-		DEBUG_LOG(("BlendTileData: dangling tile #%d at cell (%d,%d): tile %d (>>2 = %d) >= numBitmapTiles %d, clamped to %d",
-			m_blendStats.danglingTiles, i % m_width, i / m_width, tile, tile >> 2, m_numBitmapTiles, clamped));
+		if (m_blendStats.danglingTiles <= BLEND_ANOMALY_LOG_LIMIT) {	// BFME: review #10
+			DEBUG_LOG(("BlendTileData: dangling tile #%d at cell (%d,%d): tile %d (>>2 = %d) >= numBitmapTiles %d, clamped to %d",
+				m_blendStats.danglingTiles, i % m_width, i / m_width, tile, tile >> 2, m_numBitmapTiles, clamped));
+		}
 		m_tileNdxes[i] = (Short)clamped;
 	}
 // --> file loading here
@@ -1331,12 +1379,18 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 		// BFME: E1-25 only INVERTED_MASK | FLIPPED_MASK have a meaning (BFME1 Central Ithilien: 8..61).
 		if (m_blendedTiles[i].inverted & ~(INVERTED_MASK|FLIPPED_MASK)) {
 			m_blendStats.flagsOutside0x3++;
-			DEBUG_LOG(("BlendTileData: blend %d flags 0x%02X outside &0x3 (#%d), masked to %d", i, m_blendedTiles[i].inverted,
-				m_blendStats.flagsOutside0x3, m_blendedTiles[i].inverted & (INVERTED_MASK|FLIPPED_MASK)));
+			if (m_blendStats.flagsOutside0x3 <= BLEND_ANOMALY_LOG_LIMIT) {	// BFME: review #10
+				DEBUG_LOG(("BlendTileData: blend %d flags 0x%02X outside &0x3 (#%d), masked to %d", i, m_blendedTiles[i].inverted,
+					m_blendStats.flagsOutside0x3, m_blendedTiles[i].inverted & (INVERTED_MASK|FLIPPED_MASK)));
+			}
 			m_blendedTiles[i].inverted &= (INVERTED_MASK|FLIPPED_MASK);
 		}
 		if ((m_blendedTiles[i].horiz | m_blendedTiles[i].vert | m_blendedTiles[i].rightDiagonal | m_blendedTiles[i].leftDiagonal) > 1) {
 			m_blendStats.dirBytesNot01++;	// BFME: E1-25 counted only, used as booleans as upstream
+			if (m_blendStats.dirBytesNot01 <= BLEND_ANOMALY_LOG_LIMIT) {	// BFME: review #10
+				DEBUG_LOG(("BlendTileData: blend %d direction bytes %d/%d/%d/%d not 0/1 (#%d), kept", i, m_blendedTiles[i].horiz,
+					m_blendedTiles[i].vert, m_blendedTiles[i].rightDiagonal, m_blendedTiles[i].leftDiagonal, m_blendStats.dirBytesNot01));
+			}
 		}
 		//Allow clearing of extra blend tiles via ini and resaving of map.
 		//Useful for flushing out initial maps made with buggy 3-way blending.
@@ -1358,8 +1412,10 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 		if (m_blendedTiles[i].customBlendEdgeClass >= m_numEdgeTextureClasses) {
 			if (m_numEdgeTextureClasses == 0) m_blendStats.edgeClassWithoutClasses++;
 			m_blendStats.edgeClassOutOfRange++;
-			DEBUG_LOG(("BlendTileData: blend %d customBlendEdgeClass %d with %d edge classes (#%d), set to -1", i,
-				m_blendedTiles[i].customBlendEdgeClass, m_numEdgeTextureClasses, m_blendStats.edgeClassOutOfRange));
+			if (m_blendStats.edgeClassOutOfRange <= BLEND_ANOMALY_LOG_LIMIT) {	// BFME: review #10
+				DEBUG_LOG(("BlendTileData: blend %d customBlendEdgeClass %d with %d edge classes (#%d), set to -1", i,
+					m_blendedTiles[i].customBlendEdgeClass, m_numEdgeTextureClasses, m_blendStats.edgeClassOutOfRange));
+			}
 			m_blendedTiles[i].customBlendEdgeClass = -1;
 		}
 
@@ -1385,10 +1441,29 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 		}
 	}
 	// BFME: E1-25 count indices outside the tables (the constructor resets them to 0, as upstream).
+	// BFME: review #10 the first BLEND_ANOMALY_LOG_LIMIT of each kind are logged.
 	for (i=0; i<m_dataSize; i++) {
-		if (m_blendTileNdxes[i] && (m_blendTileNdxes[i] < 0 || m_blendTileNdxes[i] >= m_numBlendedTiles)) m_blendStats.danglingBlend++;
-		if (m_extraBlendTileNdxes[i] && (m_extraBlendTileNdxes[i] < 0 || m_extraBlendTileNdxes[i] >= m_numBlendedTiles)) m_blendStats.dangling3Way++;
-		if (m_cliffInfoNdxes[i] && (m_cliffInfoNdxes[i] < 0 || m_cliffInfoNdxes[i] >= m_numCliffInfo)) m_blendStats.danglingCliff++;
+		if (m_blendTileNdxes[i] && (m_blendTileNdxes[i] < 0 || m_blendTileNdxes[i] >= m_numBlendedTiles)) {
+			m_blendStats.danglingBlend++;
+			if (m_blendStats.danglingBlend <= BLEND_ANOMALY_LOG_LIMIT) {
+				DEBUG_LOG(("BlendTileData: dangling blend index %d at cell (%d,%d) (#%d), numBlendedTiles %d", m_blendTileNdxes[i],
+					i % m_width, i / m_width, m_blendStats.danglingBlend, m_numBlendedTiles));
+			}
+		}
+		if (m_extraBlendTileNdxes[i] && (m_extraBlendTileNdxes[i] < 0 || m_extraBlendTileNdxes[i] >= m_numBlendedTiles)) {
+			m_blendStats.dangling3Way++;
+			if (m_blendStats.dangling3Way <= BLEND_ANOMALY_LOG_LIMIT) {
+				DEBUG_LOG(("BlendTileData: dangling 3-way blend index %d at cell (%d,%d) (#%d), numBlendedTiles %d", m_extraBlendTileNdxes[i],
+					i % m_width, i / m_width, m_blendStats.dangling3Way, m_numBlendedTiles));
+			}
+		}
+		if (m_cliffInfoNdxes[i] && (m_cliffInfoNdxes[i] < 0 || m_cliffInfoNdxes[i] >= m_numCliffInfo)) {
+			m_blendStats.danglingCliff++;
+			if (m_blendStats.danglingCliff <= BLEND_ANOMALY_LOG_LIMIT) {
+				DEBUG_LOG(("BlendTileData: dangling cliff index %d at cell (%d,%d) (#%d), numCliffInfo %d", m_cliffInfoNdxes[i],
+					i % m_width, i / m_width, m_blendStats.danglingCliff, m_numCliffInfo));
+			}
+		}
 	}
 	if (info->version >= K_BLEND_TILE_VERSION_6) {
 		//Allow clearing of extra blend tiles via ini and resaving of map.
@@ -1415,14 +1490,21 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 		m_height = newHeight;
 		m_dataSize = m_width*m_height;
 	}
-	// BFME: E1-25 per-map summary.
-	DEBUG_LOG(("BlendTileData v%d %dx%d: bitmap tiles %d, blends %d, cliffs %d, texture classes %d, edge classes %d; "
-		"dangling tiles %d (clamped), flags outside &0x3 %d (masked), customBlendEdgeClass without edge classes %d / out of range %d (-> -1), "
-		"direction bytes not 0/1 %d, dangling blend/3-way/cliff %d/%d/%d",
-		m_blendStats.version, m_width, m_height, m_numBitmapTiles, m_numBlendedTiles, m_numCliffInfo, m_numTextureClasses,
-		m_numEdgeTextureClasses, m_blendStats.danglingTiles, m_blendStats.flagsOutside0x3, m_blendStats.edgeClassWithoutClasses,
-		m_blendStats.edgeClassOutOfRange, m_blendStats.dirBytesNot01, m_blendStats.danglingBlend, m_blendStats.dangling3Way,
-		m_blendStats.danglingCliff));
+	// BFME: E1-25 per-map summary; review #10: in release (no DEBUG_LOGGING) one stderr line, only with anomalies.
+	{
+		char anomalies[320];
+		formatBlendAnomalies(anomalies, sizeof(anomalies), m_blendStats);
+#ifdef DEBUG_LOGGING
+		DEBUG_LOG(("BlendTileData v%d %dx%d: bitmap tiles %d, blends %d, cliffs %d, texture classes %d, edge classes %d; %s; "
+			"per-case lines: first %d of each kind",
+			m_blendStats.version, m_width, m_height, m_numBitmapTiles, m_numBlendedTiles, m_numCliffInfo, m_numTextureClasses,
+			m_numEdgeTextureClasses, anomalies, BLEND_ANOMALY_LOG_LIMIT));
+#else
+		if (hasBlendAnomalies(m_blendStats)) {
+			fprintf(stderr, "WARNING: BlendTileData v%d %dx%d: %s\n", m_blendStats.version, m_width, m_height, anomalies);
+		}
+#endif
+	}
 	DEBUG_ASSERTCRASH(file.atEndOfChunk(), ("Unexpected data left over."));
 	return true;
 }

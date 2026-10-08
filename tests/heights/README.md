@@ -53,7 +53,7 @@ BFME_GAMEDATA=/path/to/bfme1 BFME_ORACLE_DIR=tools/oracle/out BFME_ORACLE_DUMP_D
 - `getHeightMapHeight`: интерполяция и сглаженная нормаль, 400 000 клеток;
 - пороги `getUVForTileIndex`: полный перебор;
 - `flattenTerrain`: 2 млн случайных высот и все границы шагов;
-- `formula_flatten_rounding_boundaries` (по просьбе QA в #4): границы x.5 у `floor(0.5f + avg/0.625)`. Для k = −100…300 берутся ровно (k+0.5)·0.625 и k·0.625 (оба точны во float) и по 4 соседних float в каждую сторону (`nextafterf`). При k ≥ 0 значение апстрима проверяется явно: k+1 и k. Ниже нуля `REAL_TO_INT_FLOOR` (`fast_float_floor`) переводит целое −n в −n−1 при n ≥ 2. Это особенность апстрима, одинаковая до и после, а высоты не бывают отрицательными;
+- `formula_flatten_rounding_boundaries` (по просьбе QA в #4): границы x.5 у `floor(0.5f + avg/0.625)`. Для k = −100…300 берутся ровно (k+0.5)·0.625 и k·0.625 (оба точны во float) и по 4 соседних float в каждую сторону (`nextafterf`). При k ≥ 0 значение апстрима проверяется явно: k+1 и k. Ниже нуля `REAL_TO_INT_FLOOR` (`fast_float_floor`) переводит целое −n в −n−1 при n ≥ 1. Это особенность апстрима, одинаковая до и после, а высоты не бывают отрицательными;
 - `formula_crater_integer_displacements` (QA): `displacementAmount` = 0…300 целые и по 2 соседних float в каждую сторону, для всех 256 высот ZH. На целых проверяется явно `MAX(1, h − d)`;
 - `createCraterInTerrain`, сейсмика, раскладка сейва v3;
 - боксы `Cast_Ray`, `updateCenter`.

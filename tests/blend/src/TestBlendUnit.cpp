@@ -185,15 +185,20 @@ TEST(blend_anomalies_clamped_masked_counted)
 	for (int i = 0; i < 3; ++i) REQUIRE_EQ(b.descs[size_t(20 + i)].horiz, 12);   // counted only
 	REQUIRE_EQ(b.blends[3], s.numBlendedTiles + 5);   // the constructor resets these, the parser counts
 	REQUIRE_EQ(b.threeWay[5], -1);
-	// one log line per case, then the summary
+	// one log line per case (fewer than 16 of each kind here), then the summary
 	const std::string& log = capturedLog();
 	REQUIRE_EQ(countOccurrences(log, "BlendTileData: dangling tile #"), 8);
 	REQUIRE_EQ(countOccurrences(log, "outside &0x3 (#"), 5);
 	REQUIRE_EQ(countOccurrences(log, "edge classes (#"), 4);
+	REQUIRE_EQ(countOccurrences(log, "not 0/1 (#"), 3);
+	REQUIRE_EQ(countOccurrences(log, "BlendTileData: dangling blend index "), 2);
+	REQUIRE_EQ(countOccurrences(log, "BlendTileData: dangling 3-way blend index "), 1);
+	REQUIRE_EQ(countOccurrences(log, "BlendTileData: dangling cliff index "), 1);
 	REQUIRE(log.find("dangling tile #8 at cell (11,4): tile 65535") != std::string::npos);
 	REQUIRE(log.find("BlendTileData v15 20x10: bitmap tiles " + std::to_string(nb)) != std::string::npos);
 	REQUIRE(log.find("dangling tiles 8 (clamped), flags outside &0x3 5 (masked), customBlendEdgeClass without edge classes 4 / "
 		"out of range 4 (-> -1), direction bytes not 0/1 3, dangling blend/3-way/cliff 2/1/1") != std::string::npos);
+	REQUIRE_EQ(countOccurrences(log, "BlendTileData v15 "), 1);
 
 	// with edge classes: only indices >= numEdgeTextureClasses are reset, "without classes" stays 0
 	BlendSpec e = makeBlendSpec("edges", 15, 12, 12, 0x2001u, 30);
@@ -208,6 +213,48 @@ TEST(blend_anomalies_clamped_masked_counted)
 	REQUIRE_EQ(be.descs[0].customBlendEdgeClass, 1);
 	REQUIRE_EQ(be.descs[1].customBlendEdgeClass, -1);
 	REQUIRE_EQ(be.descs[2].customBlendEdgeClass, -1);
+}
+
+// Review #10, decision 1: per map, a log line for each of the first 16 cases of every kind, then only
+// the summary with the totals.
+TEST(blend_anomaly_log_first_16_of_each_kind)
+{
+	BlendSpec s = makeBlendSpec("many", 15, 20, 10, 0x2010u, 60);   // even seed: no edge classes
+	const int nb = s.numBitmapTiles;
+	for (int i = 0; i < 40; ++i) s.tiles[size_t(i * 5)] = uint16_t(nb * 4 + i);
+	for (int i = 0; i < 20; ++i) s.descs[size_t(i)].inverted = uint8_t(8 + i);
+	for (int i = 0; i < 18; ++i) s.descs[size_t(20 + i)].customBlendEdgeClass = i;
+	for (int i = 0; i < 17; ++i) s.descs[size_t(40 + i)].vert = 2;
+	for (int i = 0; i < 19; ++i) s.blends[size_t(i)] = uint32_t(s.numBlendedTiles + i);
+	for (int i = 0; i < 21; ++i) s.threeWay[size_t(50 + i)] = 0xFFFFFFFFu;
+	for (int i = 0; i < 22; ++i) s.cliff[size_t(100 + i)] = uint32_t(s.numCliffInfo + i);
+	const LoadedBlend b = load(s);
+	REQUIRE(b.ok);
+	REQUIRE_EQ(b.stats.danglingTiles, 40);
+	REQUIRE_EQ(b.stats.flagsOutside0x3, 20);
+	REQUIRE_EQ(b.stats.edgeClassOutOfRange, 18);
+	REQUIRE_EQ(b.stats.dirBytesNot01, 17);
+	REQUIRE_EQ(b.stats.danglingBlend, 19);
+	REQUIRE_EQ(b.stats.dangling3Way, 21);
+	REQUIRE_EQ(b.stats.danglingCliff, 22);
+	const std::string& log = capturedLog();
+	REQUIRE_EQ(countOccurrences(log, "BlendTileData: dangling tile #"), 16);
+	REQUIRE_EQ(countOccurrences(log, "outside &0x3 (#"), 16);
+	REQUIRE_EQ(countOccurrences(log, "edge classes (#"), 16);
+	REQUIRE_EQ(countOccurrences(log, "not 0/1 (#"), 16);
+	REQUIRE_EQ(countOccurrences(log, "BlendTileData: dangling blend index "), 16);
+	REQUIRE_EQ(countOccurrences(log, "BlendTileData: dangling 3-way blend index "), 16);
+	REQUIRE_EQ(countOccurrences(log, "BlendTileData: dangling cliff index "), 16);
+	REQUIRE(log.find("dangling tile #16 at cell") != std::string::npos);
+	REQUIRE(log.find("dangling tile #17 ") == std::string::npos);
+	REQUIRE(log.find("(#16)") != std::string::npos);
+	REQUIRE(log.find("(#17)") == std::string::npos);
+	REQUIRE_EQ(countOccurrences(log, "BlendTileData v15 20x10: "), 1);
+	REQUIRE(log.find("dangling tiles 40 (clamped), flags outside &0x3 20 (masked), customBlendEdgeClass without edge classes 18 / "
+		"out of range 18 (-> -1), direction bytes not 0/1 17, dangling blend/3-way/cliff 19/21/22; per-case lines: first 16 of each kind") !=
+		std::string::npos);
+	// lines = 7 kinds * 16 + the summary
+	REQUIRE_EQ(countOccurrences(log, "\n"), 7 * 16 + 1);
 }
 
 // Tables on the heap sized by the counts; NUM_SOURCE_TILES / NUM_BLEND_TILES / NUM_CLIFF_INFO

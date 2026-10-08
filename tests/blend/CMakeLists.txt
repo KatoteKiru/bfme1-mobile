@@ -47,7 +47,7 @@ target_link_libraries(blend_zh_dump_new PRIVATE bfme_blend_engine_new)
 # ---------------------------------------------------------------------------------------------------
 set(BFME_BLEND_TESTS
     blend_v15_layout_roundtrip blend_versions_9_to_15_masks blend_v16_and_above_rejected
-    blend_anomalies_clamped_masked_counted blend_limits_heap_tables blend_index_widths_and_sign
+    blend_anomalies_clamped_masked_counted blend_anomaly_log_first_16_of_each_kind blend_limits_heap_tables blend_index_widths_and_sign
     blend_use3way_reset blend_zh_repo_maps
     gamedata_refpack_all_maps_vs_oracle gamedata_blend_all_maps_vs_oracle_and_datacheck
 )
@@ -64,6 +64,38 @@ add_test(NAME blend.registry_complete COMMAND ${CMAKE_COMMAND}
     -DBIN=$<TARGET_FILE:bfme_blend_tests> "-DEXPECTED=${BFME_BLEND_TESTS}"
     -P ${BFME_E125_TESTS_DIR}/cmake/check_registry.cmake)
 set_tests_properties(blend.registry_complete PROPERTIES LABELS "unit")
+
+# ---------------------------------------------------------------------------------------------------
+# Review #10: the loading constructor WorldHeightMap(ChunkInputStream*, Bool) in the release configuration
+# (no RELEASE_DEBUG_LOGGING: DEBUG_LOG is compiled out, the per-map summary goes to stderr) with counting
+# operator new/delete (DISABLE_GAMEMEMORY_NEW_OPERATORS + src/CountingNew.cpp) for the leak and
+# out-of-memory checks of its failure paths. Under -DBFME_TESTS_ASAN=ON LSan checks the same at exit.
+bfme_heights_engine(bfme_blend_engine_release ${BFME_REPO_ROOT}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/BlendStubs.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/CtorLoader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/CtorStubs.cpp)
+target_compile_definitions(bfme_blend_engine_release PUBLIC DISABLE_GAMEMEMORY_NEW_OPERATORS=1)
+
+add_executable(bfme_blend_ctor_tests
+    ${BFME_E125_TESTS_DIR}/harness/TestMain.cpp
+    src/TestBlendCtor.cpp
+    src/CountingNew.cpp
+)
+target_link_libraries(bfme_blend_ctor_tests PRIVATE bfme_blend_engine_release)
+target_compile_definitions(bfme_blend_ctor_tests PRIVATE BFME_ZH_MAPS_DIR="${BFME_ZH_MAPS_DIR}")
+
+set(BFME_BLEND_CTOR_TESTS
+    ctor_corrupt_map_frees_arrays ctor_out_of_memory_at_every_allocation ctor_release_log_one_summary_line
+    ctor_zh_repo_maps
+)
+foreach(t IN LISTS BFME_BLEND_CTOR_TESTS)
+    add_test(NAME blend.${t} COMMAND bfme_blend_ctor_tests ${t})
+    set_tests_properties(blend.${t} PROPERTIES SKIP_RETURN_CODE 77 LABELS "unit")
+endforeach()
+add_test(NAME blend.ctor_registry_complete COMMAND ${CMAKE_COMMAND}
+    -DBIN=$<TARGET_FILE:bfme_blend_ctor_tests> "-DEXPECTED=${BFME_BLEND_CTOR_TESTS}"
+    -P ${BFME_E125_TESTS_DIR}/cmake/check_registry.cmake)
+set_tests_properties(blend.ctor_registry_complete PROPERTIES LABELS "unit")
 
 # ---------------------------------------------------------------------------------------------------
 # Before/after: upstream (Short indices, fixed arrays, v<=8) vs this tree on ZH BlendTileData.
