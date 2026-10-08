@@ -261,6 +261,24 @@ target_include_directories(z_gameenginedevice PUBLIC
     Include
 )
 
+# BFME: E1-21b. The BFME archive filesystem lives in formats/vfs and is compiled into
+# this target so SDL3GameEngine::createArchiveFileSystem() can return it when
+# BFME_GAMEDATA is set. BigArchiveReader and MountOrder are engine-independent and
+# do not use the game precompiled header. See docs/UPSTREAM-PATCHES.md.
+set(BFME_VFS_DIR ${CMAKE_SOURCE_DIR}/formats/vfs)
+target_sources(z_gameenginedevice PRIVATE
+    ${BFME_VFS_DIR}/src/BigArchiveReader.cpp
+    ${BFME_VFS_DIR}/src/MountOrder.cpp
+    ${BFME_VFS_DIR}/src/BfmeBIGFileSystem.cpp
+)
+target_include_directories(z_gameenginedevice PRIVATE ${BFME_VFS_DIR}/include)
+set_source_files_properties(
+    ${BFME_VFS_DIR}/src/BigArchiveReader.cpp
+    ${BFME_VFS_DIR}/src/MountOrder.cpp
+    TARGET_DIRECTORY z_gameenginedevice
+    PROPERTIES SKIP_PRECOMPILE_HEADERS ON
+)
+
 target_precompile_headers(z_gameenginedevice PRIVATE
     [["Utility/CppMacros.h"]] # Must be first, to be removed when abandoning VC6
     [["Common/STLTypedefs.h"]]

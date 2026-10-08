@@ -14,6 +14,7 @@
 #include "bfme/vfs/MountOrder.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 
@@ -372,6 +373,46 @@ TEST(engine_skips_broken_archive)
 	REQUIRE_EQ(vfs.fs().getMountedArchiveCount(), 1);
 	REQUIRE_EQ(vfs.fs().getFailedArchiveCount(), 1);
 	REQUIRE(vfs.exists("x.ini"));
+}
+
+// SDL3GameEngine::createArchiveFileSystem() selects BfmeBIGFileSystem exactly when this is true.
+TEST(bfme_gamedata_requests_bfme_filesystem)
+{
+	struct Restore {
+		bool had;
+		std::string value;
+		Restore()
+		{
+			const char* v = getenv("BFME_GAMEDATA");
+			had = v != nullptr;
+			if (had) {
+				value = v;
+			}
+		}
+		~Restore()
+		{
+			if (had) {
+				setenv("BFME_GAMEDATA", value.c_str(), 1);
+			} else {
+				unsetenv("BFME_GAMEDATA");
+			}
+		}
+	} restore;
+
+	unsetenv("BFME_GAMEDATA");
+	REQUIRE(!BfmeBIGFileSystem::isRequestedByEnvironment());
+	BfmeVfsConfig empty;
+	std::string error;
+	REQUIRE(!BfmeVfsConfig::fromEnvironment(empty, &error));
+
+	setenv("BFME_GAMEDATA", "", 1);
+	REQUIRE(!BfmeBIGFileSystem::isRequestedByEnvironment());
+
+	setenv("BFME_GAMEDATA", "/tmp/bfme-not-a-real-gamedata", 1);
+	REQUIRE(BfmeBIGFileSystem::isRequestedByEnvironment());
+	BfmeVfsConfig cfg;
+	REQUIRE(BfmeVfsConfig::fromEnvironment(cfg, &error));
+	REQUIRE_EQ(cfg.gameRoot, std::string("/tmp/bfme-not-a-real-gamedata"));
 }
 
 // --- RefPack stays in CompressionManager -----------------------------------------------------

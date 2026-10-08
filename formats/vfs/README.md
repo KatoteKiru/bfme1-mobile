@@ -91,7 +91,13 @@ VFS отдаёт **сохранённые** байты, без распаков�
 (`DataChunk.cpp`). Тесты `gamedata_m1_map_refpack` и `gamedata_all_maps_refpack` проверяют, что результат побайтно (SHA-256) совпадает с
 `MapFile.Decompress` OpenSAGE. Свой распаковщик не нужен.
 
-## Подключение в игре (ещё не сделано, см. вопросы к ревью)
-`BfmeBIGFileSystem::isRequestedByEnvironment()` — точка, через которую фабрика `createArchiveFileSystem()`
-(`GeneralsMD/Code/GameEngineDevice/Source/SDL3GameEngine.cpp`) может выбрать BFME-VFS, и добавить `formats/vfs/src/*.cpp`
-в `z_gameenginedevice`. Это вторая правка апстрима, она нужна для M1 п. 3 (E1-32), в этой ветке её нет.
+## Подключение в игре (E1-21b)
+`SDL3GameEngine::createArchiveFileSystem()` (`GeneralsMD/Code/GameEngineDevice/Source/SDL3GameEngine.cpp`)
+смотрит `BfmeBIGFileSystem::isRequestedByEnvironment()`:
+- `BFME_GAMEDATA` задана и не пустая — возвращается `BfmeBIGFileSystem`. `init()` монтирует архивы по
+  `bfme1-mount-order.cfg` (`ini.big`, `maps.big`, `_patch222*.big`, `MobileLayer/`) и пишет в stderr
+  `[bfmevfs] mounted #N (слой, приоритет): путь`.
+- переменная не задана или пустая — возвращается `StdBIGFileSystem`, как в апстриме ZH.
+
+Исходники `formats/vfs/src` входят в `z_gameenginedevice`. Это вторая правка апстрима (`// BFME:` в
+`SDL3GameEngine.cpp`, `# BFME:` в `CMakeLists.txt`), строка в `docs/UPSTREAM-PATCHES.md`.

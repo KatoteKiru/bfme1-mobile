@@ -55,6 +55,7 @@
 #include "W3DDevice/GameClient/W3DWebBrowser.h"
 #include "StdDevice/Common/StdLocalFileSystem.h"
 #include "StdDevice/Common/StdBIGFileSystem.h"
+#include "bfme/vfs/BfmeBIGFileSystem.h"
 #include "Common/GlobalData.h"
 #include "GXTrace.h"
 #include <SDL3/SDL.h>
@@ -2602,6 +2603,13 @@ LocalFileSystem *SDL3GameEngine::createLocalFileSystem(void)
 
 ArchiveFileSystem *SDL3GameEngine::createArchiveFileSystem(void)
 {
+	// BFME: E1-21b. A headless or Android run sets BFME_GAMEDATA to a copied GameData
+	// directory and gets the BFME archive filesystem (base -> patch 2.22 -> MobileLayer).
+	// Unset or empty keeps the upstream ZH filesystem. See docs/UPSTREAM-PATCHES.md.
+	if (BfmeBIGFileSystem::isRequestedByEnvironment()) {
+		fprintf(stderr, "INFO: SDL3GameEngine::createArchiveFileSystem() -> BfmeBIGFileSystem\n");
+		return NEW BfmeBIGFileSystem;
+	}
 	fprintf(stderr, "INFO: SDL3GameEngine::createArchiveFileSystem() -> StdBIGFileSystem\n");
 	return NEW StdBIGFileSystem;
 }
