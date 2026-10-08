@@ -39,6 +39,11 @@
 #endif
 #endif
 
+#if !defined(_MSC_VER) || _MSC_VER >= 1300
+#include "fp.h" // BFME: ADR-0003 §2.3
+#define BFME_FP_THREAD 1
+#endif
+
 #include "Common/AudioAffect.h"
 #include "Common/AudioHandleSpecialValues.h"
 #include "Common/BuildAssistant.h"
@@ -214,6 +219,12 @@ static Waypoint * findNamedWaypoint(AsciiString name)
 // ------------------------------------------------------------------------------------------------
 void setFPMode()
 {
+#if defined(BFME_FP_THREAD)
+	// BFME: ADR-0003 §2.3. Wrapper over fp::reset(). Wrong thread: do not write FP state.
+	if (!fp::ensureLogicThread("setFPMode"))
+		return;
+	fp::reset();
+#else
   // Set floating point round mode to CHOP, which only comes
   // into play when precision is exceeded.  This is necessary
   // for the fast float to int routines used elsewhere in the
@@ -253,6 +264,7 @@ void setFPMode()
 	_mm_setcsr(mxcsr);
 	#endif
 	#endif
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -429,6 +441,11 @@ GameLogic::~GameLogic()
 // ------------------------------------------------------------------------------------------------
 void GameLogic::init()
 {
+#if defined(BFME_FP_THREAD)
+	// BFME: ADR-0003 §2.3. INI::load calls setFPMode() before init, so init is
+	// not what binds the thread. This only checks the id bindLogicThread() recorded.
+	fp::ensureLogicThread("GameLogic::init");
+#endif
 
 	setFPMode();
 
@@ -4123,7 +4140,17 @@ void GameLogic::update()
 	unitTimings();
 #endif
 
+#if defined(BFME_FP_THREAD)
+	// BFME: ADR-0003 §2.3. Replaces setFPMode() so the check reads FP state before the reset.
+	fp::checkAndReset("tick-start");
+	// Every exit, including the frozen-time return below, asserts before leaving the tick.
+	struct BfmeFpTickEnd
+	{
+		~BfmeFpTickEnd() { fp::assertExpected("tick-end"); }
+	} bfmeFpTickEnd;
+#else
 	setFPMode();
+#endif
 
 #if !(defined(_MSC_VER) && defined(_M_IX86))
 	// GeneralsX @feature Android port 23/09/2026 Tell the math trace (ReferenceFloatMath.cpp)
@@ -4408,8 +4435,9 @@ void GameLogic::update()
 	// or an infinity. Those are where x86 and ARM part ways even with identical arithmetic:
 	// flush-to-zero may be on on one machine and not the other, and converting NaN or an
 	// out-of-range float to an integer gives 0x80000000 on x86 but a saturated value on
-	// ARM. setFPMode() clears the flags at the top of every logic update, so what is raised
-	// here was raised by this frame's simulation.
+	// ARM. BFME: fp::checkAndReset("tick-start") calls fp::reset(), which clears
+	// the exception flags the way setFPMode() did, so what is raised here was
+	// raised by this frame's simulation.
 	if (GXTrace::isNetEnabled())
 	{
 		static UnsignedInt s_fpLines = 0;
@@ -4714,7 +4742,12 @@ UnsignedInt GameLogic::getCRC( Int mode, AsciiString deepCRCFileName )
 	if (mode != CRC_RECALC)
 		return m_CRC;
 
+#if defined(BFME_FP_THREAD)
+	// BFME: ADR-0003 §2.3. Do not reset before the check: a reset would hide a drift.
+	fp::assertExpected("getCRC");
+#else
 	setFPMode();
+#endif
 
 	LatchRestore<Bool> latch(inCRCGen, !isInGameLogicUpdate());
 

@@ -15,3 +15,6 @@ add_subdirectory(Source/debug)
 add_subdirectory(Source/EABrowserDispatch)
 add_subdirectory(Source/EABrowserEngine)
 add_subdirectory(Source/Compression)
+
+# BFME: ADR-0003 §2.3. Logic-thread FP gate (core_gamemath). Not built for VC6.
+add_subdirectory(Source/GameMath)

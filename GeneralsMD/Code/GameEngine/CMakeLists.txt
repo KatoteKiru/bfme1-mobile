@@ -1291,6 +1291,12 @@ target_link_libraries(z_gameengine PUBLIC
     d3d8lib  # Ensure DirectX8 headers available (Windows SDK or DXVK)
 )
 
+# BFME: ADR-0003 §2.3. GameMain / GameLogic call fp::. PUBLIC so the executable
+# that links this static library also links core_gamemath.
+if(NOT IS_VS6_BUILD)
+    target_link_libraries(z_gameengine PUBLIC core_gamemath)
+endif()
+
 target_precompile_headers(z_gameengine PRIVATE
     [["Utility/CppMacros.h"]] # Must be first, to be removed when abandoning VC6
     Include/Precompiled/PreRTS.h

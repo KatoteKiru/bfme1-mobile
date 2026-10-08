@@ -31,6 +31,9 @@
 #include "Common/FramePacer.h"
 #include "Common/GameEngine.h"
 #include "Common/ReplaySimulation.h"
+#if !defined(_MSC_VER) || _MSC_VER >= 1300
+#include "fp.h" // BFME: ADR-0003 §2.3
+#endif
 
 
 /**
@@ -38,6 +41,10 @@
  */
 Int GameMain()
 {
+#if !defined(_MSC_VER) || _MSC_VER >= 1300
+	// BFME: ADR-0003 §2.3. First call in GameMain, before TheGameEngine->init().
+	fp::bindLogicThread();
+#endif
 	int exitcode = 0;
 	// initialize the game engine using factory function
 	TheFramePacer = new FramePacer();
