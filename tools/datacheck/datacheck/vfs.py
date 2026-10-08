@@ -8,7 +8,10 @@ Priority model (GeneralsGameCode, the engine BFME1 descends from):
   * ArchiveFileSystem::loadIntoDirectoryTree(overwrite=FALSE) appends each file at the END of a multimap
     key range, and lookups take the first element -> the FIRST loaded archive wins.
     That is why BFME patches are called "_patch*.big" ('_' 0x5F sorts before letters 0x61+) and mods use "!".
-  * Within one archive, duplicate names: first entry wins in the same way (multimap append).
+  * Within one archive, duplicate names: the first entry is kept here (inventory). The engine's
+    ArchiveFile::addFile overwrites, so the later entry wins; terrainmap follows the engine.
+  * Two archive paths that differ only by case mount once, as ZH FilenameList (a set). The
+    byte-smaller path is kept (INI.BIG before ini.big).
 NOTE: OpenSAGE's BigFileSystem uses "last archive wins" with alphabetical order, which would invert this for
 BFME patches; we deliberately follow the EA engine.
 """
@@ -62,8 +65,19 @@ class VFS:
                 if f.lower().endswith('.big'):
                     rel = os.path.relpath(os.path.join(dp, f), self.root)
                     res.append(rel)
-        res.sort(key=sage_key)
-        return res
+
+        def sort_key(rel):
+            slash = rel.replace(os.sep, '/')
+            return (sage_key(slash), slash)
+
+        res.sort(key=sort_key)
+        kept = []
+        for rel in res:
+            slash = rel.replace(os.sep, '/')
+            if kept and sage_key(kept[-1].replace(os.sep, '/')) == sage_key(slash):
+                continue
+            kept.append(rel)
+        return kept
 
     def _mount(self, big_filter):
         if self.include_loose:

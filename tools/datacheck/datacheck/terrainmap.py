@@ -12,6 +12,7 @@ No EA bytes are written. Reports may contain counters, texture names and
 paths inside archives.
 """
 import argparse
+import fnmatch
 import os
 import struct
 import sys
@@ -27,8 +28,117 @@ OPENSAGE_REV = '588ac477'
 OPENSAGE_REV_FULL = '588ac477367a0022adf29f20a084e8873014e6ce'
 
 M1_MAP = 'maps\\map mp fords of isen\\map mp fords of isen.map'
-# Lead's M1 criterion: the file is in one of these two archives.
-M1_ARCHIVES = ('terrain.big', 'textures.big')
+
+
+def _norm_rel(path):
+    text = str(path).replace('\\', '/')
+    while text.startswith('./'):
+        text = text[2:]
+    if text == '.':
+        return ''
+    return text.rstrip('/')
+
+
+def _parent(rel):
+    rel = _norm_rel(rel)
+    slash = rel.rfind('/')
+    return '' if slash < 0 else rel[:slash]
+
+
+def _file_name(rel):
+    rel = _norm_rel(rel)
+    slash = rel.rfind('/')
+    return rel if slash < 0 else rel[slash + 1:]
+
+
+def mount_rules_path():
+    here = os.path.dirname(os.path.abspath(__file__))
+    return os.path.normpath(os.path.join(here, '..', '..', '..', 'formats', 'vfs', 'bfme1-mount-order.cfg'))
+
+
+def load_mount_layers(path=None):
+    """Layers from bfme1-mount-order.cfg. Comments are ignored. The three
+    layer lines are the same text compiled into MountOrder.cpp."""
+    path = path or mount_rules_path()
+    layers = []
+    with open(path, encoding='utf-8') as handle:
+        for lineno, raw in enumerate(handle, 1):
+            line = raw.split('#', 1)[0].strip()
+            if not line:
+                continue
+            parts = line.split()
+            if not parts or parts[0] != 'layer' or len(parts) < 7:
+                raise ValueError(f'{path}:{lineno}: expected a layer rule')
+            _keyword, name, priority, directory, recursion, order, *globs = parts
+            if recursion not in ('flat', 'recursive'):
+                raise ValueError(f'{path}:{lineno}: expected flat or recursive')
+            if order not in ('first-wins', 'last-wins'):
+                raise ValueError(f'{path}:{lineno}: expected first-wins or last-wins')
+            layers.append({
+                'name': name,
+                'priority': int(priority),
+                'dir': directory,
+                'recursive': recursion == 'recursive',
+                'first_wins': order == 'first-wins',
+                'globs': globs,
+            })
+    if not layers:
+        raise ValueError(f'{path}: no layers')
+    return layers
+
+
+def _dir_matches(rule, rel):
+    directory = _norm_rel(rule['dir'])
+    parent = _parent(rel)
+    if parent.lower() == directory.lower():
+        return True
+    if not rule['recursive']:
+        return False
+    if directory == '':
+        return not (rel.startswith('/') or (len(rel) > 1 and rel[1] == ':'))
+    return parent.lower().startswith(directory.lower() + '/')
+
+
+def _classify_layer(rel, layers):
+    best = None
+    name = _file_name(rel)
+    for rule in layers:
+        if best is not None and best['priority'] >= rule['priority']:
+            continue
+        if not _dir_matches(rule, rel):
+            continue
+        if any(fnmatch.fnmatchcase(name.lower(), glob.lower()) for glob in rule['globs']):
+            best = rule
+    return best
+
+
+def resolution_order(archives, layers=None):
+    """Archives in mount order (index 0 wins), per bfme1-mount-order.cfg.
+    Higher layer priority first. Inside a layer, first by _stricmp on a
+    '/'-separated path. Names that differ only by case mount once; the
+    byte-smaller path is kept."""
+    if layers is None:
+        layers = load_mount_layers()
+    by_priority = {}
+    for arc in archives:
+        rel = _norm_rel(getattr(arc, 'label', '') or '')
+        rule = _classify_layer(rel, layers)
+        priority = rule['priority'] if rule else -1
+        first_wins = rule['first_wins'] if rule else True
+        by_priority.setdefault(priority, []).append((first_wins, rel, arc))
+    ordered = []
+    for priority in sorted(by_priority, reverse=True):
+        group = by_priority[priority]
+        group.sort(key=lambda item: (item[1].lower(), item[1]))
+        deduped = []
+        for item in group:
+            if deduped and deduped[-1][1].lower() == item[1].lower():
+                continue
+            deduped.append(item)
+        if deduped and not deduped[0][0]:
+            deduped.reverse()
+        ordered.extend(item[2] for item in deduped)
+    return ordered
 
 # Blend tiles: OpenSAGE Terrain.CreateTextures joins "Art/Terrain" with the
 # Texture field as written (extension included) and opens that path.
@@ -238,23 +348,33 @@ def texture_refs(blocks, kind, field_names):
 
 
 class PathIndex:
-    """Case-insensitive archive paths. Hits are in VFS mount order (first wins
-    in the game). This is not OpenSAGE's last-archive-wins order."""
+    """Case-insensitive archive paths. Hit 0 is the VFS winner: mount order
+    from bfme1-mount-order.cfg, and the later entry inside one archive
+    (ArchiveFile::addFile overwrites). This is not OpenSAGE's last-archive-wins."""
 
-    def __init__(self, archives):
+    def __init__(self, archives, layers=None):
         self.hits = defaultdict(list)
-        for arc in archives:
-            label = os.path.basename(arc.label.replace('\\', '/'))
+        for arc in resolution_order(archives, layers):
+            label = os.path.basename(str(arc.label).replace('\\', '/'))
+            latest = {}
+            order = []
             for entry in arc.entries:
                 key = entry.name.replace('/', '\\').lower()
-                self.hits[key].append((label, entry.name))
+                if key not in latest:
+                    order.append(key)
+                latest[key] = (label, entry.name)
+            for key in order:
+                self.hits[key].append(latest[key])
 
     def get(self, path):
         return list(self.hits.get(path.replace('/', '\\').lower(), []))
 
 
 def in_m1_archives(hits):
-    return [h for h in hits if h[0].lower() in M1_ARCHIVES]
+    """The winning archive, when the path exists in the mount plan.
+    E1-26 counts a texture as found here. terrain.big and textures.big are
+    not a special pair: _patch222textures.big wins when it holds the file."""
+    return hits[:1]
 
 
 def blend_tile_hits(index, texture_file):
@@ -550,7 +670,8 @@ def render_md(report):
     a = lines.append
     a('# E1-26, срез M1: текстуры blend-тайлов Fords of Isen')
     a('')
-    a('Срез закрывает критерий M1 по текстурам карты, не весь пункт E1-26 бэклога.')
+    a('Срез закрывает критерий E1-26 «0 missing»: текстуры из `terrain.ini` найдены в VFS.')
+    a('Пункт 4 вехи M1 — кадр без чистой магенты — это E1-32, не этот срез.')
     a('Схемы `terrain.ini`, `water.ini` и `roads.ini` разбираются здесь (v3.6: E1-26')
     a('для M1 не ждёт остальной E1-23). Атлас тайлов — E1-51, `WorldHeightMap.cpp`')
     a('этот срез не меняет. Вода и дороги как картинка — E1-29; здесь только разбор')
@@ -581,14 +702,16 @@ def render_md(report):
     a('Оракул OpenSAGE по этой карте (`docs/formats/BFME1_vs_ZH.md`): 63 текстуры, 984 тайла, '
       '16 700 описаний blend (= numBlendedTiles − 1), 577 cliff (= numCliffInfo − 1).')
     a('')
-    a('## Критерий M1')
+    a('## Критерий E1-26')
     a('')
     a('Текстура blend-тайла — это поле `Texture` одноимённого блока `Terrain` в')
     a(f'`terrain.ini` (источник `{report["terrain"]["source"]}`, позднее определение')
     a('перекрывает раннее, как `INI::parseTerrainDefinition` в ZH). Файл ищется как')
     a(f'`{TERRAIN_TILE_DIR}<Texture>` без смены расширения, без учёта регистра.')
     a('Так же путь собирает OpenSAGE `Terrain.CreateTextures` (`Art/Terrain` + поле `Texture`).')
-    a(f'Найдено в `terrain.big` и/или `textures.big`: **{report["found_in_m1_archives"]} / {n}**.')
+    a('Победитель — архив по `formats/vfs/bfme1-mount-order.cfg` (больший приоритет слоя,')
+    a('внутри слоя первый по `_stricmp`, разделитель `/`).')
+    a(f'Найдено: **{report["found_in_m1_archives"]} / {n}**.')
     a(f'Не найдено: **{len(report["missing"])}**.')
     a('')
     if report['missing']:
@@ -634,11 +757,12 @@ def render_md(report):
     a('')
     a('## water.ini и roads.ini')
     a('')
-    a('Это не критерий M1 (там только blend-тайлы). Файлы ищутся общим правилом')
+    a('Это не критерий E1-26 (там только blend-тайлы и 0 пропусков). Кадр без чистой магенты — E1-32.')
+    a('Файлы ищутся общим правилом')
     a('текстур, не правилом `Art/Terrain`: сначала `.dds`, потом `.tga`, потом `.jpg`,')
     a('в `lang\\english\\art\\textures\\`, затем `art\\textures\\`, затем голое имя.')
     a('Порядок расширений — как у загрузчика текстур OpenSAGE той же ревизии.')
-    a('В таблицу попадают только имя из INI и путь в архиве.')
+    a('В таблицу попадает победитель VFS: имя из INI и путь в архиве.')
     a('')
     w = report['water']
     def _blk(b):
@@ -646,25 +770,18 @@ def render_md(report):
     a(f'`water.ini` из `{w["source"]}`: блоков {len(w["blocks"])} '
       f'({", ".join(_blk(b) for b in w["blocks"])}).')
     a(f'Неизвестных полей: {len(w["unknown"])}. Текстур: {len(w["textures"])}, '
-      f'из них в terrain.big/textures.big: {sum(1 for x in w["textures"] if x["m1_hit"])}.')
+      f'победитель VFS есть: {sum(1 for x in w["textures"] if x["m1_hit"])}.')
     a('')
-    a('| блок | поле | имя в INI | terrain.big / textures.big | кто побеждает в VFS |')
-    a('|---|---|---|---|---|')
+    a('| блок | поле | имя в INI | кто побеждает в VFS |')
+    a('|---|---|---|---|')
     for x in w['textures']:
         label = x['block'] or x['kind']
-        hit = x['m1_hit']
-        vfs_hit = x['hit']
+        hit = x['m1_hit'] or x['hit']
         if hit:
             where = f'`{hit["archive"]}` `{hit["path"]}`'
         else:
             where = 'не найден'
-        if vfs_hit and hit and vfs_hit != hit:
-            winner = f'`{vfs_hit["archive"]}` `{vfs_hit["path"]}`'
-        elif vfs_hit:
-            winner = 'тот же файл'
-        else:
-            winner = '—'
-        a(f'| `{label}` | `{x["field"]}` | `{x["file"]}` | {where} | {winner} |')
+        a(f'| `{label}` | `{x["field"]}` | `{x["file"]}` | {where} |')
     a('')
     rd = report['roads']
     nroad = sum(1 for b in rd['blocks'] if b['kind'] == 'Road')
@@ -672,7 +789,7 @@ def render_md(report):
     found_r = sum(1 for x in rd['textures'] if x['m1_hit'])
     a(f'`roads.ini` из `{rd["source"]}`: Road {nroad}, Bridge {nbridge}.')
     a(f'Неизвестных полей: {len(rd["unknown"])}. Ссылок на текстуры: {len(rd["textures"])}, '
-      f'найдены в terrain.big/textures.big: {found_r}, не найдены: {len(rd["textures"]) - found_r}.')
+      f'найдены победителем VFS: {found_r}, не найдены: {len(rd["textures"]) - found_r}.')
     ext_note = {}
     for x in rd['textures']:
         hit = x['m1_hit'] or x['hit']
@@ -682,7 +799,7 @@ def render_md(report):
     missed = [x for x in rd['textures'] if not x['m1_hit']]
     if missed:
         a('')
-        a('Не найдены в terrain.big/textures.big:')
+        a('Не найдены победителем VFS:')
         a('')
         for x in missed:
             a(f'- `{x["block"]}` `{x["field"]}` `{x["file"]}`')
@@ -699,19 +816,19 @@ def render_md(report):
     a('2. **Повтор имени.** Оракул оставляет первое определение (`ScopedAssetCollection`,')
     a('   «existing entries take precedence»). ZH находит уже созданный тип и перечитывает')
     a('   поля поверх (`initFromINI`), то есть побеждает последнее. Затронуты три имени в')
-    a('   таблице выше; на карте M1 их нет, поэтому на критерий M1 это не влияет.')
+    a('   таблице выше; на карте их нет, поэтому на критерий E1-26 (0 пропусков) это не влияет.')
     a('3. **Путь blend-тайла.** Оракул открывает `Art/Terrain/<Texture>` как есть (расширение')
     a('   из INI, словарь BIG без учёта регистра). Общий загрузчик (`.dds`, потом `.tga`,')
     a('   потом `.jpg` в `art/textures`) для этих тайлов оракул не использует. Все найденные')
     a('   файлы карты лежат в `terrain.big` именно по этому пути, так что оба правила дают')
     a('   один и тот же файл. В `textures.big` этих путей нет, патч их не перекрывает.')
-    a('4. **Порядок архивов.** Игра и наш VFS: первый по `_stricmp` побеждает. Оракул для')
+    a('4. **Порядок архивов.** Игра и наш VFS: слой с большим приоритетом побеждает,')
+    a('   внутри слоя первый по `_stricmp` с разделителем `/`. Оракул для')
     a('   BIG в ряде мест оставляет последний. Для 63 файлов карты источник один')
-    a('   (`terrain.big`), расхождения нет. У части текстур воды тот же stem есть и в')
-    a('   `_patch222textures.big`; в отчёте воды указан файл из `textures.big`, если он')
-    a('   попал в пару архивов критерия.')
-    a('5. **Вода и дороги.** Имена в INI оканчиваются на `.tga`, файлы в `textures.big` —')
-    a('   `.dds` или `.jpg`. Точное имя `.tga` в `terrain.big`/`textures.big` не лежит.')
+    a('   (`terrain.big`), расхождения нет. Текстуры воды, которые есть и в')
+    a('   `_patch222textures.big`, в таблице указаны победителем этого слоя.')
+    a('5. **Вода и дороги.** Имена в INI оканчиваются на `.tga`, победивший файл —')
+    a('   `.dds` или `.jpg`. Точное имя `.tga` в выигравшем архиве не лежит.')
     a('   Это ожидаемо для общего загрузчика и не считается пропуском blend-тайлов.')
     a('')
     a('## Чего в этом срезе нет')

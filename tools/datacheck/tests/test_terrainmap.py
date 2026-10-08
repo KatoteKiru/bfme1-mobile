@@ -73,7 +73,7 @@ Terrain Sand
   Class = Type Dirt NEXT Region Isengard
 End
 Terrain Sand
-  Texture = first.tga
+  Texture = later.tga
   Class = Type Dirt
 End
 Terrain Other
@@ -88,7 +88,7 @@ End
         sand = defs['by_name']['sand']
         self.assertEqual(sand['count'], 2)
         self.assertEqual(sand['opensage']['texture'], 'first.tga')
-        self.assertEqual(sand['zh']['texture'], 'first.tga')
+        self.assertEqual(sand['zh']['texture'], 'later.tga')
         self.assertNotEqual(sand['opensage']['class'], sand['zh']['class'])
         self.assertEqual(sand['zh']['class']['regions'], [])
         self.assertEqual(sand['opensage']['class']['regions'], ['Isengard'])
@@ -158,6 +158,32 @@ class TestLookup(unittest.TestCase):
             resolved, hits = generic_texture_hits(index, 'TRWagon.tga')
             self.assertEqual(os.path.splitext(resolved)[1], '.dds')
             self.assertEqual(hits[0][1].lower(), 'art\\textures\\trwagon.dds')
+
+    def test_later_entry_in_one_archive_wins(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, 'terrain.big')
+            write_big(path, [
+                ('art\\terrain\\A.tga', b'first'),
+                ('art\\terrain\\a.TGA', b'last'),
+            ])
+            hits = blend_tile_hits(PathIndex([BigArchive(path, label='terrain.big')]), 'a.tga')
+            self.assertEqual(hits, [('terrain.big', 'art\\terrain\\a.TGA')])
+
+    def test_patch_layer_beats_an_earlier_base_name(self):
+        # '!' sorts before '_patch222', so a global name sort would keep the base file.
+        # The mount plan gives patch222 priority 100, so the patch wins.
+        with tempfile.TemporaryDirectory() as d:
+            early = os.path.join(d, '!textures.big')
+            patch = os.path.join(d, '_patch222textures.big')
+            write_big(early, [('art\\textures\\tswater.dds', b'base')])
+            write_big(patch, [('art\\textures\\TSWater.dds', b'patch')])
+            index = PathIndex([
+                BigArchive(early, label='!textures.big'),
+                BigArchive(patch, label='_patch222textures.big'),
+            ])
+            _resolved, hits = generic_texture_hits(index, 'TSWater.tga')
+            self.assertEqual(hits[0][0], '_patch222textures.big')
+            self.assertEqual(hits[0][1], 'art\\textures\\TSWater.dds')
 
     def test_blend_classes_and_which_cells_use_them(self):
         # 2x1 map. Cell 0 paints source tile 0, cell 1 paints source tile 1.

@@ -12,7 +12,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from datacheck.big import BigArchive, write_big  # noqa: E402
+from datacheck.big import BigArchive, BigError, entry_output_path, extract_entry, write_big  # noqa: E402
 from datacheck.vfs import VFS  # noqa: E402
 from datacheck.schema import Schema  # noqa: E402
 from datacheck.ini import IniAnalyzer  # noqa: E402
@@ -89,6 +89,15 @@ class TestBig(unittest.TestCase):
                 self.assertEqual(a.entries[0].read(), b'hello')
                 self.assertEqual(a.declared_size, os.path.getsize(p))   # little-endian size field
                 self.assertEqual(a.warnings, [])
+            dest = os.path.join(d, 'out')
+            written = extract_entry(a.entries[0], dest)
+            self.assertTrue(written.endswith(os.path.join('data', 'ini', 'a.ini')))
+            with open(written, 'rb') as handle:
+                self.assertEqual(handle.read(), b'hello')
+            for unsafe in ('../outside.ini', '/tmp/abs.ini', 'C:\\Windows\\x.dll', ''):
+                with self.assertRaises(BigError):
+                    entry_output_path(dest, unsafe)
+            self.assertFalse(os.path.exists(os.path.join(d, 'outside.ini')))
         finally:
             shutil.rmtree(d)
 
@@ -110,6 +119,17 @@ class TestVfsPriority(unittest.TestCase):
             self.assertEqual([o[0] for o in g.overridden], ['INI.big'])
             self.assertEqual(v.read('data\\ini\\only.ini'), b'mod')
             self.assertEqual(v.get('data\\ini\\loose.ini').source, '<loose>')
+        finally:
+            shutil.rmtree(d)
+
+    def test_case_duplicate_archive_mounts_once(self):
+        d = tempfile.mkdtemp()
+        try:
+            write_big(os.path.join(d, 'ini.big'), [('data\\ini\\x.ini', b'lower')])
+            write_big(os.path.join(d, 'INI.BIG'), [('data\\ini\\x.ini', b'UPPER')])
+            v = VFS(d, include_loose=False)
+            self.assertEqual([a.label for a in v.archives], ['INI.BIG'])
+            self.assertEqual(v.read('data\\ini\\x.ini'), b'UPPER')
         finally:
             shutil.rmtree(d)
 

@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "bfme/vfs/BigArchiveReader.h"
 
+#include <algorithm>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 
 namespace bfme::vfs {
@@ -69,7 +71,13 @@ bool parseBigDirectory(const unsigned char* data, size_t length, uint64_t fileSi
 	out.header.firstEntryOffset = readBE32(data + 12);
 
 	size_t pos = kHeaderSize;
-	out.entries.reserve(out.header.entryCount);
+	// Smallest entry is 8 bytes of offsets plus a NUL (9). A count of 0xFFFFFFFF must not reserve that many.
+	const size_t maxFit = (length - kHeaderSize) / 9;
+	size_t reserveCount = out.header.entryCount;
+	if (reserveCount > maxFit) {
+		reserveCount = maxFit;
+	}
+	out.entries.reserve(reserveCount);
 	for (uint32_t i = 0; i < out.header.entryCount; ++i) {
 		if (pos + 8 > length) {
 			setError(error, "directory truncated at entry " + std::to_string(i));
@@ -91,7 +99,8 @@ bool parseBigDirectory(const unsigned char* data, size_t length, uint64_t fileSi
 		entry.path.assign(reinterpret_cast<const char*>(data + nameStart), pos - nameStart);
 		++pos; // NUL
 
-		if (fileSize != 0 && uint64_t(entry.offset) + entry.size > fileSize) {
+		// fileSize 0 is an empty archive, not "skip the check": offset + size must still fit.
+		if (uint64_t(entry.offset) + uint64_t(entry.size) > fileSize) {
 			setError(error, "entry '" + entry.path + "' lies outside the archive");
 			return false;
 		}
@@ -142,6 +151,102 @@ bool readBigEntry(const std::string& archivePath, const BigEntry& entry, std::ve
 	in.seekg(entry.offset, std::ios::beg);
 	if (entry.size != 0 && !in.read(reinterpret_cast<char*>(out.data()), entry.size)) {
 		setError(error, "cannot read entry " + entry.path);
+		return false;
+	}
+	return true;
+}
+
+bool entryPathSafeForDisk(const std::string& path)
+{
+	if (path.empty() || path[0] == '/' || path[0] == '\\') {
+		return false;
+	}
+	if (path.size() >= 2 && path[1] == ':') {
+		return false;
+	}
+	bool any = false;
+	std::string segment;
+	auto flush = [&]() -> bool {
+		if (segment == "..") {
+			return false;
+		}
+		if (!segment.empty() && segment != ".") {
+			any = true;
+		}
+		segment.clear();
+		return true;
+	};
+	for (char c : path) {
+		if (c == '/' || c == '\\') {
+			if (!flush()) {
+				return false;
+			}
+		} else {
+			segment.push_back(c);
+		}
+	}
+	return flush() && any;
+}
+
+bool extractBigEntry(const std::string& archivePath, const BigEntry& entry, const std::string& destDir, std::string* error)
+{
+	if (!entryPathSafeForDisk(entry.path)) {
+		setError(error, "entry path is absolute or contains '..': " + entry.path);
+		return false;
+	}
+	std::vector<unsigned char> bytes;
+	if (!readBigEntry(archivePath, entry, bytes, error)) {
+		return false;
+	}
+
+	namespace fs = std::filesystem;
+	std::error_code ec;
+	fs::create_directories(destDir, ec);
+	if (ec) {
+		setError(error, "cannot create " + destDir);
+		return false;
+	}
+	const fs::path destNorm = fs::weakly_canonical(fs::path(destDir), ec);
+	if (ec) {
+		setError(error, "cannot resolve " + destDir);
+		return false;
+	}
+
+	fs::path relPath;
+	std::string segment;
+	auto push = [&]() {
+		if (!segment.empty() && segment != ".") {
+			relPath /= segment;
+		}
+		segment.clear();
+	};
+	for (char c : entry.path) {
+		if (c == '/' || c == '\\') {
+			push();
+		} else {
+			segment.push_back(c);
+		}
+	}
+	push();
+
+	const fs::path outNorm = (destNorm / relPath).lexically_normal();
+	const std::string destStr = destNorm.generic_string();
+	const std::string outStr = outNorm.generic_string();
+	const bool inside = outStr == destStr
+		|| (outStr.size() > destStr.size() && outStr.compare(0, destStr.size(), destStr) == 0 && outStr[destStr.size()] == '/');
+	if (!inside) {
+		setError(error, "entry path escapes the output directory: " + entry.path);
+		return false;
+	}
+
+	fs::create_directories(outNorm.parent_path(), ec);
+	if (ec) {
+		setError(error, "cannot create directory for " + entry.path);
+		return false;
+	}
+	std::ofstream out(outNorm, std::ios::binary);
+	if (!out || (!bytes.empty() && !out.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size())))) {
+		setError(error, "cannot write " + entry.path);
 		return false;
 	}
 	return true;

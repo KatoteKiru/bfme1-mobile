@@ -41,6 +41,10 @@
 ## 4. Проверка целостности
 
 - **Манифест** `bfme1-manifest.json` встроен в APK. Содержит **только метаданные** (имена, размеры, SHA-256), без контента EA. Собирает «Форматы и данные» по копии Андрея на боксе, в одном профиле `patch-2.22v5.5.4`.
+- **Пути** в манифесте хранятся в нижнем регистре. Сравнение при импорте и в VFS без учёта регистра: `INI.BIG` и `ini.big` — один файл.
+- **`required: true`** значит: без этого файла движок не дойдёт до карты M1. `required: false` — файл может отсутствовать, старт до M1 от этого не зависит.
+- **`window.big` обязателен.** `GameEngine::init` поднимает клиента (`GeneralsMD/Code/GameEngine/Source/Common/GameEngine.cpp:758`, `initSubsystem(TheGameClient, …)`). `GameClient::init` вызывает `TheInGameUI->init()` (`GeneralsMD/Code/GameEngine/Source/GameClient/GameClient.cpp:389`). `InGameUI::init` на строке 1438 вызывает `createControlBar()`, а тот на строке 4843 — `winCreateFromScript("ControlBar.wnd")` (`GeneralsMD/Code/GameEngine/Source/GameClient/InGameUI.cpp`). Скрипт открывает `Window\<имя>` (`GeneralsMD/Code/GameEngine/Source/GameClient/GUI/GameWindowManagerScript.cpp:2743` собирает путь, `:2767` — `TheFileSystem->openFile`). Сразу после создания `ControlBar::init` берёт окно `ControlBar.wnd:ControlBarParent` и без проверки на null вызывает `winGetPosition` (`Core/GameEngine/Source/GameClient/GUI/ControlBar/ControlBar.cpp:1121–1123`). Это происходит в `GameClient::init`, до главного меню. В `window.big` лежат экраны `Window/*.wnd`, без шрифтов и без `Data/INI`.
+- **`apt/*.big` и `englishsplash.jpg` остаются `required: false`.** У ZH нет формата APT, до карты M1 эти файлы не читаются.
 - **Проверки при импорте:**
   1. Обязательные файлы есть, например `ini.big`, `maps.big`, текстуры, W3D, звук, английский или русский `lang` (точный список дадут «Форматы и данные»).
   2. Размеры совпадают.

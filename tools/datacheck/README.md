@@ -15,7 +15,7 @@ export BFME_GAMEDATA=/path/to/gamedata         # каталог с ini.big, maps
 ./run.sh --archives ini.big,maps.big --out out
 # всё, что лежит в gamedata/ (база + _patch222*.big, в т.ч. _patch222maps.big): ~2,5 мин (карты ~2 мин):
 ./run.sh --out out-all
-python3 -m unittest discover -s tests -v        # 21 тест; сверка эталона с gamedata — только при BFME_GAMEDATA
+python3 -m unittest discover -s tests -v        # 31 тест; сверка эталона с gamedata — только при BFME_GAMEDATA
 ```
 
 Ключи: `--archives a.big,b.big` (монтировать только эти BIG; по умолчанию все `*.big`), `--no-loose` (игнорировать
@@ -142,7 +142,7 @@ python3 schema/gen_zh_schema.py /workspace/bfme-mobile/src/GeneralsGameCode sche
 | модуль | что делает |
 |---|---|
 | `datacheck/big.py` | BIGF/BIG4: magic, размер архива LE, число записей и смещение BE, записи (offset BE, size BE, имя\0) |
-| `datacheck/vfs.py` | монтирование: loose > архивы; архивы по `_stricmp`-порядку пути, первый выигрывает; перекрытые версии сохраняются |
+| `datacheck/vfs.py` | монтирование: loose > архивы; архивы по `_stricmp`-порядку пути, первый выигрывает; имена, которые отличаются только регистром, монтируются один раз; перекрытые версии сохраняются |
 | `datacheck/ini.py` | структурный разбор INI по схеме, учёт неизвестного, BeginScript, #define/#include, сбор операций с модулями объектов |
 | `datacheck/objects.py` | итоговые модули объекта после ChildObject/ObjectReskin/DefaultThingTemplate, Add/Remove/Replace/InheritableModule |
 | `datacheck/values.py` | нормализация значений без локали (Decimal) |
@@ -168,9 +168,10 @@ python3 schema/gen_zh_schema.py /workspace/bfme-mobile/src/GeneralsGameCode sche
 
 ## E1-26, срез M1 (terrain.ini / water.ini / roads.ini)
 
-`datacheck.terrainmap` разбирает три INI своей схемой и сопоставляет классы текстур
-BlendTileData карты с файлами в `terrain.big` и `textures.big`. Это срез E1-26 под
-критерий M1 (Fords of Isen), не весь E1-23 и не атлас (E1-51). OpenSAGE rev 588ac477
+`datacheck.terrainmap` разбирает три INI своей схемой и считает текстуру найденной,
+если у неё есть победитель VFS по `formats/vfs/bfme1-mount-order.cfg` (в том числе
+`_patch222textures.big`). Это критерий E1-26 «0 missing» для Fords of Isen, не пункт 4
+вехи M1 (кадр без чистой магенты — E1-32) и не атлас (E1-51). OpenSAGE rev 588ac477
 (GPL-3.0) — только оракул, код оракула не копируется.
 
 ```sh

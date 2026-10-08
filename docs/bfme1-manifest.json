@@ -2446,7 +2446,7 @@
           "path": "window.big",
           "size": 694006,
           "sha256": "53020f0fd15f3ac5c2a3fa78ebb68c4c825acce3965d6263c52eeea2450b4941",
-          "required": false,
+          "required": true,
           "kind": "big"
         },
         {

@@ -75,6 +75,9 @@ bool parseMountRules(std::istream& in, MountRules& out, std::string* error);
 bool loadMountRulesFile(const std::string& path, MountRules& out, std::string* error);
 
 // _stricmp: case-insensitive ordinal comparison with lower-case folding ('_' sorts before letters).
+// Callers pass a '/' -separated key (normalizeSlashes). ZH on Windows compares '\\'. After a shared
+// prefix those separators sit on opposite sides of a digit or a dot, so the order can diverge.
+// On the current BFME1 archive set the two keys sort the same.
 int compareArchiveNames(const std::string& a, const std::string& b);
 bool globMatchNoCase(const std::string& pattern, const std::string& text);
 

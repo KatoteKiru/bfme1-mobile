@@ -209,6 +209,45 @@ TEST(big_reader_rejects_bad_input)
 	std::string truncated = buildBig(sampleEntries("x"));
 	truncated.resize(0x14);
 	REQUIRE(!parseBigDirectory(reinterpret_cast<const unsigned char*>(truncated.data()), truncated.size(), truncated.size(), dir, &error));
+
+	// entryCount 0xFFFFFFFF used to reserve that many pointers and throw bad_alloc.
+	std::string huge = "BIG4";
+	putLE32(huge, 16);
+	putBE32(huge, 0xFFFFFFFFu);
+	putBE32(huge, 16);
+	REQUIRE(!parseBigDirectory(reinterpret_cast<const unsigned char*>(huge.data()), huge.size(), huge.size(), dir, &error));
+
+	// fileSize 0 is an empty file: the bounds check must not be skipped.
+	const std::string payload = buildBig({{"a.ini", "hi"}});
+	REQUIRE(!parseBigDirectory(reinterpret_cast<const unsigned char*>(payload.data()), payload.size(), 0, dir, &error));
+	REQUIRE(parseBigDirectory(reinterpret_cast<const unsigned char*>(payload.data()), payload.size(), payload.size(), dir, &error));
+
+	REQUIRE(!entryPathSafeForDisk(""));
+	REQUIRE(!entryPathSafeForDisk("../x.ini"));
+	REQUIRE(!entryPathSafeForDisk("a/../../etc/passwd"));
+	REQUIRE(!entryPathSafeForDisk("/etc/passwd"));
+	REQUIRE(!entryPathSafeForDisk("\\\\server\\share\\x"));
+	REQUIRE(!entryPathSafeForDisk("C:\\Windows\\x.dll"));
+	REQUIRE(entryPathSafeForDisk("data\\ini\\a.ini"));
+	REQUIRE(entryPathSafeForDisk("data/./ini/a.ini"));
+
+	TempDir extracted;
+	const auto archivePath = extracted.path() / "ini.big";
+	writeBig(archivePath, {{"data\\ini\\a.ini", "hi"}});
+	BigDirectory written;
+	REQUIRE(readBigDirectory(archivePath.string(), written, &error));
+	const auto dest = extracted.path() / "out";
+	REQUIRE(extractBigEntry(archivePath.string(), written.entries[0], dest.string(), &error));
+	std::ifstream back(dest / "data" / "ini" / "a.ini");
+	std::string got;
+	REQUIRE(std::getline(back, got));
+	REQUIRE_EQ(got, std::string("hi"));
+	BigEntry escape = written.entries[0];
+	escape.path = "../outside.ini";
+	REQUIRE(!extractBigEntry(archivePath.string(), escape, dest.string(), &error));
+	REQUIRE(!std::filesystem::exists(extracted.path() / "outside.ini"));
+	escape.path = "/tmp/abs.ini";
+	REQUIRE(!extractBigEntry(archivePath.string(), escape, dest.string(), &error));
 }
 
 TEST(engine_opens_big4_and_bigf)
@@ -485,6 +524,20 @@ TEST(engine_mobile_layer_outside_root)
 	std::string data;
 	REQUIRE(vfs.read("x.ini", data));
 	REQUIRE_EQ(data, std::string("mobile"));
+}
+
+// ZH FilenameList keeps one name when two paths differ only by case. The byte-smaller path is kept.
+TEST(engine_mounts_case_duplicate_archive_once)
+{
+	TempDir root;
+	writeBig(root.path() / "ini.big", {{"data\\ini\\x.ini", "lower"}});
+	writeBig(root.path() / "INI.BIG", {{"data\\ini\\x.ini", "UPPER"}});
+	MountedVfs vfs(configFor(root));
+	REQUIRE_EQ(vfs.fs().getMountedArchiveCount(), 1);
+	std::string data;
+	REQUIRE(vfs.read("data\\ini\\x.ini", data));
+	REQUIRE_EQ(data, std::string("UPPER"));
+	REQUIRE(vfs.winner("data\\ini\\x.ini").find("INI.BIG") != std::string::npos);
 }
 
 TEST(engine_skips_broken_archive)

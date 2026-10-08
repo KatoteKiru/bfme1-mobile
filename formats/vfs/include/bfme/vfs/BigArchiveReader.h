@@ -45,7 +45,9 @@ struct BigDirectory {
 };
 
 // Parses header + directory from a memory block that holds at least the directory.
-// fileSize, when non-zero, is used to validate that every entry lies inside the file.
+// fileSize is the archive length. Every entry must lie inside it, including when
+// fileSize is 0: a zero length used to skip the check and accept any offset.
+// reserve() is capped at (length - 16) / 9 so a huge entry count cannot bad_alloc.
 bool parseBigDirectory(const unsigned char* data, size_t length, uint64_t fileSize, BigDirectory& out, std::string* error);
 
 // Reads header + directory from a file on disk (does not read entry payloads).
@@ -53,5 +55,12 @@ bool readBigDirectory(const std::string& archivePath, BigDirectory& out, std::st
 
 // Reads the raw (stored, never decompressed) bytes of one entry.
 bool readBigEntry(const std::string& archivePath, const BigEntry& entry, std::vector<unsigned char>& out, std::string* error);
+
+// False for an empty path, an absolute path ('/', '\\', or a drive letter), or any '..' segment.
+// '.' segments are allowed. The parser still accepts such names; writers must refuse them.
+bool entryPathSafeForDisk(const std::string& path);
+
+// Writes one entry under destDir. Rejects absolute paths and '..' (does not create the file).
+bool extractBigEntry(const std::string& archivePath, const BigEntry& entry, const std::string& destDir, std::string* error);
 
 } // namespace bfme::vfs

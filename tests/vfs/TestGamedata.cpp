@@ -199,23 +199,38 @@ TEST(gamedata_full_mount_follows_plan)
 	REQUIRE(vfs.fs().getMountedArchiveCount() > 0);
 	REQUIRE_EQ(vfs.fs().getFailedArchiveCount(), 0);
 
+	// A failed insert is not always a cross-archive overlap. data.big repeats three paths
+	// (identical bytes). On the full 2.22 copy those 3 plus 1221 paths shared between
+	// archives used to print as one number, 1224. Only the 1221 are overlaps; patch222 wins all of them.
 	std::map<std::string, std::string> expectedWinner;  // canonical path -> archive path
-	std::map<std::string, int> overriddenByLayer;
+	std::map<std::string, int> crossByLayer;
+	size_t crossArchive = 0;
+	size_t intraArchive = 0;
 	for (const PlannedArchive& a : plan.resolutionOrder) {
 		BigDirectory dir;
 		std::string error;
 		REQUIRE(readBigDirectory(a.archive.path, dir, &error));
+		std::set<std::string> seenHere;
 		for (const BigEntry& e : dir.entries) {
-			const auto inserted = expectedWinner.emplace(canonical(e.path), a.archive.path);
-			if (!inserted.second) ++overriddenByLayer[a.layer];
+			const std::string key = canonical(e.path);
+			if (!seenHere.insert(key).second) {
+				++intraArchive;
+				continue;
+			}
+			const auto inserted = expectedWinner.emplace(key, a.archive.path);
+			if (!inserted.second) {
+				++crossArchive;
+				++crossByLayer[a.layer];
+			}
 		}
 	}
 	for (const auto& [path, archive] : expectedWinner) {
 		REQUIRE_EQ(vfs.winner(path), archive);
 	}
 	std::printf("  %zu paths, winners match the plan\n", expectedWinner.size());
-	for (const auto& [layer, n] : overriddenByLayer) {
-		std::printf("  %d entries of layer %s are shadowed by a higher-precedence archive\n", n, layer.c_str());
+	std::printf("  %zu cross-archive overlaps; %zu duplicate paths inside one archive (not overlaps)\n", crossArchive, intraArchive);
+	for (const auto& [layer, n] : crossByLayer) {
+		std::printf("  %d entries of layer %s are shadowed by an earlier archive\n", n, layer.c_str());
 	}
 }
 

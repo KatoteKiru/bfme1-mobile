@@ -288,6 +288,11 @@ MountPlan planMount(const std::vector<ArchiveCandidate>& archives, const MountRu
 			const int c = compareArchiveNames(normalizeSlashes(a.relPath), normalizeSlashes(b.relPath));
 			return c != 0 ? c < 0 : a.relPath < b.relPath;  // deterministic for case-only differences
 		});
+		// ZH FilenameList is a set with less_than_nocase, so two names that differ only by case
+		// are one archive. Keep the byte-smaller path when _stricmp ties (the first after this sort).
+		list.erase(std::unique(list.begin(), list.end(), [](const ArchiveCandidate& a, const ArchiveCandidate& b) {
+			return compareArchiveNames(normalizeSlashes(a.relPath), normalizeSlashes(b.relPath)) == 0;
+		}), list.end());
 		if (layer->order == IntraLayerOrder::SortedLastWins) {
 			std::reverse(list.begin(), list.end());
 		}

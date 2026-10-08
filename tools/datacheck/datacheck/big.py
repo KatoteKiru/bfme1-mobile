@@ -8,6 +8,7 @@ Layout (checked against GeneralsGameCode Win32BIGFileSystem::openArchiveFile and
   16 entries: uint32 offset (BE), uint32 size (BE), NUL-terminated path (ASCII, '\\' separators)
 Placeholder archives of < 4 bytes ("??") are treated as empty (OpenSAGE behaviour).
 """
+import os
 import struct
 
 
@@ -81,6 +82,43 @@ class BigArchive:
         with open(self.path, 'rb') as f:
             f.seek(e.offset)
             return f.read(e.size)
+
+
+def entry_output_path(dest_dir, entry_name):
+    """Path under dest_dir for an archive entry.
+
+    Raises BigError for an empty name, an absolute path, a drive letter, or a
+    '..' segment. '.' segments are skipped. The parser still accepts those
+    names; anything that writes to disk must refuse them.
+    """
+    if not entry_name or entry_name[0] in '/\\' or (len(entry_name) > 1 and entry_name[1] == ':'):
+        raise BigError(f'unsafe entry path: {entry_name!r}')
+    parts = []
+    for segment in entry_name.replace('\\', '/').split('/'):
+        if segment in ('', '.'):
+            continue
+        if segment == '..':
+            raise BigError(f'unsafe entry path: {entry_name!r}')
+        parts.append(segment)
+    if not parts:
+        raise BigError(f'unsafe entry path: {entry_name!r}')
+    dest = os.path.abspath(dest_dir)
+    out = os.path.abspath(os.path.join(dest, *parts))
+    try:
+        if os.path.commonpath([dest, out]) != dest:
+            raise BigError(f'unsafe entry path: {entry_name!r}')
+    except ValueError as exc:
+        raise BigError(f'unsafe entry path: {entry_name!r}') from exc
+    return out
+
+
+def extract_entry(entry, dest_dir):
+    """Write one entry under dest_dir. Refuses absolute paths and '..'."""
+    out = entry_output_path(dest_dir, entry.name)
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, 'wb') as handle:
+        handle.write(entry.read())
+    return out
 
 
 def write_big(path, files, magic=b'BIGF'):
