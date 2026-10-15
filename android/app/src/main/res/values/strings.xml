@@ -329,4 +329,40 @@
     <string name="online_network_settings">Network settings (servers, PC compatibility): from %1$s, updated automatically from the project\'s GitHub and signed.</string>
     <string name="online_network_settings_builtin">Network settings (servers, PC compatibility): built into this version; newer ones come automatically from the project\'s GitHub.</string>
     <string name="online_datapacks_chip_update">Update available</string>
+
+    <!-- BFME1 Mobile E1-12a: SAF game-data import -->
+    <string name="bfme_import_title">BFME1 game files required</string>
+    <string name="bfme_import_btn_choose_folder">Choose game folder</string>
+    <string name="bfme_import_btn_howto">How to copy from PC</string>
+    <string name="bfme_import_btn_logs">Logs</string>
+    <string name="bfme_import_btn_start">Start import</string>
+    <string name="bfme_import_btn_play">Play</string>
+    <string name="bfme_import_cancel">Cancel</string>
+    <string name="bfme_import_notif_channel">Game data import</string>
+    <string name="bfme_import_notif_channel_desc">Progress while copying BFME1 files into the app</string>
+    <string name="bfme_import_notif_title">Importing BFME1</string>
+    <string name="bfme_import_notif_starting">Starting…</string>
+    <string name="bfme_import_status_need_files">Need your BFME1 install (version %1$s).
+Required ≈ %2$s · free %3$s</string>
+    <string name="bfme_import_status_manifest_error">Cannot load manifest: %1$s</string>
+    <string name="bfme_import_status_already_ready">GameData is ready. You can play.</string>
+    <string name="bfme_import_status_prechecking">Checking selected folder…</string>
+    <string name="bfme_import_status_precheck_ok">Precheck OK — %1$s</string>
+    <string name="bfme_import_status_precheck_warn">Precheck warning — %1$s (modified copy?)</string>
+    <string name="bfme_import_status_precheck_err">Precheck failed — fix the issues below</string>
+    <string name="bfme_import_status_running">Importing… screen can be off; progress is in the notification.</string>
+    <string name="bfme_import_status_done">Done, version %1$s, %2$d files verified</string>
+    <string name="bfme_import_status_cancelled">Import cancelled — tap Start import to resume</string>
+    <string name="bfme_import_status_failed">Import failed: %1$s</string>
+    <string name="bfme_import_toast_pick_first">Choose a folder and pass precheck first</string>
+    <string name="bfme_import_toast_not_ready">Import is not complete yet</string>
+    <string name="bfme_import_howto_body">1. On your PC open your BFME1 folder (1.03 + Patch 2.22).
+2. Copy it to the phone under Download/BFME1 or Documents/BFME1 (USB file transfer).
+3. In the app tap “Choose game folder”, open that BFME1 folder, Allow.
+4. Do not put files directly in Download root or Android/data — the system picker cannot select those.
+5. Alternative: adb push into Android/data/&lt;package&gt;/files/GameData (no integrity check).</string>
+    <string name="bfme_import_open_from_setup">Import BFME1 files (SAF)</string>
+
+    <string name="bfme_import_btn_verify">Verify files in GameData</string>
+    <string name="bfme_import_status_verifying">Verifying GameData…</string>
 </resources>

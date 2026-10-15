@@ -324,4 +324,40 @@
     <string name="online_network_settings">Сетевые настройки (серверы, совместимость с ПК): от %1$s, обновляются автоматически с GitHub проекта и подписаны.</string>
     <string name="online_network_settings_builtin">Сетевые настройки (серверы, совместимость с ПК): встроенные в эту версию; новые придут автоматически с GitHub проекта.</string>
     <string name="online_datapacks_chip_update">Есть обновление</string>
+
+    <!-- BFME1 Mobile E1-12a -->
+    <string name="bfme_import_title">Нужны файлы BFME1</string>
+    <string name="bfme_import_btn_choose_folder">Выбрать папку с игрой</string>
+    <string name="bfme_import_btn_howto">Как скопировать с ПК</string>
+    <string name="bfme_import_btn_logs">Логи</string>
+    <string name="bfme_import_btn_start">Начать импорт</string>
+    <string name="bfme_import_btn_play">Играть</string>
+    <string name="bfme_import_cancel">Отмена</string>
+    <string name="bfme_import_notif_channel">Импорт данных игры</string>
+    <string name="bfme_import_notif_channel_desc">Прогресс копирования файлов BFME1 в приложение</string>
+    <string name="bfme_import_notif_title">Импорт BFME1</string>
+    <string name="bfme_import_notif_starting">Запуск…</string>
+    <string name="bfme_import_status_need_files">Нужна ваша установка BFME1 (версия %1$s).
+Нужно ≈ %2$s · свободно %3$s</string>
+    <string name="bfme_import_status_manifest_error">Не удалось загрузить манифест: %1$s</string>
+    <string name="bfme_import_status_already_ready">GameData готова. Можно играть.</string>
+    <string name="bfme_import_status_prechecking">Проверяем выбранную папку…</string>
+    <string name="bfme_import_status_precheck_ok">Предпроверка ОК — %1$s</string>
+    <string name="bfme_import_status_precheck_warn">Предпроверка с предупреждением — %1$s (изменённая копия?)</string>
+    <string name="bfme_import_status_precheck_err">Предпроверка не пройдена — исправьте ошибки ниже</string>
+    <string name="bfme_import_status_running">Импорт… экран можно выключить; прогресс в уведомлении.</string>
+    <string name="bfme_import_status_done">Готово, версия %1$s, %2$d файлов проверено</string>
+    <string name="bfme_import_status_cancelled">Импорт отменён — нажмите «Начать импорт», чтобы продолжить</string>
+    <string name="bfme_import_status_failed">Ошибка импорта: %1$s</string>
+    <string name="bfme_import_toast_pick_first">Сначала выберите папку и пройдите предпроверку</string>
+    <string name="bfme_import_toast_not_ready">Импорт ещё не завершён</string>
+    <string name="bfme_import_howto_body">1. На ПК откройте папку BFME1 (1.03 + Patch 2.22).
+2. Скопируйте её на телефон в Download/BFME1 или Documents/BFME1 (USB).
+3. В приложении нажмите «Выбрать папку с игрой», укажите эту папку, «Разрешить».
+4. Не кладите файлы прямо в корень Download и не в Android/data — системный выбор туда не пускает.
+5. Запасной путь: adb push в Android/data/&lt;пакет&gt;/files/GameData (без проверки целостности).</string>
+    <string name="bfme_import_open_from_setup">Импорт файлов BFME1 (SAF)</string>
+
+    <string name="bfme_import_btn_verify">Проверить файлы в GameData</string>
+    <string name="bfme_import_status_verifying">Проверка GameData…</string>
 </resources>

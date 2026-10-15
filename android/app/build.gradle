@@ -98,8 +98,17 @@ android {
             // assets/default_driver/ (fallback Turnip build, see
             // SetupActivity.applyRecommendedDriverIfNeeded()) is extracted to
             // app-private internal storage only on Adreno phones that need it.
-            assets.srcDirs = ['src/main/assets']
+            assets.srcDirs = ['src/main/assets', "${layout.buildDirectory.get()}/generated/bfmeAssets"]
         }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    testOptions {
+        unitTests.includeAndroidResources = false
     }
 
     buildTypes {
@@ -148,6 +157,29 @@ android {
     }
 }
 
+
+// BFME1 Mobile E1-12a / E1-24: single source of truth is docs/bfme1-manifest.json.
+// Copy into generated assets so the APK serves assets/bfme/bfme1-manifest.json
+// without committing a duplicate under src/main/assets/.
+def bfme1ManifestSrc = rootProject.file("../docs/bfme1-manifest.json")
+tasks.register("copyBfme1Manifest", Copy) {
+    description = "Copy docs/bfme1-manifest.json into assets/bfme/ for the APK"
+    from bfme1ManifestSrc
+    into layout.buildDirectory.dir("generated/bfmeAssets/bfme")
+    rename { String ignored -> "bfme1-manifest.json" }
+    doFirst {
+        if (!bfme1ManifestSrc.isFile()) {
+            throw new GradleException("BFME: missing ${bfme1ManifestSrc} (E1-24 SoT) — build cannot continue")
+        }
+    }
+}
+tasks.named("preBuild").configure { dependsOn("copyBfme1Manifest") }
+// Unit tests that compile/resources may run without full preBuild — keep assets present.
+tasks.matching { it.name.contains("Assets") || it.name.contains("UnitTest") }.configureEach {
+    dependsOn("copyBfme1Manifest")
+}
+
+
 dependencies {
     // Material Components for the Setup/Settings/Log-viewer screens only —
     // GeneralsZHActivity (the actual game surface) stays on its own plain
@@ -158,5 +190,9 @@ dependencies {
     // WindowInsetsCompat (InsetUtil.java) -- pulled in transitively by
     // Material already, but declared directly since we call its APIs.
     implementation 'androidx.core:core:1.13.1'
+
+    // BFME1 Mobile E1-12a: JVM unit tests for importer (hash, state, precheck, manifest).
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
 }
 

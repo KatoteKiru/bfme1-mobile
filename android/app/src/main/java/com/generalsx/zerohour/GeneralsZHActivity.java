@@ -43,6 +43,9 @@ import android.view.WindowMetrics;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.generalsx.zerohour.importer.GameDataPaths;
+import com.generalsx.zerohour.importer.GameDataReady;
+
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
@@ -265,19 +268,20 @@ public class GeneralsZHActivity extends SDLActivity {
 
         extractBundledRuntime();
 
-        String gamePath = getSavedGamePath();
-        boolean haveCustomPath = gamePath != null && SetupActivity.isValidGameFolder(new File(gamePath));
-        boolean haveLegacyPath = !haveCustomPath && isValidGameFolder(legacyGameDataDir());
-
-        if (!haveCustomPath && !haveLegacyPath) {
-            // Never touch libmain.so on a misconfigured install: redirect to
-            // Setup instead of letting SDLActivity load the native library
-            // into an app state that can only end in a black screen or a
-            // confusing crash the user has no way to diagnose.
-            Log.i(TAG, "no valid game folder configured; redirecting to Setup");
+        // BFME: E1-12a — gate on import-state (not ZH isValidGameFolder).
+        if (!GameDataReady.isReady(this)) {
+            Log.i(TAG, "GameData not ready (import-state); redirecting to Setup");
             startActivity(new Intent(this, SetupActivity.class));
             finish();
             return;
+        }
+
+        File gameData = GameDataPaths.gameDataDir(this);
+        File bundledRoot = getExternalFilesDir(null);
+        // BFME: E1-12a — fonts/dxvk.conf/DefaultOptions.ini/Window into GameData every launch.
+        if (bundledRoot != null && gameData != null) {
+            SetupActivity.copyBundledRuntimeIfMissing(bundledRoot, gameData.getAbsolutePath());
+            writeBfmeGamedataPathMarker(gameData);
         }
 
         // GeneralsX @bugfix Android port 12/07/2026 GeneralsOnline session
@@ -290,19 +294,6 @@ public class GeneralsZHActivity extends SDLActivity {
         // Online button; on failure the old marker stays (nothing regresses
         // offline).
         GeneralsOnlineSession.refreshSessionAsync(this);
-
-        // GeneralsX @bugfix Android port 07/07/2026 Apply the fonts/dxvk.conf/
-        // DefaultOptions.ini copy-if-missing fix retroactively on every launch,
-        // not just when the folder is freshly picked in Setup — an install that
-        // already had a custom path saved before this fix shipped would
-        // otherwise keep missing fonts/ forever (every button renders with no
-        // text; see SetupActivity.copyBundledRuntimeIfMissing for why).
-        if (haveCustomPath) {
-            File bundledRoot = getExternalFilesDir(null);
-            if (bundledRoot != null) {
-                SetupActivity.copyBundledRuntimeIfMissing(bundledRoot, gamePath);
-            }
-        }
 
         super.onCreate(savedInstanceState);
     }
@@ -380,6 +371,18 @@ public class GeneralsZHActivity extends SDLActivity {
     // is also the only way to find out, and a live back gesture is worth
     // more than a speculative fix for a bug that may no longer exist in
     // its original form.
+
+
+    // BFME: E1-12a — native reads filesDir/gamedata_path.txt; always point at our GameData.
+    private void writeBfmeGamedataPathMarker(File gameData) {
+        File marker = new File(getFilesDir(), "gamedata_path.txt");
+        try (java.io.FileWriter w = new java.io.FileWriter(marker, false)) {
+            w.write(gameData.getAbsolutePath());
+            w.write("\n");
+        } catch (java.io.IOException e) {
+            Log.w(TAG, "could not write gamedata_path.txt: " + e.getMessage());
+        }
+    }
 
     private String getSavedGamePath() {
         return SetupActivity.getSavedGamePath(this);

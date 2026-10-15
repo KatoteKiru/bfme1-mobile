@@ -58,6 +58,9 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.generalsx.zerohour.importer.GameDataImportActivity;
+import com.generalsx.zerohour.importer.GameDataReady;
+
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -2431,6 +2434,8 @@ public class SetupActivity extends Activity {
         }
     }
 
+    // BFME: E1-12a — keep ZH meaning (INIZH.big / INI.big). BFME readiness is
+    // GameDataReady / onLaunchGame gate, not this helper.
     static boolean isValidGameFolder(File dir) {
         if (dir == null || !dir.isDirectory()) {
             return false;
@@ -2779,31 +2784,9 @@ public class SetupActivity extends Activity {
 
     private static final int REQUEST_LEGACY_STORAGE_PERMISSION = 1003;
 
+    // BFME: E1-12a — BFME game-folder entry opens SAF import (FolderPicker remains for ZH base).
     private void onSelectGameFolder() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager()) {
-                Toast.makeText(this, R.string.setup_toast_grant_all_files, Toast.LENGTH_LONG).show();
-                try {
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                    intent.setData(Uri.parse("package:" + getPackageName()));
-                    startActivity(intent);
-                } catch (Exception e) {
-                    startActivity(new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION));
-                }
-                return;
-            }
-        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            // MANAGE_EXTERNAL_STORAGE / isExternalStorageManager() don't exist
-            // before API 30 -- this is the pre-R equivalent, otherwise
-            // FolderPickerActivity opens with no storage permission at all
-            // and its File.listFiles() silently comes back empty.
-            ActivityCompat.requestPermissions(this,
-                new String[] { Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE },
-                REQUEST_LEGACY_STORAGE_PERMISSION);
-            return;
-        }
-        startActivityForResult(new Intent(this, FolderPickerActivity.class), 1001);
+        startActivity(new Intent(this, GameDataImportActivity.class));
     }
 
     // GeneralsX @feature Android port 06/09/2026 Second picker, same browser,
@@ -3049,8 +3032,17 @@ public class SetupActivity extends Activity {
         }
     }
 
+    // BFME: E1-12a — log each bundled runtime file for QA (fonts/dxvk/DefaultOptions).
     private static void copyFileIfMissing(File bundled, File dest) {
-        if (dest.exists() || !bundled.exists()) {
+        if (!bundled.exists()) {
+            return;
+        }
+        long size = bundled.length();
+        String name = dest.getName();
+        if (dest.exists()) {
+            android.util.Log.i("BfmeImport", String.format(java.util.Locale.US,
+                    com.generalsx.zerohour.importer.ImportLogLines.BUNDLED_FILE,
+                    name, size, com.generalsx.zerohour.importer.ImportLogLines.STATUS_ALREADY_PRESENT));
             return;
         }
         try (java.io.InputStream in = new java.io.FileInputStream(bundled);
@@ -3060,16 +3052,20 @@ public class SetupActivity extends Activity {
             while ((n = in.read(buf)) > 0) {
                 out.write(buf, 0, n);
             }
+            android.util.Log.i("BfmeImport", String.format(java.util.Locale.US,
+                    com.generalsx.zerohour.importer.ImportLogLines.BUNDLED_FILE,
+                    name, size, com.generalsx.zerohour.importer.ImportLogLines.STATUS_COPIED));
         } catch (java.io.IOException e) {
             // Not fatal: caller falls back to its own defaults without this file.
         }
     }
 
+    // BFME: E1-12a — per-file copy/log so existing fonts/ still picks up missing glyphs.
     private static void copyDirIfMissing(File bundledDir, File destDir) {
-        if (destDir.exists() || !bundledDir.isDirectory()) {
+        if (!bundledDir.isDirectory()) {
             return;
         }
-        if (!destDir.mkdirs()) {
+        if (!destDir.exists() && !destDir.mkdirs()) {
             return;
         }
         File[] children = bundledDir.listFiles();
@@ -3077,7 +3073,9 @@ public class SetupActivity extends Activity {
             return;
         }
         for (File child : children) {
-            copyFileIfMissing(child, new File(destDir, child.getName()));
+            if (child.isFile()) {
+                copyFileIfMissing(child, new File(destDir, child.getName()));
+            }
         }
     }
 
@@ -3115,6 +3113,11 @@ public class SetupActivity extends Activity {
     private boolean pendingLaunchAfterRotation = false;
 
     private void onLaunchGame() {
+        // BFME: E1-12a — separate from isValidGameFolder; require import-state complete.
+        if (!GameDataReady.isReady(this)) {
+            startActivity(new Intent(this, GameDataImportActivity.class));
+            return;
+        }
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             startActivity(new Intent(this, GeneralsZHActivity.class));
             return;
