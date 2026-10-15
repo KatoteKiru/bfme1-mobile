@@ -18,7 +18,7 @@
 
 // GeneralsX @feature Android port 10/07/2026
 //
-// Account login for GeneralsOnline (playgenerals.online / TheSuperHackers
+// Account login for GeneralsOnline (TheSuperHackers
 // GeneralsOnlineServices), the actively-maintained GameSpy replacement for
 // Zero Hour multiplayer -- see docs/port/... for how this was chosen over
 // Revora/CnC-Online (which retired Generals/ZH support and redirects here).
@@ -28,7 +28,7 @@
 // The real client (github.com/GeneralsOnlineDevelopmentTeam/GameClient,
 // OnlineServices_Auth.cpp: NGMP_OnlineServices_AuthInterface::BeginLogin)
 // generates the code itself, embeds it directly in the URL it opens
-// (playgenerals.online/login/?gamecode=<code>), and polls CheckLogin with
+// (a browser login page), and polls CheckLogin with
 // that same code -- the user never sees or types the code at all, only
 // picks Steam/Discord/GameReplays on the site and comes back. Ported that
 // exact flow here, including the refresh_token cache so repeat logins skip
@@ -68,7 +68,7 @@ public class GeneralsOnlineActivity extends Activity {
     // without, and the parameter appears nowhere in it. What actually
     // broke that July sign-in was the client id itself; see
     // GeneralsOnlineSession.CLIENT_ID.
-    private static final String LOGIN_URL_FMT = "https://www.playgenerals.online/login/?gamecode=%s";
+    // BFME: E1-04 the login page URL is not compiled into this APK.
 
     private static final String PREFS_NAME = GeneralsOnlineSession.PREFS_NAME;
     private static final String PREF_SESSION_TOKEN = GeneralsOnlineSession.PREF_SESSION_TOKEN;
@@ -656,20 +656,10 @@ public class GeneralsOnlineActivity extends Activity {
             return;
         }
 
-        String url = String.format(LOGIN_URL_FMT, code);
-        NetworkTrace.write(this, "server issued a login code (" + code.length()
-            + " chars); opening browser");
-        try {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-        } catch (Exception e) {
-            busy = false;
-            signInButton.setEnabled(true);
-            Toast.makeText(this, getString(R.string.online_toast_no_browser, e.getMessage()), Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        statusText.setText(R.string.online_status_continue_browser);
-        handler.postDelayed(() -> pollOnce(code, generation), POLL_INTERVAL_MS);
+        // BFME: E1-04 do not open a login page and do not poll the online API.
+        busy = false;
+        signInButton.setEnabled(true);
+        statusText.setText(R.string.online_status_not_signed_in);
     }
 
     private void pollOnce(String code, int generation) {

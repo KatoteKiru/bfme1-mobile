@@ -1825,7 +1825,7 @@ void WOLLobbyMenuUpdate( WindowLayout * layout, void *userData)
 		{
 			s_tryingToHostOrJoin = false;
 			ExitState();
-			TearDownGeneralsOnline();
+			TearDownOnlineServices();
 		}		
 
 		return;

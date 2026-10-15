@@ -1119,7 +1119,8 @@ set(GAMEENGINE_SRC
 #    Source/GameNetwork/GameSpyOverlay.cpp
     Source/GameNetwork/GUIUtil.cpp
 
-    # GeneralsX @feature Android port 10/07/2026 GeneralsOnline (playgenerals.online)
+    # GeneralsX @feature Android port 10/07/2026 GeneralsOnline
+    # BFME: E1-04 compiled-in service hosts are removed from this build.
     # multiplayer backend, replacing the dead GameSpy servers behind MainMenu's
     # Online button. First pass: auth (session bootstrap from the Android
     # launcher's already-completed login) + lobby/rooms/social/stats/matchmaking
@@ -1230,6 +1231,18 @@ endif()
 add_library(z_gameengine STATIC)
 
 target_sources(z_gameengine PRIVATE ${GAMEENGINE_SRC})
+
+# BFME: E1-04 (QA §4.0) -fsanitize=float-cast-overflow (cmake/config-build.cmake) writes the
+# full source path of every check into libmain.so; strip/-fmacro-prefix-map do not touch it.
+# For the upstream online client (Source/GameNetwork/GeneralsOnline, json.hpp, stb_image) keep
+# only the file name, so the stripped .so does not carry that directory token
+# (checked by tools/ci/check-no-upstream-urls.sh <apk>). Other engine files keep full paths.
+if(ANDROID)
+    file(GLOB_RECURSE BFME_ONLINE_CLIENT_SRC CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/Source/GameNetwork/GeneralsOnline/*.cpp")
+    set_source_files_properties(${BFME_ONLINE_CLIENT_SRC} PROPERTIES
+        COMPILE_OPTIONS "-fsanitize-undefined-strip-path-components=-1")
+endif()
 
 target_include_directories(z_gameengine PUBLIC
     Include

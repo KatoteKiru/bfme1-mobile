@@ -54,14 +54,14 @@ void NetworkLog(ELogVerbosity logVerbosity, const char* fmt, ...)
 		NGMP_OnlineServices_AuthInterface* pAuthInterface = NGMP_OnlineServicesManager::GetInterface<NGMP_OnlineServices_AuthInterface>();
 		if (pAuthInterface != nullptr && pAuthInterface->GetUserID() != -1)
 		{
-			m_strNetworkLogFileName = std::format("{}/GeneralsOnlineData/GeneralsOnline_UserID_{}.log", TheGlobalData->getPath_UserData().str(), pAuthInterface->GetUserID());
+			m_strNetworkLogFileName = std::format("{}/OnlineData/Online_UserID_{}.log", TheGlobalData->getPath_UserData().str(), pAuthInterface->GetUserID());
 		}
 		else
 		{
 			return;
 		}
 #else
-		m_strNetworkLogFileName = std::format("{}/GeneralsOnlineData/GeneralsOnline.log", TheGlobalData->getPath_UserData().str());
+		m_strNetworkLogFileName = std::format("{}/OnlineData/Online.log", TheGlobalData->getPath_UserData().str());
 #endif
 		/*
 			std::stringstream ss;
@@ -70,15 +70,15 @@ void NetworkLog(ELogVerbosity logVerbosity, const char* fmt, ...)
 		if (IsDebuggerPresent())
 		{
 			ss << std::put_time(std::localtime(&in_time_t),
-				"GeneralsOnline_Debugger_%Y-%m-%d-%H-%M-%S.log");
+				"Online_Debugger_%Y-%m-%d-%H-%M-%S.log");
 		}
 		else
 		{
 			ss << std::put_time(std::localtime(&in_time_t),
-				"GeneralsOnline_%Y-%m-%d-%H-%M-%S.log");
+				"Online_%Y-%m-%d-%H-%M-%S.log");
 		}
 #else
-		ss << "GeneralsOnline.log";
+		ss << "Online.log";
 #endif
 */
 		std::ofstream overwriteFile(m_strNetworkLogFileName);

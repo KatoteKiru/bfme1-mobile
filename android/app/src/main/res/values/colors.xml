@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- GeneralsX @feature Android port launcher-ui-2026 08/09/2026 Design
-         tokens for the launcher (Setup / GeneralsOnline / Log Viewer /
+         tokens for the launcher (Setup / Online / Log Viewer /
          Folder Picker). A Material 3 dark colour-role set: one near-black
          ground, a small ladder of "surface container" greys for cards and
          rows on top of it, a soft lavender primary for headings/active

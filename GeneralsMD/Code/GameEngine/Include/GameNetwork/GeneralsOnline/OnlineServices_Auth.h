@@ -45,7 +45,7 @@ public:
 
 	// GeneralsX @feature Android port 10/07/2026 the Android launcher
 	// (GeneralsOnlineActivity.java) already ran its own device-code exchange
-	// with playgenerals.online before the game process even starts, so this
+	// with the online service before the game process even starts, so this
 	// module's normal BeginLogin()/OnLoginComplete() device-code flow never
 	// runs on Android -- m_strToken/m_userID/m_strDisplayName would stay at
 	// their unset defaults forever, so every authenticated HTTP/WS call

@@ -237,14 +237,14 @@ void ArchiveFileSystem::loadIntoDirectoryTree(ArchiveFile *archiveFile, Bool ove
 	}
 }
 
-void ArchiveFileSystem::loadGeneralsOnlineCommunityPatch(const AsciiString& userDataIn)
+void ArchiveFileSystem::loadZhCommunityPatch(const AsciiString& userDataIn)
 {
 #if RTS_ZEROHOUR
 	// BFME: selected BfmeBIGFileSystem does not mount the Zero Hour community
 	// patch. The name starts with '5' and '_' sorts after digits, so
 	// data\ini\* in 500_900_CommunityPatch_CoreINI.big would beat _patch222.
 	// The marker file is not this switch.
-	if (!mountsGeneralsOnlineCommunityPatch()) {
+	if (!mountsZhCommunityPatch()) {
 		fprintf(stderr, "[gxbig] community patch skipped (BFME)\n");
 		fflush(stderr);
 		return;
@@ -288,7 +288,8 @@ void ArchiveFileSystem::loadGeneralsOnlineCommunityPatch(const AsciiString& user
 		if (userData.isNotEmpty())
 		{
 			patchPath = userData;
-			patchPath.concat("GeneralsOnlineGameData/500_900_CommunityPatch_CoreINI.big");
+			// BFME: E1-04 directory token renamed so the old product name is not in libmain.so.
+			patchPath.concat("OnlineGameData/500_900_CommunityPatch_CoreINI.big");
 
 			disableMarkerPath = userData;
 			disableMarkerPath.concat(kCommunityPatchDisableMarker);
@@ -335,8 +336,8 @@ void ArchiveFileSystem::loadMods()
 {
 #if RTS_ZEROHOUR
 	// BFME: BfmeBIGFileSystem logs "community patch skipped (BFME)" and returns
-	// before the archive is opened. See loadGeneralsOnlineCommunityPatch().
-	loadGeneralsOnlineCommunityPatch(TheGlobalData->getPath_UserData());
+	// before the archive is opened. See loadZhCommunityPatch().
+	loadZhCommunityPatch(TheGlobalData->getPath_UserData());
 #endif
 
 	if (TheGlobalData->m_modBIG.isNotEmpty())

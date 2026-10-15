@@ -149,7 +149,7 @@ void NGMP_OnlineServicesManager::GetAndParseServiceConfig(std::function<void(voi
 void NGMP_OnlineServicesManager::CaptureScreenshotToDisk()
 {
 	// create dirs
-	std::string strScreenshotsDir = std::format("{}\\GeneralsOnlineScreenshots\\", TheGlobalData->getPath_UserData().str());
+	std::string strScreenshotsDir = std::format("{}\\OnlineScreenshots\\", TheGlobalData->getPath_UserData().str());
 
 	if (!std::filesystem::exists(strScreenshotsDir))
 	{
@@ -160,7 +160,7 @@ void NGMP_OnlineServicesManager::CaptureScreenshotToDisk()
 	auto now = std::chrono::system_clock::now();
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);
 	std::stringstream ss;
-	ss << std::put_time(std::localtime(&in_time_t), "GeneralsOnline_Screenshot_%Y-%m-%d-%H-%M-%S.jpg");
+	ss << std::put_time(std::localtime(&in_time_t), "Online_Screenshot_%Y-%m-%d-%H-%M-%S.jpg");
 
 	std::string strFilePath = std::format("{}\\{}", strScreenshotsDir.c_str(), ss.str().c_str());
 
@@ -259,25 +259,10 @@ NGMP_OnlineServicesManager::NGMP_OnlineServicesManager()
 
 std::string NGMP_OnlineServicesManager::GetAPIEndpoint(const char* szEndpoint)
 {
-	if (g_Environment == EEnvironment::DEV)
-	{
-		return std::format("https://localhost:9000/env/dev/contract/1/{}", szEndpoint);
-	}
-	else if (g_Environment == EEnvironment::TEST)
-	{
-		return std::format("https://api.playgenerals.online/env/test/contract/1/{}", szEndpoint);
-	}
-	else // PROD
-	{
-		if (NGMP_OnlineServicesManager::Settings.Network_UseAlternativeEndpoint())
-		{
-			return std::format("https://api-ru.playgenerals.online/env/prod/contract/1/{}", szEndpoint);
-		}
-		else
-		{
-			return std::format("https://api.playgenerals.online/env/prod/contract/1/{}", szEndpoint);
-		}
-	}
+	// BFME: E1-04 compiled-in GeneralsOnline API hosts are not part of this build.
+	// GXRemoteConfig still reads a local file when one exists; nothing is fetched.
+	(void)szEndpoint;
+	return {};
 }
 
 void NGMP_OnlineServicesManager::CommitReplay(AsciiString absoluteReplayPath)
@@ -480,9 +465,7 @@ void NGMP_OnlineServicesManager::ContinueUpdate()
 						});
 					// GeneralsX @bugfix Android port 10/07/2026 see LaunchPatcher() below --
 					// this whole update-download path is Windows-desktop-only.
-#if defined(_WIN32)
-					ShellExecuteA(NULL, "open", "https://www.playgenerals.online/updatefailed", NULL, NULL, SW_SHOWNORMAL);
-#endif
+					// BFME: E1-04 do not open an upstream update page.
 				}
 				else
 				{
@@ -785,10 +768,10 @@ void NGMP_OnlineServicesManager::LaunchPatcher()
 			{
 				TheGameEngine->setQuitting(TRUE);
 			});
-		ShellExecuteA(NULL, "open", "https://www.playgenerals.online/updatefailed", NULL, NULL, SW_SHOWNORMAL);
+		// BFME: E1-04 do not open an upstream update page.
 	}
 #else
-	NetworkLog(ELogVerbosity::LOG_RELEASE, "[GeneralsOnline] LaunchPatcher() is not implemented on this platform");
+	NetworkLog(ELogVerbosity::LOG_RELEASE, "[Online] LaunchPatcher() is not implemented on this platform");
 #endif
 }
 
@@ -830,8 +813,13 @@ void NGMP_OnlineServicesManager::OnLogin(ELoginResult loginResult, const char* s
 		// connect to WS
 		m_pWebSocket = std::make_shared<WebSocket>();
 
-		// TODO_NGMP: This should come from the service, if the service was russia-aware
-		std::string strWebsocketAddr = NGMP_OnlineServicesManager::Settings.Network_UseAlternativeEndpoint() ? "wss://api-ru.playgenerals.online/ws" : std::string(szWSAddr);
+		// BFME: E1-04 do not substitute a compiled-in websocket host.
+		std::string strWebsocketAddr = (szWSAddr != nullptr) ? std::string(szWSAddr) : std::string();
+		if (strWebsocketAddr.empty())
+		{
+			NetworkLog(ELogVerbosity::LOG_RELEASE, "[NGMP] OnLogin: no websocket address");
+			return;
+		}
 
         m_pWebSocket->Connect(strWebsocketAddr.c_str(), false, [=]()
             {
@@ -948,7 +936,7 @@ void NGMP_OnlineServicesManager::Tick()
 
 std::string NGMP_OnlineServicesManager::GetPatcherDirectoryPath()
 {
-	std::string strPatcherDirPath = std::format("{}/GeneralsOnlineData/Update/", TheGlobalData->getPath_UserData().str());
+	std::string strPatcherDirPath = std::format("{}/OnlineData/Update/", TheGlobalData->getPath_UserData().str());
 	return strPatcherDirPath;
 }
 

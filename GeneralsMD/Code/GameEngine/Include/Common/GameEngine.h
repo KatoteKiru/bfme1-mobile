@@ -53,8 +53,9 @@ class Radar;
 class WebBrowser;
 class ParticleSystemManager;
 
-// GeneralsX @bugfix Android port 07/11/2026 - ported from upstream GeneralsOnline, requests a delayed teardown of the NGMP online services
-void TearDownGeneralsOnline();
+// GeneralsX @bugfix Android port 07/11/2026 - ported from upstream, requests a delayed teardown of the NGMP online services
+// BFME: E1-04 symbol renamed so the old product token is not exported from libmain.so.
+void TearDownOnlineServices();
 
 class GameEngine : public SubsystemInterface
 {

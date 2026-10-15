@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">GeneralsZH</string>
+    <string name="app_name">ME1 Mobile</string>
     <string name="common_cancel">Скасувати</string>
 
     <!-- SetupActivity: title / fallback -->
@@ -53,7 +53,7 @@
     <string name="setup_sim_rate_30_short">30 Hz</string>
     <string name="setup_sim_rate_60_short">60 Hz</string>
     <string name="setup_sim_rate_30_desc">30 Гц — те саме, що в усіх попередніх збірках порту. Гра Android з Android на ній працює, але матч проти гравця на Windows розсинхронізується.</string>
-    <string name="setup_sim_rate_60_desc">60 Гц — стільки рахує клієнт GeneralsOnline на Windows, і лише на цій частоті можлива гра з ПК. Роботи в симуляції вдвічі більше, тож на слабшому пристрої гра може йти повільніше за норму.</string>
+    <string name="setup_sim_rate_60_desc">60 Гц — стільки рахує клієнт Online на Windows, і лише на цій частоті можлива гра з ПК. Роботи в симуляції вдвічі більше, тож на слабшому пристрої гра може йти повільніше за норму.</string>
     <string name="setup_sim_rate_help">Частота тику задається під час складання рушія, тому застосунок несе обидві версії та завантажує обрану тут. Зміна набуде чинності під час наступного запуску гри. В обох гравців у матчі частота має збігатися.</string>
     <string name="setup_toast_sim_rate_saved">Частоту симуляції збережено. Застосується під час наступного запуску гри.</string>
     <string name="online_crossplay_hz_title">Частоту симуляції перемкнено на 60 Гц</string>
@@ -130,7 +130,7 @@
 
     <!-- SetupActivity: Online Multiplayer card -->
     <string name="setup_card_online">Онлайн-мультиплеєр</string>
-    <string name="setup_button_online_account">Обліковий запис GeneralsOnline</string>
+    <string name="setup_button_online_account">Обліковий запис Online</string>
     <string name="setup_online_signed_in">Ви увійшли як %1$s.</string>
     <string name="setup_online_signed_out">Вхід не виконано — потрібен для онлайн-матчів.</string>
 
@@ -179,12 +179,12 @@
     <string name="logviewer_toast_share_failed">Не вдалося підготувати файл логу для надсилання: %1$s</string>
     <string name="logviewer_read_failed">(не вдалося прочитати %1$s: %2$s)</string>
 
-    <!-- GeneralsOnlineActivity -->
-    <string name="online_window_title">Обліковий запис GeneralsOnline</string>
-    <string name="online_subtitle">Увійдіть для онлайн-мультиплеєра (playgenerals.online)</string>
+    <!-- OnlineActivity -->
+    <string name="online_window_title">Обліковий запис Online</string>
+    <string name="online_subtitle">Увійдіть для онлайн-мультиплеєра</string>
     <string name="online_button_sign_out">Вийти</string>
     <string name="online_card_sign_in">Вхід</string>
-    <string name="online_signin_help">Натисніть «Увійти». Під час першого натискання може з’явитися запит виключити застосунок з оптимізації батареї — дозвольте це, потім поверніться і знову натисніть «Увійти». Після цього відкриється браузер на playgenerals.online, який вже міститиме одноразовий код для цього пристрою. Оберіть там Steam, Discord або GameReplays, а потім просто поверніться до застосунку — вхід завершиться сам.</string>
+    <string name="online_signin_help">Натисніть «Увійти». Під час першого натискання може з’явитися запит виключити застосунок з оптимізації батареї — дозвольте це, потім поверніться і знову натисніть «Увійти». Після цього відкриється браузер, який вже міститиме одноразовий код для цього пристрою. Оберіть там Steam, Discord або GameReplays, а потім просто поверніться до застосунку — вхід завершиться сам.</string>
     <string name="online_button_sign_in">Увійти</string>
     <string name="online_status_signing_in">Виконується вхід...</string>
     <string name="online_status_battery_opt">Дозвольте GeneralsZH працювати у фоновому режимі на наступному екрані, потім поверніться і знову натисніть «Увійти» — інакше Android може перервати перевірку входу, поки ви перебуваєте в браузері.</string>
@@ -228,10 +228,10 @@
     <string name="setup_render_backend_gles_angle_short">ANGLE</string>
     <string name="setup_render_backend_vulkan_short">Vulkan</string>
     <string name="setup_switch_gx_net_trace">Мережевий лог онлайну</string>
-    <string name="setup_switch_gx_net_trace_desc">Записує кожен запит гри до серверів GeneralsOnline і отриману відповідь. Увімкніть, якщо вхід, лобі чи підбір гри не працюють уже всередині гри. Запити самого лаунчера записуються завжди; цей перемикач додає запити гри. Також вмикає діагностику розсинхронізації у кросплатформеній грі: контрольні суми симуляції, які порівнюються на кожному інтервалі, а в повторі — контрольну суму кожного окремого об\'єкта. (gx_net_trace.txt)</string>
+    <string name="setup_switch_gx_net_trace_desc">Записує кожен запит гри до серверів Online і отриману відповідь. Увімкніть, якщо вхід, лобі чи підбір гри не працюють уже всередині гри. Запити самого лаунчера записуються завжди; цей перемикач додає запити гри. Також вмикає діагностику розсинхронізації у кросплатформеній грі: контрольні суми симуляції, які порівнюються на кожному інтервалі, а в повторі — контрольну суму кожного окремого об\'єкта. (gx_net_trace.txt)</string>
     <string name="netdiag_title">Діагностика мережі</string>
-    <string name="netdiag_row_note">Перевірити, чи дістається пристрій до серверів GeneralsOnline, і зібрати звіт для повідомлення про помилку.</string>
-    <string name="netdiag_intro">Перевірка йде по черзі: чи є робоча мережа, чи розпізнаються імена серверів GeneralsOnline, чи відповідають сервери і що вони кажуть про вхід.\n\nНікуди нічого не надсилається. Натисніть «Запустити».</string>
+    <string name="netdiag_row_note">Перевірити, чи дістається пристрій до серверів Online, і зібрати звіт для повідомлення про помилку.</string>
+    <string name="netdiag_intro">Перевірка йде по черзі: чи є робоча мережа, чи розпізнаються імена серверів Online, чи відповідають сервери і що вони кажуть про вхід.\n\nНікуди нічого не надсилається. Натисніть «Запустити».</string>
     <string name="netdiag_running">Виконується…</string>
     <string name="netdiag_running_step">Виконується… (%1$s)</string>
     <string name="netdiag_button_run">Запустити діагностику</string>
@@ -240,12 +240,12 @@
     <string name="netdiag_toast_copied">Звіт скопійовано в буфер обміну.</string>
     <string name="netdiag_toast_share_failed">Не вдалося надіслати звіт: %1$s</string>
     <string name="netdiag_share_subject">Мережевий лог GeneralsZH</string>
-    <string name="online_status_banned">Цей обліковий запис заблоковано на GeneralsOnline. Подати апеляцію можна в їхньому Discord.</string>
-    <string name="online_status_banned_reason">Цей обліковий запис заблоковано на GeneralsOnline: %1$s</string>
+    <string name="online_status_banned">Цей обліковий запис заблоковано на Online. Подати апеляцію можна в їхньому Discord.</string>
+    <string name="online_status_banned_reason">Цей обліковий запис заблоковано на Online: %1$s</string>
     <string name="online_status_requesting_code">Запитуємо код входу в сервера…</string>
     <string name="online_status_no_login_code">Сервер не видав код входу. Перевірте з’єднання і спробуйте ще раз або запустіть «Діагностику мережі» в Інструментах.</string>
     <string name="online_card_datapacks">Мережеві дані гри</string>
-    <string name="online_datapacks_help">Для гри в мережі потрібні дві речі, яких немає у звичайній грі: патч даних спільноти, від якого залежить, чи прийме вас гра з ПК, і карти спільноти, на яких ці ігри йдуть. Тут і те й інше завантажується просто з GeneralsOnline — ПК не потрібен.</string>
+    <string name="online_datapacks_help">Для гри в мережі потрібні дві речі, яких немає у звичайній грі: патч даних спільноти, від якого залежить, чи прийме вас гра з ПК, і карти спільноти, на яких ці ігри йдуть. Тут і те й інше завантажується просто з Online — ПК не потрібен.</string>
     <string name="online_button_datapacks_update">Оновити</string>
     <string name="online_datapacks_checking">Перевірка оновлень…</string>
     <string name="online_datapacks_downloading">Завантаження… %1$d%%</string>
@@ -293,11 +293,11 @@
     <string name="replaycheck_trace_failed">Не вдалося ввімкнути мережеве трасування; у лозі не буде подробиць щодо контрольних сум.</string>
     <string name="replaycheck_crc_every_frame">Контрольна сума кожного кадру</string>
     <string name="replaycheck_crc_every_frame_help">Додатково записує в лог контрольну суму логіки на кожному кадрі. Потрібна, щоб зібрати копію реплею, яку клієнт ПК перевірить покадрово. Повільніше.</string>
-    <string name="setup_online_anticheat_note">У мобільному клієнті немає античиту. Щоб грати разом, гравець на ПК має вимкнути античит (GeneralsOnline AntiCheat або Easy Anti-Cheat) у лаунчері GeneralsOnline: до лобі з іншим античитом з телефона не зайти, і до лобі з телефона не зайти з ним.</string>
+    <string name="setup_online_anticheat_note">У мобільному клієнті немає античиту. Щоб грати разом, гравець на ПК має вимкнути античит (Online AntiCheat або Easy Anti-Cheat) у лаунчері Online: до лобі з іншим античитом з телефона не зайти, і до лобі з телефона не зайти з ним.</string>
     <string name="setup_switch_logging">Збирати логи</string>
     <string name="setup_switch_logging_desc">Записувати на пристрій логи гри, збоїв і мережі. Вимкніть, щоб у фоні нічого не зберігалося; логи не пишуться, доки ви знову не ввімкнете. Потрібно для звітів про помилки.</string>
     <string name="setup_card_updates">Оновлення</string>
-    <string name="setup_updates_help">Нові збірки рушія надходять прямо з GitHub проєкту, без перевстановлення APK. Кожне оновлення підписане; усе без правильного підпису ігнорується. Мережеві налаштування й мережеві дані гри — в «Обліковий запис GeneralsOnline».</string>
+    <string name="setup_updates_help">Нові збірки рушія надходять прямо з GitHub проєкту, без перевстановлення APK. Кожне оновлення підписане; усе без правильного підпису ігнорується. Мережеві налаштування й мережеві дані гри — в «Обліковий запис Online».</string>
     <string name="setup_updates_status">Рушій: %1$s · Остання перевірка: %2$s</string>
     <string name="setup_updates_engine_bundled">вбудований, збірка %1$d</string>
     <string name="setup_updates_engine_updated">оновлений, збірка %1$d</string>
@@ -313,7 +313,7 @@
     <string name="setup_updates_not_published">Оновлення ще не публікувалися.</string>
     <string name="setup_updates_offline">Немає підключення до інтернету. Лаунчер і гра працюють і без нього; оновлення перевіряться наступного разу.</string>
     <string name="setup_updates_datapack_installed">Патч даних спільноти оновлено до версії %1$s.</string>
-    <string name="setup_updates_datapack_available">Вийшла нова версія мережевих даних гри (%1$s). Оновіть її в «Обліковий запис GeneralsOnline» → «Мережеві дані гри».</string>
+    <string name="setup_updates_datapack_available">Вийшла нова версія мережевих даних гри (%1$s). Оновіть її в «Обліковий запис Online» → «Мережеві дані гри».</string>
     <string name="setup_updates_datapack_line_new">Вийшла нова версія мережевих даних гри: %1$s.</string>
     <string name="setup_button_open_online_data">Оновити мережеві дані</string>
     <string name="online_datapacks_update_available">Встановлено версію %1$s. Вийшла нова версія %2$s.</string>

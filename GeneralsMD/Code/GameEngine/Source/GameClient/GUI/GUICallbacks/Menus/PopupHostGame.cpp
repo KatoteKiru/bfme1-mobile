@@ -269,10 +269,10 @@ void PopulateCustomLadderComboBox()
 #if defined(GENERALS_ONLINE)
 	NGMP_OnlineServices_AuthInterface* pAuthInterface = NGMP_OnlineServicesManager::GetInterface<NGMP_OnlineServices_AuthInterface>();
 	int64_t localProfile = pAuthInterface == nullptr ? -1 : pAuthInterface->GetUserID();
-	userPrefFilename.format("GeneralsOnline\\CustomPref%lld.ini", localProfile);
+	userPrefFilename.format("Online\\CustomPref%lld.ini", localProfile);
 #else
 	Int localProfile = TheGameSpyInfo->getLocalProfileID();
-	userPrefFilename.format("GeneralsOnline\\CustomPref%d.ini", localProfile);
+	userPrefFilename.format("Online\\CustomPref%d.ini", localProfile);
 #endif
 	pref.load(userPrefFilename);
 

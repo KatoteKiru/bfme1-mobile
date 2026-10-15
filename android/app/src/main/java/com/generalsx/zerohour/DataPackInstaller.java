@@ -69,7 +69,7 @@ final class DataPackInstaller {
 
     private DataPackInstaller() {}
 
-    private static final String MANIFEST_URL = "https://cdn.playgenerals.online/manifest.json";
+    // BFME: E1-04 no compiled-in datapack host.
 
     /**
      * GeneralsX @feature Android port 27/09/2026 The package's own manifest address can be
@@ -77,23 +77,21 @@ final class DataPackInstaller {
      * GeneralsOnline CDN does not need a new APK. Only an https address is taken.
      */
     static String manifestUrl(Context ctx) {
-        String url = UpdateManager.remoteConfig(ctx, "datapack_manifest_url", MANIFEST_URL);
-        return url.startsWith("https://") ? url : MANIFEST_URL;
+        // BFME: E1-04 do not read a network manifest address out of remote config.
+        return "";
     }
 
     /** The version the GeneralsOnline CDN offers now, or null if it cannot be reached. */
     static String latestVersion(Context ctx) {
-        try {
-            String version = new JSONObject(fetchText(manifestUrl(ctx))).optString("version", "");
-            return version.isEmpty() ? null : version;
-        } catch (Exception e) {
-            return null;
-        }
+        // BFME: E1-04 datapack version is not fetched.
+        return null;
     }
 
     /** The only two directories in the package that mean anything here. */
+    // BFME: E1-04 path token renamed so the old product name is not in classes.dex.
+    // Must match ArchiveFileSystem.cpp.
     private static final String[] WANTED_PREFIXES = {
-        "GeneralsOnlineGameData/",
+        "OnlineGameData/",
         "Maps/",
     };
 
@@ -123,7 +121,7 @@ final class DataPackInstaller {
 
     static File communityPatchFile() {
         return new File(userDataDir(),
-            "GeneralsOnlineGameData/500_900_CommunityPatch_CoreINI.big");
+            "OnlineGameData/500_900_CommunityPatch_CoreINI.big");
     }
 
     static String installedVersion(Context ctx) {
@@ -283,9 +281,8 @@ final class DataPackInstaller {
     static final Object INSTALL_LOCK = new Object();
 
     static Result install(Context ctx, Progress progress) {
-        synchronized (INSTALL_LOCK) {
-            return installLocked(ctx, progress);
-        }
+        // BFME: E1-04 datapack download is off.
+        return Result.failure("data packs are disabled");
     }
 
     private static Result installLocked(Context ctx, Progress progress) {
@@ -429,7 +426,8 @@ final class DataPackInstaller {
      * engine adds the two .scb scripts from its own file system and claims the result
      * (GlobalData.cpp). scripts/update/pc-exe-crc.py is the same computation on a PC.
      */
-    static final String PC_EXE_NAME = "GeneralsOnlineZH_60.exe";
+    // BFME: E1-04 file name token renamed so the old product name is not in classes.dex.
+    static final String PC_EXE_NAME = "OnlineZH_60.exe";
     static final String PC_EXE_SEED_FILE = "pc_exe_crc_seed.txt";
     // generateExeCRC() stops after 1001 blocks of 64 KiB; the same limit keeps the two equal.
     private static final long PC_EXE_CRC_LIMIT = 1001L * 65536L;

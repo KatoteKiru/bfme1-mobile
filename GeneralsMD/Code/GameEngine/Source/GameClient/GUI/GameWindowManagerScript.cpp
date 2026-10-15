@@ -2751,9 +2751,9 @@ GameWindow *GameWindowManager::winCreateFromScript( AsciiString filenameString,
 	// alongside the base game's own .big-archived layouts without ever
 	// colliding with those names.
 #if defined(GENERALS_ONLINE)
-	char gofilepath[_MAX_PATH] = "GeneralsOnlineGameData\\";
+	char gofilepath[_MAX_PATH] = "OnlineGameData\\";
 	if (strchr(filename, '\\') == nullptr)
-		snprintf(gofilepath, ARRAY_SIZE(gofilepath), "GeneralsOnlineGameData\\%s", filename);
+		snprintf(gofilepath, ARRAY_SIZE(gofilepath), "OnlineGameData\\%s", filename);
 	else
 		strlcpy(gofilepath, filename, ARRAY_SIZE(gofilepath));
 

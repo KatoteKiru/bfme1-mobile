@@ -596,14 +596,14 @@ TEST(bfme_gamedata_requests_bfme_filesystem)
 
 // 500_900_CommunityPatch_CoreINI.big sorts ahead of _patch222 ('5' < '_'), so its
 // data\ini\* would win. BfmeBIGFileSystem must not mount it, marker file or not.
-// loadMods() calls loadGeneralsOnlineCommunityPatch() with the user-data directory.
+// loadMods() calls loadZhCommunityPatch() with the user-data directory.
 TEST(bfme_skips_zh_community_patch)
 {
 	TempDir root;
 	TempDir user;
 	writeBig(root.path() / "ini.big", {{"data\\ini\\gamedata.ini", "BASE"}});
 	writeBig(root.path() / "_patch222core.big", {{"data\\ini\\gamedata.ini", "PATCH222"}});
-	const std::filesystem::path patch = user.path() / "GeneralsOnlineGameData" / "500_900_CommunityPatch_CoreINI.big";
+	const std::filesystem::path patch = user.path() / "OnlineGameData" / "500_900_CommunityPatch_CoreINI.big";
 	writeBig(patch, {{"data\\ini\\gamedata.ini", "ZHCP"}});
 	REQUIRE(std::filesystem::exists(patch));
 	REQUIRE(!std::filesystem::exists(user.path() / "gx_no_community_patch.txt"));
@@ -611,10 +611,10 @@ TEST(bfme_skips_zh_community_patch)
 
 	{
 		StdBIGFileSystem zh;
-		REQUIRE(zh.mountsGeneralsOnlineCommunityPatch());
+		REQUIRE(zh.mountsZhCommunityPatch());
 		REQUIRE(zh.loadBigFilesFromDirectory(AsciiString(root.str().c_str()), "*.big", FALSE));
 		StderrCapture cap;
-		zh.loadGeneralsOnlineCommunityPatch(AsciiString(user.str().c_str()));
+		zh.loadZhCommunityPatch(AsciiString(user.str().c_str()));
 		const std::string log = cap.stop();
 		REQUIRE(log.find("community patch skipped (BFME)") == std::string::npos);
 		REQUIRE(log.find("community patch mounted") != std::string::npos);
@@ -626,12 +626,12 @@ TEST(bfme_skips_zh_community_patch)
 
 	{
 		MountedVfs vfs(configFor(root));
-		REQUIRE(!vfs.fs().mountsGeneralsOnlineCommunityPatch());
+		REQUIRE(!vfs.fs().mountsZhCommunityPatch());
 		std::string before;
 		REQUIRE(vfs.read("data\\ini\\gamedata.ini", before));
 		REQUIRE_EQ(before, std::string("PATCH222"));
 		StderrCapture cap;
-		vfs.fs().loadGeneralsOnlineCommunityPatch(AsciiString(user.str().c_str()));
+		vfs.fs().loadZhCommunityPatch(AsciiString(user.str().c_str()));
 		const std::string log = cap.stop();
 		REQUIRE(log.find("community patch skipped (BFME)") != std::string::npos);
 		REQUIRE(log.find("community patch mounted") == std::string::npos);
@@ -647,13 +647,13 @@ bool candidateUnderExcludedDir(const std::string& relPath)
 {
 	std::string path = relPath;
 	std::transform(path.begin(), path.end(), path.begin(), [](unsigned char c) { return char(std::tolower(c)); });
-	return path.find("generalsonlinegamedata") != std::string::npos
+	return path.find("onlinegamedata") != std::string::npos
 		|| path.find("command and conquer generals zero hour data") != std::string::npos
 		|| path.find("500_900_communitypatch") != std::string::npos;
 }
 
 // The base layer walks the game root recursively. userdata ZH and
-// GeneralsOnlineGameData inside that root must not contribute archives.
+// OnlineGameData inside that root must not contribute archives.
 // gx_no_community_patch.txt is not created: it is not the BFME switch.
 TEST(bfme_scan_skips_zh_userdata_dirs)
 {
@@ -664,17 +664,17 @@ TEST(bfme_scan_skips_zh_userdata_dirs)
 	writeBig(root.path() / "_patch222.big", {{"data\\ini\\gamedata.ini", "PATCH"}});
 	writeBig(root.path() / "lang" / "english.big", {{"lang.ini", "LANG"}});
 	writeBig(root.path() / "MobileLayer" / "ui.big", {{"hud.ini", "UI"}});
-	const std::filesystem::path online = root.path() / "GeneralsOnlineGameData";
+	const std::filesystem::path online = root.path() / "OnlineGameData";
 	writeBig(online / "500_900_CommunityPatch_CoreINI.big", {
 		{"data\\ini\\gamedata.ini", "ZH"}, {"data\\ini\\neutralunits.ini", "ZH"}, {"only_zh.ini", "ZH"}});
 	writeBig(online / "side.big", {{"only_side.ini", "SIDE"}});
-	writeBig(root.path() / "generalsOnlineGameData" / "also.big", {{"only_also.ini", "ALSO"}});
+	writeBig(root.path() / "onlineGameData" / "also.big", {{"only_also.ini", "ALSO"}});
 	const std::filesystem::path userdata = root.path() / "Command and Conquer Generals Zero Hour Data";
 	writeBig(userdata / "loose.big", {{"only_loose.ini", "LOOSE"}});
-	writeBig(userdata / "GeneralsOnlineGameData" / "500_900_CommunityPatch_CoreINI.big", {
+	writeBig(userdata / "OnlineGameData" / "500_900_CommunityPatch_CoreINI.big", {
 		{"data\\ini\\neutralunits.ini", "ZH2"}});
 	writeBig(outside.path() / "ok.big", {{"outside.ini", "OUT"}});
-	writeBig(outside.path() / "GeneralsOnlineGameData" / "500_900_CommunityPatch_CoreINI.big", {
+	writeBig(outside.path() / "OnlineGameData" / "500_900_CommunityPatch_CoreINI.big", {
 		{"data\\ini\\neutralunits.ini", "ZH3"}});
 	REQUIRE(!std::filesystem::exists(root.path() / "gx_no_community_patch.txt"));
 	REQUIRE(!std::filesystem::exists(userdata / "gx_no_community_patch.txt"));
@@ -732,6 +732,31 @@ TEST(bfme_scan_skips_zh_userdata_dirs)
 // (CommandLine::parseMod). loadMods() still mounts both with overwrite, including
 // a file that lives inside a directory scanArchives skipped. The community patch
 // stays off for BfmeBIGFileSystem and on for StdBIGFileSystem.
+// BFME: E1-04 installs made before the rename still have the old folder; the
+// scan must keep skipping it, in any case.
+TEST(bfme_scan_skips_legacy_online_dir)
+{
+	TempDir root;
+	writeBig(root.path() / "ini.big", {{"data\\ini\\gamedata.ini", "BASE"}});
+	writeBig(root.path() / "_patch222.big", {{"data\\ini\\gamedata.ini", "PATCH"}});
+	writeBig(root.path() / "GeneralsOnlineGameData" / "500_900_CommunityPatch_CoreINI.big", {
+		{"data\\ini\\gamedata.ini", "ZH"}, {"only_zh.ini", "ZH"}});
+	writeBig(root.path() / "sub" / "generalsonlinegamedata" / "x.big", {{"only_x.ini", "X"}});
+	const std::vector<ArchiveCandidate> found =
+		scanArchives(root.str(), resolveLayerDirs(defaultBfme1MountRules(), root.str()));
+	REQUIRE(!found.empty());
+	for (const ArchiveCandidate& candidate : found) {
+		REQUIRE(!candidateUnderExcludedDir(candidate.relPath));
+	}
+	ensureLocalFileSystem();
+	MountedVfs vfs(configFor(root));
+	std::string data;
+	REQUIRE(vfs.read("data\\ini\\gamedata.ini", data));
+	REQUIRE_EQ(data, std::string("PATCH"));
+	REQUIRE(!vfs.exists("only_zh.ini"));
+	REQUIRE(!vfs.exists("only_x.ini"));
+}
+
 TEST(bfme_loadmods_mounts_mod_not_community_patch)
 {
 	TempDir root;
@@ -743,12 +768,12 @@ TEST(bfme_loadmods_mounts_mod_not_community_patch)
 		{"data\\ini\\neutralunits.ini", "BASE"},
 		{"data\\ini\\object\\gondor.ini", "BASE"}});
 	writeBig(root.path() / "_patch222.big", {{"data\\ini\\gamedata.ini", "PATCH"}});
-	const std::filesystem::path patch = user.path() / "GeneralsOnlineGameData" / "500_900_CommunityPatch_CoreINI.big";
+	const std::filesystem::path patch = user.path() / "OnlineGameData" / "500_900_CommunityPatch_CoreINI.big";
 	writeBig(patch, {
 		{"data\\ini\\gamedata.ini", "ZH"}, {"data\\ini\\neutralunits.ini", "ZH"}, {"only_zh.ini", "ZH"}});
-	writeBig(root.path() / "GeneralsOnlineGameData" / "500_900_CommunityPatch_CoreINI.big", {
+	writeBig(root.path() / "OnlineGameData" / "500_900_CommunityPatch_CoreINI.big", {
 		{"data\\ini\\gamedata.ini", "ZH"}, {"data\\ini\\neutralunits.ini", "ZH"}, {"only_zh.ini", "ZH"}});
-	const std::filesystem::path modBig = root.path() / "GeneralsOnlineGameData" / "explicit-mod.big";
+	const std::filesystem::path modBig = root.path() / "OnlineGameData" / "explicit-mod.big";
 	writeBig(modBig, {{"data\\ini\\gamedata.ini", "MODBIG"}, {"only_mod.ini", "MODBIG"}});
 	writeBig(modDir.path() / "pack.big", {{"data\\ini\\object\\gondor.ini", "MODDIR"}, {"only_dir.ini", "MODDIR"}});
 	writeBig(zhRoot.path() / "ini.big", {

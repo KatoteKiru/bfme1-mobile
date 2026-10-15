@@ -37,7 +37,7 @@
 #define SETTINGS_KEY_NETWORK_USE_ALTERNATIVE_ENDPOINT "use_alternative_endpoint"
 
 
-#define SETTINGS_FILENAME_LEGACY "GeneralsOnline_settings.json"
+#define SETTINGS_FILENAME_LEGACY "Online_settings.json"
 #define SETTINGS_FILENAME "settings.json"
 
 GenOnlineSettings::GenOnlineSettings()
@@ -79,7 +79,7 @@ void GenOnlineSettings::Load(void)
 		GameDir[0] = '\0';
 	}
 #endif
-	std::string strSettingsFileDir = std::format("{}/GeneralsOnlineData/", TheGlobalData->getPath_UserData().str());
+	std::string strSettingsFileDir = std::format("{}/OnlineData/", TheGlobalData->getPath_UserData().str());
 	std::string strSettingsFilePath = std::format("{}/{}", strSettingsFileDir, SETTINGS_FILENAME);
 	std::string strSettingsFilePathLegacy = std::format("{}/{}", GameDir, SETTINGS_FILENAME_LEGACY);
 
@@ -354,7 +354,7 @@ void GenOnlineSettings::Save()
 	
 	std::string strData = root.dump(1);
 
-	std::string strSettingsFilePath = std::format("{}/GeneralsOnlineData/{}", TheGlobalData->getPath_UserData().str(), SETTINGS_FILENAME);
+	std::string strSettingsFilePath = std::format("{}/OnlineData/{}", TheGlobalData->getPath_UserData().str(), SETTINGS_FILENAME);
 	FILE* file = fopen(strSettingsFilePath.c_str(), "wb");
 	if (file)
 	{

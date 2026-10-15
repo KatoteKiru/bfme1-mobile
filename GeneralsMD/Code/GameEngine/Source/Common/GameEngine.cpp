@@ -130,17 +130,17 @@
 // they kick off (auth polling, WS connect, HTTP requests) ever progresses.
 #include "GameNetwork/GeneralsOnline/NGMP_interfaces.h"
 #include "GameNetwork/GeneralsOnline/NextGenMP_defines.h"
-// GeneralsX @bugfix Android port 07/11/2026 - needed for GSMessageBoxOk/GameSpyCloseAllOverlays used by TearDownGeneralsOnline below
+// GeneralsX @bugfix Android port 07/11/2026 - needed for GSMessageBoxOk/GameSpyCloseAllOverlays used by TearDownOnlineServices below
 #include "GameNetwork/GameSpyOverlay.h"
 
 #include "Common/version.h"
 
 // GeneralsX @bugfix Android port 07/11/2026 - ported from upstream GeneralsOnline: request a delayed teardown of NGMP
 // online services, deferred to the next GameEngine::update() so it doesn't destroy the manager mid-callback.
-static bool g_bTearDownGeneralsOnlineRequested = false;
-void TearDownGeneralsOnline()
+static bool g_bTearDownOnlineServicesRequested = false;
+void TearDownOnlineServices()
 {
-	g_bTearDownGeneralsOnlineRequested = true;
+	g_bTearDownOnlineServicesRequested = true;
 
 	if (NGMP_OnlineServicesManager::GetInstance() == nullptr)
 		return;
@@ -154,7 +154,7 @@ void TearDownGeneralsOnline()
 		if (teardownReason == EGOTearDownReason::USER_LOGOUT)
 		{
 			title = L"Logged Out";
-			body = L"You are now logged out of GeneralsOnline.";
+			body = L"You are now logged out of Online.";
 		}
 		else if (teardownReason == EGOTearDownReason::LOST_CONNECTION)
 		{
@@ -850,7 +850,7 @@ void GameEngine::init()
 		// carries it: the PC client hashes its own Windows binary, this port hashes
 		// a version number and the .scb scripts, and no arrangement of game files
 		// will ever make those agree.
-		fprintf(stderr, "[GX-CRC] ini_crc=%u exe_crc=%u  (vanilla ini=%u, PC GeneralsOnline ini=2180732466, PC exe=%s from update settings)\n",
+		fprintf(stderr, "[GX-CRC] ini_crc=%u exe_crc=%u  (vanilla ini=%u, PC Online ini=2180732466, PC exe=%s from update settings)\n",
 			(unsigned)TheGlobalData->m_iniCRC, (unsigned)TheGlobalData->m_exeCRC,
 			(unsigned)VANILLA_INI_CRC, GXRemoteConfig::get("pc_exe_crc", "524577083").c_str());
 		fflush(stderr);
@@ -1250,10 +1250,10 @@ void GameEngine::update()
 			}
 			if (gxPerfTrace) gxT4 = std::chrono::steady_clock::now();
 
-			// GeneralsX @bugfix Android port 07/11/2026 - ported from upstream GeneralsOnline: process a deferred TearDownGeneralsOnline() request
-			if (g_bTearDownGeneralsOnlineRequested) // delayed tear down
+			// GeneralsX @bugfix Android port 07/11/2026 - ported from upstream GeneralsOnline: process a deferred TearDownOnlineServices() request
+			if (g_bTearDownOnlineServicesRequested) // delayed tear down
 			{
-				g_bTearDownGeneralsOnlineRequested = false;
+				g_bTearDownOnlineServicesRequested = false;
 
 				NGMP_OnlineServicesManager::DestroyInstance();
 			}

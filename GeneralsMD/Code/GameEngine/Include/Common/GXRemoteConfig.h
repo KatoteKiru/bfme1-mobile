@@ -34,7 +34,7 @@
 #include <map>
 #include <string>
 #if defined(__ANDROID__)
-#include <unistd.h>
+#include "Common/GXAndroidPackage.h"
 #endif
 
 namespace GXRemoteConfig
@@ -43,8 +43,9 @@ namespace GXRemoteConfig
 	{
 #if defined(__ANDROID__)
 		char path[256];
-		const int userId = (int)(getuid() / 100000);
-		snprintf(path, sizeof(path), "/data/user/%d/com.generalsx.zerohour/files/update", userId);
+		// BFME: E1-04 local file only; nothing is fetched, and the directory follows applicationId.
+		if (!gxAndroidFilesPath(path, sizeof(path), "update"))
+			return std::string();
 		return path;
 #else
 		return std::string();

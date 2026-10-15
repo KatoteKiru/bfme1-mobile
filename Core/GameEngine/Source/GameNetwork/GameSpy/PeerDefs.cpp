@@ -604,9 +604,9 @@ void SetUpGameSpy( const char *motdBuffer, const char *configBuffer )
 
 	AsciiString dir = TheGlobalData->getPath_UserData();
 	CreateDirectory(dir.str(), nullptr);
-	dir.format("%sGeneralsOnline", TheGlobalData->getPath_UserData().str());
+	dir.format("%sOnline", TheGlobalData->getPath_UserData().str());
 	CreateDirectory(dir.str(), nullptr);
-	dir.format("%sGeneralsOnline\\Ladders", TheGlobalData->getPath_UserData().str());
+	dir.format("%sOnline\\Ladders", TheGlobalData->getPath_UserData().str());
 	CreateDirectory(dir.str(), nullptr);
 
 	TheGameSpyBuddyMessageQueue = GameSpyBuddyMessageQueueInterface::createNewMessageQueue();

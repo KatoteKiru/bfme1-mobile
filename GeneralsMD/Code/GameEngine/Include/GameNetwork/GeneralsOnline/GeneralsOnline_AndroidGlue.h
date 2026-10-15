@@ -11,7 +11,8 @@
 // connect flow was started -- caller should skip the legacy GameSpy path
 // entirely in that case. Returns false (does nothing) if there's no session
 // yet, or on any non-Android build.
-bool TryStartGeneralsOnline();
+// BFME: E1-04 symbol renamed so the old product token is not exported from libmain.so.
+bool TryStartOnlineServices();
 
 // GeneralsX @bugfix Android port 13/09/2026 The GeneralsOnline auth API
 // replaced its three placeholder "reserved_N" fields with machine_guid /
@@ -25,5 +26,5 @@ bool TryStartGeneralsOnline();
 // installation -- so the engine reads the launcher's rather than deriving
 // its own. Returns empty strings when there is no marker file (not signed in,
 // or a non-Android build), which is what the API gets sent in that case.
-void GeneralsOnline_GetDeviceIdentity(std::string& outMachineGuid,
+void Online_GetDeviceIdentity(std::string& outMachineGuid,
 	std::string& outMacAddr, std::string& outVolSerial);

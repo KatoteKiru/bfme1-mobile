@@ -388,7 +388,7 @@ static GHTTPBool configCallback( GHTTPRequest request, GHTTPResult result,
 	configBuffer[bufferLen-1] = 0;
 
 	AsciiString fname;
-	fname.format("%sGeneralsOnline\\Config.txt", TheGlobalData->getPath_UserData().str());
+	fname.format("%sOnline\\Config.txt", TheGlobalData->getPath_UserData().str());
 	FILE *fp = fopen(fname.str(), "wb");
 	if (fp)
 	{
@@ -443,7 +443,7 @@ static GHTTPBool configHeadCallback( GHTTPRequest request, GHTTPResult result,
 				Int serverLen = atoi(val.str());
 				Int fileLen = 0;
 				AsciiString fname;
-				fname.format("%sGeneralsOnline\\Config.txt", TheGlobalData->getPath_UserData().str());
+				fname.format("%sOnline\\Config.txt", TheGlobalData->getPath_UserData().str());
 				FILE *fp = fopen(fname.str(), "rb");
 				if (fp)
 				{
@@ -467,7 +467,7 @@ static GHTTPBool configHeadCallback( GHTTPRequest request, GHTTPResult result,
 					configBuffer = nullptr;
 
 					AsciiString fname;
-					fname.format("%sGeneralsOnline\\Config.txt", TheGlobalData->getPath_UserData().str());
+					fname.format("%sOnline\\Config.txt", TheGlobalData->getPath_UserData().str());
 					FILE *fp = fopen(fname.str(), "rb");
 					if (fp)
 					{
@@ -839,9 +839,9 @@ void StartPatchCheck()
 	// If the Android launcher already has a GeneralsOnline session, skip it
 	// entirely and connect to GeneralsOnline instead. Falls through to the
 	// old (always-fails) path if there's no session yet.
-	if (TryStartGeneralsOnline())
+	if (TryStartOnlineServices())
 	{
-		fprintf(stderr, "DEBUG-ONLINE: StartPatchCheck -- TryStartGeneralsOnline handled it, returning\n");
+		fprintf(stderr, "DEBUG-ONLINE: StartPatchCheck -- TryStartOnlineServices handled it, returning\n");
 		fflush(stderr);
 		return;
 	}

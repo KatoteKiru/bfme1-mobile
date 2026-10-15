@@ -134,7 +134,7 @@ set(BFME_VFS_TESTS
     bfme_gamedata_requests_bfme_filesystem
     bfme_skips_zh_community_patch bfme_init_exits_when_rules_do_not_parse
     bfme_init_exits_when_no_archive_mounts
-    bfme_scan_skips_zh_userdata_dirs
+    bfme_scan_skips_zh_userdata_dirs bfme_scan_skips_legacy_online_dir
     bfme_loadmods_mounts_mod_not_community_patch
     bfme_init_exits_when_root_ini_missing
     bfme_init_exits_when_root_ini_unreadable

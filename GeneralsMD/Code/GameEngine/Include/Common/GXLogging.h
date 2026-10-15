@@ -21,15 +21,16 @@
 // Turning it off drops an empty file named logging_off into the app's own files directory
 // (SetupActivity.LOGGING_OFF_MARKER). With it present nothing is logged in the background:
 // the stderr mirror (SDL3Main.cpp), crash.log (AndroidCrashHandler.cpp) and GeneralsOnline.log
-// (NGMP_Helpers.cpp) all ask here first. The path is derived from the uid the same way
-// AndroidCrashHandler.cpp derives crash.log's, because the crash handler asks before SDL_main
-// has run and before any Android storage API is reachable. Answered once per process: the
+// (NGMP_Helpers.cpp) all ask here first. The directory is this process's applicationId
+// (GXAndroidPackage.h), because the crash handler asks before SDL_main has run and before
+// any Android storage API is reachable. Answered once per process: the
 // switch is flipped in the launcher, never while the game runs. Always FALSE off Android.
 #pragma once
 
 #if defined(__ANDROID__)
 #include <cstdio>
 #include <unistd.h>
+#include "Common/GXAndroidPackage.h"
 #endif
 
 inline bool GXLoggingDisabled()
@@ -39,9 +40,13 @@ inline bool GXLoggingDisabled()
 	if (state < 0)
 	{
 		char path[256];
-		const int userId = (int)(getuid() / 100000);
-		snprintf(path, sizeof(path), "/data/user/%d/com.generalsx.zerohour/files/logging_off", userId);
-		state = (access(path, F_OK) == 0) ? 1 : 0;
+		// BFME: E1-04 path follows the Gradle applicationId.
+		// Missing package name: treat the switch as off (keep logging) rather than
+		// looking at another application's files directory.
+		if (!gxAndroidFilesPath(path, sizeof(path), "logging_off"))
+			state = 0;
+		else
+			state = (access(path, F_OK) == 0) ? 1 : 0;
 	}
 	return state == 1;
 #else

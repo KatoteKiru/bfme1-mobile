@@ -152,11 +152,11 @@ public:
 	// (500_900_CommunityPatch_CoreINI.big) sorts ahead of _patch222, so its
 	// data\ini\* would override the BFME patch. gx_no_community_patch.txt is only
 	// the ZH launcher switch. See docs/UPSTREAM-PATCHES.md.
-	virtual Bool mountsGeneralsOnlineCommunityPatch() const { return TRUE; }
+	virtual Bool mountsZhCommunityPatch() const { return TRUE; }
 
 	// Community-patch half of loadMods(). The game passes getPath_UserData();
 	// a test can pass a directory and skip constructing GlobalData.
-	void loadGeneralsOnlineCommunityPatch(const AsciiString& userData);
+	void loadZhCommunityPatch(const AsciiString& userData);
 
 	ArchivedDirectoryInfo* friend_getArchivedDirectoryInfo(const Char* directory);
 

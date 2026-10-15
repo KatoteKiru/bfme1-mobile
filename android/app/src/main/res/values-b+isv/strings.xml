@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">GeneralsZH</string>
+    <string name="app_name">ME1 Mobile</string>
     <string name="common_cancel">Otkazati</string>
 
     <!-- SetupActivity: title / fallback -->
@@ -53,7 +53,7 @@
     <string name="setup_sim_rate_30_short">30 Hz</string>
     <string name="setup_sim_rate_60_short">60 Hz</string>
     <string name="setup_sim_rate_30_desc">30 Hz je to, čto imali vse prědšestvujuče verzije tutoj portacije. Igra Android proti Androida rabotaje, no meč proti igrača na Windows izgubi sinhronizaciju.</string>
-    <string name="setup_sim_rate_60_desc">60 Hz je častota klienta GeneralsOnline na Windows i jedina, pri kotoroj možlivo jest igrati s PC. Simulacija děla dvakrat vyše rabotǫ na sekundǫ, tomu na slabšem uređaju igra može iti pomalěje.</string>
+    <string name="setup_sim_rate_60_desc">60 Hz je častota klienta Online na Windows i jedina, pri kotoroj možlivo jest igrati s PC. Simulacija děla dvakrat vyše rabotǫ na sekundǫ, tomu na slabšem uređaju igra može iti pomalěje.</string>
     <string name="setup_sim_rate_help">Častota tika jest utverđena pri buđenju motora, tomu aplikacija nese obě verzije i nalagaje tu, kotorǫ izbereš tutde. Izměna dějstvuje pri slědujučem puščenju igry. Oba igrača v meču mahjǫt iměti istǫ častotǫ.</string>
     <string name="setup_toast_sim_rate_saved">Častota simulacije sohranjena. Budě dějstvovati pri slědujučem puščenju igry.</string>
     <string name="online_crossplay_hz_title">Častota simulacije prěključena na 60 Hz</string>
@@ -130,7 +130,7 @@
 
     <!-- SetupActivity: Online Multiplayer card -->
     <string name="setup_card_online">Onlajn multiigra</string>
-    <string name="setup_button_online_account">Konto GeneralsOnline</string>
+    <string name="setup_button_online_account">Konto Online</string>
     <string name="setup_online_signed_in">Vy sut prijaveni kako %1$s.</string>
     <string name="setup_online_signed_out">Prijava ne izvršena — trěbovana za onlajn igry.</string>
 
@@ -179,12 +179,12 @@
     <string name="logviewer_toast_share_failed">Ne uspělo prigotoviti datoteku loga za dělenje: %1$s</string>
     <string name="logviewer_read_failed">(ne uspělo pročitati %1$s: %2$s)</string>
 
-    <!-- GeneralsOnlineActivity -->
-    <string name="online_window_title">Konto GeneralsOnline</string>
-    <string name="online_subtitle">Prijavi sę za onlajn multiigru (playgenerals.online)</string>
+    <!-- OnlineActivity -->
+    <string name="online_window_title">Konto Online</string>
+    <string name="online_subtitle">Prijavi sę za onlajn multiigru</string>
     <string name="online_button_sign_out">Odjaviti sę</string>
     <string name="online_card_sign_in">Prijava</string>
-    <string name="online_signin_help">Klikni Prijaviti sę. Prvy klik može prositi izbaviti tu aplikaciju od optimizacije bateriji — dopusti to, potom vrni sę i znova klikni Prijaviti sę. Potom sę otvorja brauzer na playgenerals.online, već nosivši jednorazovy kod za tu děvicu. Izberi tam Steam, Discord ili GameReplays, potom prosto vrni sę v tu aplikaciju — prijava sę zaveršaje sama.</string>
+    <string name="online_signin_help">Klikni Prijaviti sę. Prvy klik može prositi izbaviti tu aplikaciju od optimizacije bateriji — dopusti to, potom vrni sę i znova klikni Prijaviti sę. Potom sę otvorja brauzer na , već nosivši jednorazovy kod za tu děvicu. Izberi tam Steam, Discord ili GameReplays, potom prosto vrni sę v tu aplikaciju — prijava sę zaveršaje sama.</string>
     <string name="online_button_sign_in">Prijaviti sę</string>
     <string name="online_status_signing_in">Prijavjuje sę...</string>
     <string name="online_status_battery_opt">Dopusti GeneralsZH rabotiti na zadnem planě na sledujućem ekranu, potom vrni sę i znova klikni Prijaviti sę — inako Android može prekinuti prověrku prijavy, dokel ty sut v brauzeru.</string>
@@ -228,10 +228,10 @@
     <string name="setup_render_backend_gles_angle_short">ANGLE</string>
     <string name="setup_render_backend_vulkan_short">Vulkan</string>
     <string name="setup_switch_gx_net_trace">Mrežny log online</string>
-    <string name="setup_switch_gx_net_trace_desc">Zapisuje kojžde zaprošenje igry do serverov GeneralsOnline i odpoved, ktora prišla. Vključite, ako vhod, lobby ili podbiranje igry ne rabotaje uže vnutri igry. Zaprošenja samogo launchera zapisujut se vsegda; to dodaje zaprošenja igry. Takože vključaje diagnostiku rozsinhronizacije v krossplatformnoj igre: kontrolne sumy simulacije, ktore sut porovnjane na vsakom intervale, a v repleju — kontrolnu sumu vsakogo objekta. (gx_net_trace.txt)</string>
+    <string name="setup_switch_gx_net_trace_desc">Zapisuje kojžde zaprošenje igry do serverov Online i odpoved, ktora prišla. Vključite, ako vhod, lobby ili podbiranje igry ne rabotaje uže vnutri igry. Zaprošenja samogo launchera zapisujut se vsegda; to dodaje zaprošenja igry. Takože vključaje diagnostiku rozsinhronizacije v krossplatformnoj igre: kontrolne sumy simulacije, ktore sut porovnjane na vsakom intervale, a v repleju — kontrolnu sumu vsakogo objekta. (gx_net_trace.txt)</string>
     <string name="netdiag_title">Diagnostika mreže</string>
-    <string name="netdiag_row_note">Proveriti, jestli to ustrojstvo dohodi do serverov GeneralsOnline, i sobrati raport za soobčenje o greške.</string>
-    <string name="netdiag_intro">Proverjaje po redu: jest li rabotajuča mreža, razrešajut li se imena serverov GeneralsOnline, odpovedajut li servery i čto oni govoret o vhode.\n\nNičto nikuda ne posylaje se. Tisnite «Pustiti».</string>
+    <string name="netdiag_row_note">Proveriti, jestli to ustrojstvo dohodi do serverov Online, i sobrati raport za soobčenje o greške.</string>
+    <string name="netdiag_intro">Proverjaje po redu: jest li rabotajuča mreža, razrešajut li se imena serverov Online, odpovedajut li servery i čto oni govoret o vhode.\n\nNičto nikuda ne posylaje se. Tisnite «Pustiti».</string>
     <string name="netdiag_running">Rabotaje…</string>
     <string name="netdiag_running_step">Rabotaje… (%1$s)</string>
     <string name="netdiag_button_run">Pustiti diagnostiku</string>
@@ -240,12 +240,12 @@
     <string name="netdiag_toast_copied">Raport kopirovany do bufera.</string>
     <string name="netdiag_toast_share_failed">Ne udalo se podeliti raport: %1$s</string>
     <string name="netdiag_share_subject">Mrežny log GeneralsZH</string>
-    <string name="online_status_banned">Toj akaunt jest blokovany na GeneralsOnline. Apelaciju možete podati v ihnem Discorde.</string>
-    <string name="online_status_banned_reason">Toj akaunt jest blokovany na GeneralsOnline: %1$s</string>
+    <string name="online_status_banned">Toj akaunt jest blokovany na Online. Apelaciju možete podati v ihnem Discorde.</string>
+    <string name="online_status_banned_reason">Toj akaunt jest blokovany na Online: %1$s</string>
     <string name="online_status_requesting_code">Zaprašajemo kod vhoda od servera…</string>
     <string name="online_status_no_login_code">Server ne vydal kod vhoda. Proverite sopojenje i probujte znovu, ili pustite «Diagnostiku mreže» v Instrumentah.</string>
     <string name="online_card_datapacks">Podatky mrežnoj igry</string>
-    <string name="online_datapacks_help">Za igru po mreži trěbujut dvě věci, kojih ne jest v samoj igrě: zajedniča zaplata podatkov, od koje zavisi, čto igra iz komputera primi sej pristroj, i zajedniče karty, na kojih te igry idut. Tu obadvě sę tęgajut prěmo iz GeneralsOnline — komputer ne jest potrěbny.</string>
+    <string name="online_datapacks_help">Za igru po mreži trěbujut dvě věci, kojih ne jest v samoj igrě: zajedniča zaplata podatkov, od koje zavisi, čto igra iz komputera primi sej pristroj, i zajedniče karty, na kojih te igry idut. Tu obadvě sę tęgajut prěmo iz Online — komputer ne jest potrěbny.</string>
     <string name="online_button_datapacks_update">Obnoviti</string>
     <string name="online_datapacks_checking">Prověrjanje obnovlenij…</string>
     <string name="online_datapacks_downloading">Tęganje… %1$d%%</string>
@@ -293,11 +293,11 @@
     <string name="replaycheck_trace_failed">Ne udalo se vključiti mrěžno slědženje; v logu ne bude podrobnostij o kontrolnyh sumah.</string>
     <string name="replaycheck_crc_every_frame">Kontrolna suma každogo kadra</string>
     <string name="replaycheck_crc_every_frame_help">Dodatno piše v log kontrolnu sumu logiky na každom kadru. Treba, da sobrati kopiju replaja, ktoru klient PK prověri po kadram. Počasněje.</string>
-    <string name="setup_online_anticheat_note">Mobilny klient ne imaje anti-čita. Za igru vměsto igrač na PC musi izključiti anti-čit (GeneralsOnline AntiCheat ili Easy Anti-Cheat) v launcheru GeneralsOnline: v lobi s drugym anti-čitom ne jest možno vstupiti s telefona i obratno.</string>
+    <string name="setup_online_anticheat_note">Mobilny klient ne imaje anti-čita. Za igru vměsto igrač na PC musi izključiti anti-čit (Online AntiCheat ili Easy Anti-Cheat) v launcheru Online: v lobi s drugym anti-čitom ne jest možno vstupiti s telefona i obratno.</string>
     <string name="setup_switch_logging">Sbirati logy</string>
     <string name="setup_switch_logging_desc">Zapisyvati na ustrojstvo logy igry, padov i mreže. Izključite, da by ničto ne bylo hranjeno v fonu, dokolě ne vključite znova. Trěbuje se za otčety o grěškah.</string>
     <string name="setup_card_updates">Aktualizacije</string>
-    <string name="setup_updates_help">Nove versije motora prihodęt prěmo iz GitHub projekta, bez novoj ustanovky APK. Každo obnovljenje jest podpisano; vse bez pravilnogo podpisa sę ignoruje. Mrežne nastavjenja i podatky mrežnoj igry sut v «Konto GeneralsOnline».</string>
+    <string name="setup_updates_help">Nove versije motora prihodęt prěmo iz GitHub projekta, bez novoj ustanovky APK. Každo obnovljenje jest podpisano; vse bez pravilnogo podpisa sę ignoruje. Mrežne nastavjenja i podatky mrežnoj igry sut v «Konto Online».</string>
     <string name="setup_updates_status">Motor: %1$s · Poslědnja provědka: %2$s</string>
     <string name="setup_updates_engine_bundled">vstrojeny, versija %1$d</string>
     <string name="setup_updates_engine_updated">aktualizovany, versija %1$d</string>
@@ -313,7 +313,7 @@
     <string name="setup_updates_not_published">Aktualizacije jesče ne byli publikovane.</string>
     <string name="setup_updates_offline">Nema svezi s internetom. Launcher i igra rabotajut i bez njego; aktualizacije budut prověrjene slědujuči raz.</string>
     <string name="setup_updates_datapack_installed">Obnova danyh obščiny aktualizovana do versije %1$s.</string>
-    <string name="setup_updates_datapack_available">Jest nova versija podatkov mrežnoj igry (%1$s). Obnovite ju v «Konto GeneralsOnline» → «Podatky mrežnoj igry».</string>
+    <string name="setup_updates_datapack_available">Jest nova versija podatkov mrežnoj igry (%1$s). Obnovite ju v «Konto Online» → «Podatky mrežnoj igry».</string>
     <string name="setup_updates_datapack_line_new">Jest nova versija podatkov mrežnoj igry: %1$s.</string>
     <string name="setup_button_open_online_data">Obnoviti podatky mrěže</string>
     <string name="online_datapacks_update_available">Ustanovjena versija %1$s. Jest nova versija: %2$s.</string>

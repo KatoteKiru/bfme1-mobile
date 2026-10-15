@@ -96,7 +96,7 @@ namespace
 }
 #endif // __ANDROID__
 
-void GeneralsOnline_GetDeviceIdentity(std::string& outMachineGuid,
+void Online_GetDeviceIdentity(std::string& outMachineGuid,
 	std::string& outMacAddr, std::string& outVolSerial)
 {
 	outMachineGuid.clear();
@@ -132,10 +132,10 @@ void GeneralsOnline_GetDeviceIdentity(std::string& outMachineGuid,
 #endif
 }
 
-bool TryStartGeneralsOnline()
+bool TryStartOnlineServices()
 {
 #if defined(__ANDROID__)
-	fprintf(stderr, "DEBUG-ONLINE: TryStartGeneralsOnline enter\n");
+	fprintf(stderr, "DEBUG-ONLINE: TryStartOnlineServices enter\n");
 	fflush(stderr);
 	AndroidSession session;
 	if (!ReadAndroidSession(session))
@@ -144,11 +144,11 @@ bool TryStartGeneralsOnline()
 		// Account screen in the Settings app first. Fall through to the
 		// legacy path (which will show its own "can't connect" message);
 		// a friendlier prompt here is a follow-up.
-		fprintf(stderr, "DEBUG-ONLINE: TryStartGeneralsOnline -- no valid session, falling through to legacy path\n");
+		fprintf(stderr, "DEBUG-ONLINE: TryStartOnlineServices -- no valid session, falling through to legacy path\n");
 		fflush(stderr);
 		return false;
 	}
-	fprintf(stderr, "DEBUG-ONLINE: TryStartGeneralsOnline -- session found, userId=%s displayName=%s\n",
+	fprintf(stderr, "DEBUG-ONLINE: TryStartOnlineServices -- session found, userId=%s displayName=%s\n",
 		session.userId.c_str(), session.displayName.c_str());
 	fflush(stderr);
 
@@ -185,9 +185,9 @@ bool TryStartGeneralsOnline()
 	}
 
 	ClearGSMessageBoxes();
-	GSMessageBoxNoButtons(UnicodeString(L"GeneralsOnline"), UnicodeString(L"Connecting..."), false);
+	GSMessageBoxNoButtons(UnicodeString(L"Online"), UnicodeString(L"Connecting..."), false);
 
-	fprintf(stderr, "DEBUG-ONLINE: TryStartGeneralsOnline -- calling OnLogin, wsUri=%s\n", session.wsUri.c_str());
+	fprintf(stderr, "DEBUG-ONLINE: TryStartOnlineServices -- calling OnLogin, wsUri=%s\n", session.wsUri.c_str());
 	fflush(stderr);
 	NGMP_OnlineServicesManager::GetInstance()->OnLogin(ELoginResult::Success, session.wsUri.c_str(), []()
 		{
@@ -201,7 +201,7 @@ bool TryStartGeneralsOnline()
 			ClearGSMessageBoxes();
 			TheShell->push("Menus/WOLWelcomeMenu.wnd");
 		});
-	fprintf(stderr, "DEBUG-ONLINE: TryStartGeneralsOnline -- OnLogin call returned, exiting\n");
+	fprintf(stderr, "DEBUG-ONLINE: TryStartOnlineServices -- OnLogin call returned, exiting\n");
 	fflush(stderr);
 
 	return true;

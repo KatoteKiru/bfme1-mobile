@@ -86,6 +86,12 @@
 #include "Common/UpdateChecker.h"
 #include "GameClient/GadgetPushButton.h"
 #include <SDL3/SDL.h>
+
+#endif
+
+// BFME: E1-04 our own online server URL (compile definition); empty = online disabled.
+#ifndef BFME_ONLINE_URL
+#define BFME_ONLINE_URL ""
 #endif
 
 
@@ -659,6 +665,12 @@ void MainMenuInit( WindowLayout *layout, void *userData )
 	buttonMultiPlayer = TheWindowManager->winGetWindowFromId( parentMainMenu, buttonMultiPlayerID );
 	buttonSkirmish = TheWindowManager->winGetWindowFromId( parentMainMenu, skirmishID );
 	buttonOnline = TheWindowManager->winGetWindowFromId( parentMainMenu, onlineID );
+	// BFME: E1-04 online entry is a hook for our own server: hidden while BFME_ONLINE_URL is empty.
+	if (buttonOnline != nullptr && BFME_ONLINE_URL[0] == '\0')
+	{
+		buttonOnline->winHide(TRUE);
+		buttonOnline->winEnable(FALSE);
+	}
 	buttonNetwork = TheWindowManager->winGetWindowFromId( parentMainMenu, networkID );
 	buttonOptions = TheWindowManager->winGetWindowFromId( parentMainMenu, optionsID );
 	buttonExit = TheWindowManager->winGetWindowFromId( parentMainMenu, exitID );
@@ -1690,17 +1702,8 @@ WindowMsgHandledType MainMenuSystem( GameWindow *window, UnsignedInt msg,
 			}
 			else if( controlID == onlineID )
 			{
-				if(dontAllowTransitions)
-					break;
-				dontAllowTransitions = TRUE;
-				buttonPushed = TRUE;
-				dropDownWindows[DROPDOWN_MULTIPLAYER]->winHide(FALSE);
-				TheTransitionHandler->reverse("MainMenuMultiPlayerMenuTransitionToNext");
-
-				StartPatchCheck();
-//				localAnimateWindowManager->reverseAnimateWindow();
-				dropDown = DROPDOWN_NONE;
-
+				// BFME: E1-04 hook for our own online flow; nothing to start while BFME_ONLINE_URL is empty.
+				break;
 			}
 			else if( controlID == networkID )
 			{

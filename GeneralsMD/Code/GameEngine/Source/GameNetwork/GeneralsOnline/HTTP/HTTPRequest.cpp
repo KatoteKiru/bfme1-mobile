@@ -269,7 +269,7 @@ void HTTPRequest::PlatformStartRequest()
 		curl_easy_setopt(m_pCURL, CURLOPT_FOLLOWLOCATION, 1L);
 		curl_easy_setopt(m_pCURL, CURLOPT_WRITEDATA, (void*)this);
 		curl_easy_setopt(m_pCURL, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-		curl_easy_setopt(m_pCURL, CURLOPT_USERAGENT, "GeneralsOnline Client");
+		curl_easy_setopt(m_pCURL, CURLOPT_USERAGENT, "Online Client");
 
 		
 		// GeneralsX @bugfix Android port 10/07/2026 these curl options are all

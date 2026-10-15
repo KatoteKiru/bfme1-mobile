@@ -11,6 +11,14 @@ void HTTPManager::SendGETRequest(const char* szURI, EIPProtocolVersion protover,
 {
 	CHECK_MAIN_THREAD;
 
+	// BFME: E1-04 an empty API host must not open a socket.
+	if (szURI == nullptr || szURI[0] == '\0')
+	{
+		if (completionCallback)
+			completionCallback(false, 0, std::string(), nullptr);
+		return;
+	}
+
 	HTTPRequest* pRequest = PlatformCreateRequest(EHTTPVerb::HTTP_VERB_GET, protover, szURI, inHeaders, completionCallback, progressCallback, timeoutMS);
 
 	m_vecRequestsPendingStart.push_back(pRequest);
@@ -19,6 +27,14 @@ void HTTPManager::SendGETRequest(const char* szURI, EIPProtocolVersion protover,
 void HTTPManager::SendPOSTRequest(const char* szURI, EIPProtocolVersion protover, std::map<std::string, std::string>& inHeaders, const char* szPostData, std::function<void(bool bSuccess, int statusCode, std::string strBody, HTTPRequest* pReq)> completionCallback, std::function<void(size_t bytesReceived)> progressCallback, int timeoutMS)
 {
 	CHECK_MAIN_THREAD;
+
+	// BFME: E1-04 an empty API host must not open a socket.
+	if (szURI == nullptr || szURI[0] == '\0')
+	{
+		if (completionCallback)
+			completionCallback(false, 0, std::string(), nullptr);
+		return;
+	}
 
 	HTTPRequest* pRequest = PlatformCreateRequest(EHTTPVerb::HTTP_VERB_POST, protover, szURI, inHeaders, completionCallback, progressCallback, timeoutMS);
 	pRequest->SetPostData(szPostData);
@@ -30,6 +46,14 @@ void HTTPManager::SendPUTRequest(const char* szURI, EIPProtocolVersion protover,
 {
 	CHECK_MAIN_THREAD;
 
+	// BFME: E1-04 an empty API host must not open a socket.
+	if (szURI == nullptr || szURI[0] == '\0')
+	{
+		if (completionCallback)
+			completionCallback(false, 0, std::string(), nullptr);
+		return;
+	}
+
 	HTTPRequest* pRequest = PlatformCreateRequest(EHTTPVerb::HTTP_VERB_PUT, protover, szURI, inHeaders, completionCallback, progressCallback, timeoutMS);
 	pRequest->SetPostData(szData);
 
@@ -39,6 +63,14 @@ void HTTPManager::SendPUTRequest(const char* szURI, EIPProtocolVersion protover,
 void HTTPManager::SendDELETERequest(const char* szURI, EIPProtocolVersion protover, std::map<std::string, std::string>& inHeaders, const char* szData, std::function<void(bool bSuccess, int statusCode, std::string strBody, HTTPRequest* pReq)> completionCallback, std::function<void(size_t bytesReceived)> progressCallback /*= nullptr*/, int timeoutMS)
 {
 	CHECK_MAIN_THREAD;
+
+	// BFME: E1-04 an empty API host must not open a socket.
+	if (szURI == nullptr || szURI[0] == '\0')
+	{
+		if (completionCallback)
+			completionCallback(false, 0, std::string(), nullptr);
+		return;
+	}
 
 	HTTPRequest* pRequest = PlatformCreateRequest(EHTTPVerb::HTTP_VERB_DELETE, protover, szURI, inHeaders, completionCallback, progressCallback, timeoutMS);
 	pRequest->SetPostData(szData);

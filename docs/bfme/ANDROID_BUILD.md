@@ -52,3 +52,40 @@ Temurin JDK 17.0.20.1+1, CMake 3.31.6, Ninja 1.12.1, Gradle 8.9 (AGP 8.5.2 из 
 
 ## Файлы игры
 В APK их нет. В APK попадают только шрифты Liberation, dxvk.conf, DefaultOptions.ini и Turnip (драйвер для Adreno) из стейджинга форка.
+
+## Идентификатор и версия (E1-04)
+`applicationId` только в Gradle: `io.github.katotekiru.me1mobile`. `namespace` и пакет Java остаются `com.generalsx.zerohour`, JNI-имена не переименовываются. Имя на лаунчере — «ME1 Mobile» (`app_name`). Пути `/data/user/<id>/<applicationId>/files` берутся из `/proc/self/cmdline` (`GXAndroidPackage.h`), а не из зашитого имени пакета.
+
+`versionName` — `0.1.0-<короткий SHA>` (`git rev-parse --short=7`). Тот же SHA печатает `tools/build-apk.sh` и подставляет в `-PandroidVersionName`. Если свойство не задано, Gradle считает строку сам (`bfmeVersionName()`). `versionCode` по умолчанию 100 (`0*10000+1*100+0`): новый `applicationId`, не обновление GeneralsX 1.3.0.
+
+`android:allowBackup="false"`, плюс `res/xml/backup_rules.xml` и `data_extraction_rules.xml`: тестовый APK не восстанавливает настройки и путь к данным после переустановки.
+
+Автообновление форка и GeneralsOnline в эту сборку не входят: нет запросов к хосту обновлений, нет подмены `libmain.so`, карточка «Обновления» и пункт Online скрыты. `GXRemoteConfig` по-прежнему читает локальный `remote_config.ini`, если файл уже есть; по сети он не пишется. Зашитые хосты STUN/TURN пустые.
+
+## Журнал сборки: подпись, sha256, URL
+После упаковки скрипт печатает путь, sha256 (и пишет `out/<имя>.sha256`) и падает, если `apksigner verify` или `apksigner verify --print-certs` вернули ненулевой код. Затем `tools/ci/check-no-upstream-urls.sh` смотрит исходники и, если передан APK, `classes*.dex`, `lib/**/*.so`, `resources.arsc` и `AndroidManifest.xml` (UTF-8 и UTF-16LE). Запрещены литералы `MYSOREZ`, `raw.githubusercontent`, `GeneralsOnline`, `playgenerals.online`. Классы онлайн-аккаунта исключены из `sourceSets` и из проверки исходников.
+
+Ожидаемые строки (время и SHA — от собранного коммита):
+
+```
+=== [2026-10-08 21:00:00 UTC] git e9292c9  versionName 0.1.0-e9292c9
+=== [2026-10-08 21:00:00 UTC] ключ подписи: alias=bfmedebug file=/secrets/bfme-debug.keystore
+=== [2026-10-08 21:40:00 UTC] APK: /workspace/bfme-mobile/out/bfme-zh-e9292c9.apk
+=== [2026-10-08 21:40:00 UTC] sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+=== [2026-10-08 21:40:00 UTC] versionName: 0.1.0-e9292c9
+=== [2026-10-08 21:40:01 UTC] проверка APK: apksigner verify
+=== [2026-10-08 21:40:01 UTC] проверка APK: apksigner verify --print-certs
+Signer #1 certificate DN: CN=BFME Debug, O=BFME, C=US
+Signer #1 certificate SHA-256 digest: ...
+=== [2026-10-08 21:40:02 UTC] проверка APK: нет URL апстрима (classes.dex, .so, resources.arsc)
+E1-04 ok: MYSOREZ, raw.githubusercontent, GeneralsOnline и playgenerals.online не найдены
+=== [2026-10-08 21:40:02 UTC] ГОТОВО: /workspace/bfme-mobile/out/bfme-zh-e9292c9.apk (NNM) sha256=0123...
+```
+
+Проверка без APK (то, что гоняется до долгой сборки и на машине без образа):
+
+```
+tools/ci/check-no-upstream-urls.sh
+```
+
+Бокс-сборка вызывает тот же скрипт ещё раз на готовый APK. На этой VM образ Android не собирался, поэтому строки `apksigner` выше — образец, не журнал реального прогона.

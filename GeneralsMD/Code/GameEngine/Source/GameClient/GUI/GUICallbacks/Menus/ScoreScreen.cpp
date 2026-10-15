@@ -680,18 +680,8 @@ WindowMsgHandledType ScoreScreenSystem( GameWindow *window, UnsignedInt msg,
 
 							if (currentMatchID != 0)
 							{
-								AsciiString strMatchURL;
-#if defined(USE_TEST_ENV)
-								strMatchURL.format("https://www.playgenerals.online/viewmatch?match=%" PRIu64 "&env=test", currentMatchID);
-#else
-								strMatchURL.format("https://www.playgenerals.online/viewmatch?match=%" PRIu64, currentMatchID);
-#endif
-								// GeneralsX @bugfix Android port 07/11/2026 - ShellExecuteA is Windows-only, use SDL_OpenURL cross-platform
-#if defined(_WIN32)
-								ShellExecuteA(NULL, "open", strMatchURL.str(), NULL, NULL, SW_SHOWNORMAL);
-#else
-								SDL_OpenURL(strMatchURL.str());
-#endif
+								// BFME: E1-04 do not open an upstream match page.
+								(void)currentMatchID;
 							}
 						}
 					}
@@ -1222,8 +1212,6 @@ void initInternetMultiPlayer(void)
 
  			UnicodeString strMatchID;
  			strMatchID.format(L"\nMatch ID: %" PRIu64, lobby.match_id);
- 
- 			UnicodeString strMatchURL;
 
 			if (lobby.match_id == 0) // probably AI or < 2 humans
 			{
@@ -1235,16 +1223,8 @@ void initInternetMultiPlayer(void)
 			{
 				buttonContinue->winHide(FALSE);
 
-#if defined(USE_TEST_ENV)
-				strMatchURL.format(L"\nView match data, participants, replays, anti-cheat data: https://www.playgenerals.online/viewmatch?match=%" PRIu64 "&env=test", lobby.match_id);
-#else
-				strMatchURL.format(L"\nView match data, participants, replays, anti-cheat data: https://www.playgenerals.online/viewmatch?match=%" PRIu64, lobby.match_id);
-#endif
-
-				buttonContinue->winSetText(UnicodeString(L"VIEW MATCH ONLINE"));
-
+				// BFME: E1-04 do not show an upstream match URL.
 				GadgetListBoxAddEntryText(listboxAcademyWindowScoreScreen, strMatchID, GameSpyColor[GSCOLOR_DEFAULT], -1);
-				GadgetListBoxAddEntryText(listboxAcademyWindowScoreScreen, strMatchURL, GameSpyColor[GSCOLOR_DEFAULT], -1);
 			}
 
 

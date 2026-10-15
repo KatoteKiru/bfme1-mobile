@@ -157,7 +157,7 @@ void NGMP_OnlineServices_AuthInterface::BeginLogin()
 		// GeneralsOnline_AndroidGlue.h for where these values come from on
 		// a device that has none of the hardware they name.
 		std::string strMachineGuid, strMacAddr, strVolSerial;
-		GeneralsOnline_GetDeviceIdentity(strMachineGuid, strMacAddr, strVolSerial);
+		Online_GetDeviceIdentity(strMachineGuid, strMacAddr, strVolSerial);
 
 		nlohmann::json j;
 		j["machine_guid"] = strMachineGuid;
@@ -238,12 +238,7 @@ void NGMP_OnlineServices_AuthInterface::BeginLogin()
 
 		m_strCode = GenerateGamecode();
 
-#if defined(USE_TEST_ENV)
-		std::string strURI = std::format("http://www.playgenerals.online/login/?gamecode={}&client={}&env=test", m_strCode.c_str(), GENERALS_ONLINE_CLIENT_ID);
-#else
-		std::string strURI = std::format("http://www.playgenerals.online/login/?gamecode={}&client={}", m_strCode.c_str(), GENERALS_ONLINE_CLIENT_ID);
-#endif
-
+		// BFME: E1-04 do not open an upstream login page.
 		ClearGSMessageBoxes();
 		GSMessageBoxCancel(UnicodeString(L"Logging In"), UnicodeString(L"Please continue in your web browser"), []()
 			{
@@ -259,20 +254,6 @@ void NGMP_OnlineServices_AuthInterface::BeginLogin()
 				}
 			});
 
-#if defined(_WIN32) && (!defined(_DEBUG) || defined(USE_TEST_ENV) || defined(USE_DEBUG_ON_LIVE_SERVER))
-		ShellExecuteA(NULL, "open", strURI.c_str(), NULL, NULL, SW_SHOWNORMAL);
-#elif !defined(_WIN32)
-		// GeneralsX @bugfix Android port 10/07/2026 On Android the browser is
-		// already open and the login already in flight by the time the native
-		// engine ever calls BeginLogin -- the Android launcher (GeneralsOnlineActivity)
-		// owns code generation + browser launch + polling; the native engine
-		// picks up its finished session via the marker file it writes instead
-		// (see the Online-button wiring in MainMenuUtils.cpp). This ShellExecute
-		// path only matters on desktop builds where the game itself is the client.
-#endif
-			
-
-			
 	}
 }
 
@@ -299,18 +280,7 @@ void NGMP_OnlineServices_AuthInterface::DoReAuth()
 	m_lastCheckCode = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	m_strCode = GenerateGamecode();
 
-#if defined(USE_TEST_ENV)
-	std::string strURI = std::format("http://www.playgenerals.online/login/?gamecode={}&client={}&env=test", m_strCode.c_str(), GENERALS_ONLINE_CLIENT_ID);
-#else
-	std::string strURI = std::format("http://www.playgenerals.online/login/?gamecode={}&client={}", m_strCode.c_str(), GENERALS_ONLINE_CLIENT_ID);
-#endif
-
-#if defined(_WIN32) && (!defined(_DEBUG) || defined(USE_TEST_ENV) || defined(USE_DEBUG_ON_LIVE_SERVER))
-	ShellExecuteA(NULL, "open", strURI.c_str(), NULL, NULL, SW_SHOWNORMAL);
-#elif !defined(_WIN32)
-	// GeneralsX @bugfix Android port 10/07/2026 see BeginLogin() above -- the
-	// Android launcher already owns the browser/code flow.
-#endif
+	// BFME: E1-04 do not open an upstream login page.
 }
 
 void NGMP_OnlineServices_AuthInterface::Tick()
@@ -329,7 +299,7 @@ void NGMP_OnlineServices_AuthInterface::Tick()
 			std::map<std::string, std::string> mapHeaders;
 
 			std::string strMachineGuid, strMacAddr, strVolSerial;
-			GeneralsOnline_GetDeviceIdentity(strMachineGuid, strMacAddr, strVolSerial);
+			Online_GetDeviceIdentity(strMachineGuid, strMacAddr, strVolSerial);
 
 			nlohmann::json j;
 			j["code"] = m_strCode.c_str();
@@ -562,9 +532,9 @@ std::string NGMP_OnlineServices_AuthInterface::GetCredentialsFilePath()
 {
 	// debug supports multi inst, so needs seperate tokens
 #if defined(_DEBUG) && !defined(USE_TEST_ENV) && !defined(USE_DEBUG_ON_LIVE_SERVER)
-	std::string strCredsPath = std::format("{}/GeneralsOnlineData/credentials_dev_env_{}.json", TheGlobalData->getPath_UserData().str(), rts::ClientInstance::getInstanceIndex());
+	std::string strCredsPath = std::format("{}/OnlineData/credentials_dev_env_{}.json", TheGlobalData->getPath_UserData().str(), rts::ClientInstance::getInstanceIndex());
 #else
-	std::string strCredsPath = std::format("{}/GeneralsOnlineData/{}", TheGlobalData->getPath_UserData().str(), CREDENTIALS_FILENAME);
+	std::string strCredsPath = std::format("{}/OnlineData/{}", TheGlobalData->getPath_UserData().str(), CREDENTIALS_FILENAME);
 #endif
 	return strCredsPath;
 }

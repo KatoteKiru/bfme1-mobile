@@ -52,19 +52,20 @@ final class GeneralsOnlineSession {
 
     private static final String TAG = "GeneralsOnlineSession";
 
-    static final String API_BASE = "https://api.playgenerals.online/env/prod/contract/1/";
+    // BFME: E1-04 no compiled-in GeneralsOnline API host.
+    static final String API_BASE = "";
 
     // GeneralsX @bugfix Android port 08/30/2026 Mirrors Network_
     // UseAlternativeEndpoint() in the native client (GeneralsOnline_Settings.h/
     // OnlineServices_Init.cpp), which exists specifically because some
-    // players can't reach api.playgenerals.online directly (ISP/DNS-level
+    // players can't reach the primary API host directly (ISP/DNS-level
     // filtering is the documented reason for that setting existing at all)
-    // even though the login WEBSITE (www.playgenerals.online, a different
+    // even though the login website (a different
     // host) works fine for them. The native client only exposes this as a
     // manual settings toggle; this launcher has no settings screen for it
     // yet, so postJson() below falls back to it automatically whenever the
     // primary host doesn't answer.
-    static final String API_BASE_ALT = "https://api-ru.playgenerals.online/env/prod/contract/1/";
+    static final String API_BASE_ALT = "";
 
     static final String PREFS_NAME = "generalsonline_session";
     static final String PREF_SESSION_TOKEN = "session_token";
@@ -182,6 +183,11 @@ final class GeneralsOnlineSession {
     // only ever looks at the status to catch 423 (banned). A response is a
     // transport failure now only when there is no parseable body at all.
     static AuthResult postJson(Context ctx, String endpoint, JSONObject body, String bearerToken) {
+        // BFME: E1-04 do not call the online API.
+        if (API_BASE.isEmpty() || API_BASE_ALT.isEmpty()) {
+            lastNetworkErrorDetail = "online services are disabled";
+            return null;
+        }
         StringBuilder errors = new StringBuilder();
         AuthResult result = postJsonOnce(ctx, API_BASE, endpoint, body, bearerToken, errors);
         if (result != null) {
@@ -326,6 +332,11 @@ final class GeneralsOnlineSession {
      * mixed-case letters.
      */
     static String fetchLoginCode(Context ctx) {
+        // BFME: E1-04 do not request a login code.
+        if (API_BASE.isEmpty()) {
+            lastNetworkErrorDetail = "online services are disabled";
+            return null;
+        }
         HttpURLConnection conn = null;
         try {
             URL url = new URL(API_BASE + "LoginCode");

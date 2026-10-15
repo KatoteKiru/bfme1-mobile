@@ -2,6 +2,27 @@ plugins {
     id 'com.android.application'
 }
 
+// Short SHA of HEAD, same command tools/build-apk.sh prints in its journal.
+def bfmeVersionName() {
+    def sha = 'unknown'
+    try {
+        def out = new ByteArrayOutputStream()
+        exec {
+            workingDir rootProject.projectDir.parentFile
+            commandLine 'git', 'rev-parse', '--short=7', 'HEAD'
+            standardOutput = out
+            errorOutput = new ByteArrayOutputStream()
+            ignoreExitValue = true
+        }
+        def text = out.toString().trim()
+        if (text ==~ /[0-9a-fA-F]{7,}/) {
+            sha = text
+        }
+    } catch (Exception ignored) {
+    }
+    return "0.1.0-${sha}"
+}
+
 android {
     namespace 'com.generalsx.zerohour'
     compileSdk 35
@@ -9,11 +30,17 @@ android {
     // AGP 8.5.2 would otherwise ask for 34.0.0 and try to download it at build time.
     buildToolsVersion '35.0.0'
 
-    // BFME1 Mobile @build Android 02/10/2026 Signing key lives OUTSIDE git.
-    // tools/build-apk.sh generates it once (box: /workspace/bfme-mobile/secrets/,
-    // CI: decoded from the BFME_DEBUG_KEYSTORE_B64 secret) and passes it in via
-    // environment variables. The fork's committed debug.keystore is not used.
-    // A stable key keeps consecutive builds installable as updates.
+    // BFME: E1-04 BuildConfig carries BFME_OTA_URL / BFME_ONLINE_URL.
+    buildFeatures {
+        buildConfig true
+    }
+
+    // BFME1 Mobile @build Android 08/10/2026 Signing key lives OUTSIDE git.
+    // tools/build-apk.sh loads it from BFME_KEYSTORE_FILE (box:
+    // /workspace/bfme-mobile/secrets/bfme-debug.keystore) and passes
+    // BFME_KEYSTORE_PASSWORD, BFME_KEY_ALIAS and BFME_KEY_PASSWORD.
+    // The fork's committed debug.keystore is not used. A stable key keeps
+    // consecutive builds installable as updates.
     signingConfigs {
         bfmeDebug {
             def ks = System.getenv('BFME_KEYSTORE_FILE')
@@ -31,7 +58,13 @@ android {
     }
 
     defaultConfig {
-        applicationId 'com.generalsx.zerohour'
+        // BFME1 Mobile @build Android 08/10/2026 applicationId is independent of
+        // the Java package and of `namespace` above (both stay
+        // com.generalsx.zerohour). Launcher label is app_name ("ME1 Mobile").
+        applicationId 'io.github.katotekiru.me1mobile'
+        // BFME: E1-04 hooks for our own OTA and online server; empty = disabled.
+        buildConfigField 'String', 'BFME_OTA_URL', "\"${project.findProperty('bfmeOtaUrl') ?: ''}\""
+        buildConfigField 'String', 'BFME_ONLINE_URL', "\"${project.findProperty('bfmeOnlineUrl') ?: ''}\""
         // API 28 (Android 9): floor that still covers the Redmi Note 8 Pro
         // line while giving bionic glob(3) and stable Vulkan loader behavior.
         // The real graphics gate is the GPU driver, not the OS version — see
@@ -77,8 +110,13 @@ android {
         // already on your device.
         // Scheme: versionCode = major*10000 + minor*100 + patch, so the
         // number always sorts the same way as versionName (1.2.0 -> 10200).
-        versionCode (project.hasProperty('androidVersionCode') ? (project.androidVersionCode as Integer) : 10300)
-        versionName (project.hasProperty('androidVersionName') ? project.androidVersionName : '1.3.0')
+        // BFME1 Mobile @build Android 08/10/2026 New applicationId, so this is
+        // not an upgrade of GeneralsX 1.3.0. versionName carries the short git
+        // SHA of the commit that was built (0.1.0-e9292c9). tools/build-apk.sh
+        // passes -PandroidVersionName; a direct Gradle build computes the same
+        // string. versionCode follows major*10000 + minor*100 + patch.
+        versionCode (project.hasProperty('androidVersionCode') ? (project.androidVersionCode as Integer) : 100)
+        versionName (project.hasProperty('androidVersionName') ? project.androidVersionName : bfmeVersionName())
         ndk {
             abiFilters 'arm64-v8a'
         }
@@ -90,7 +128,13 @@ android {
             // (gitignored): jniLibs/ receives the CMake-built .so set, java-sdl/
             // receives org/libsdl/app/*.java from the in-tree SDL3 source so the
             // shell always matches the exact SDL version the game linked.
-            java.srcDirs += 'src/main/java-sdl'
+            // BFME: E1-04 the online account classes are not compiled in. Their
+            // names would otherwise be stored in classes.dex and the manifest.
+            java {
+                srcDirs = ['src/main/java', 'src/main/java-sdl']
+                exclude '**/GeneralsOnlineActivity.java'
+                exclude '**/GeneralsOnlineSession.java'
+            }
             jniLibs.srcDirs = ['src/main/jniLibs']
             // Small runtime files bundled into the APK, staged by the packaging
             // script: assets/gamedata/ (fonts/, dxvk.conf, DefaultOptions.ini)

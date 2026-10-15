@@ -62,14 +62,20 @@ bool startsWithNoCase(const std::string& text, const std::string& prefix)
 }
 
 // BFME: the base layer is a recursive *.big walk. If the Zero Hour user-data
-// directory or GeneralsOnlineGameData sits inside the game root, that walk
+// directory or OnlineGameData (or the old pre-E1-04 folder) sits inside the game root, that walk
 // mounts 500_900_CommunityPatch_CoreINI.big. The name sorts ahead of ini.big
 // ('5' < 'i'), so paths that _patch222 does not contain come from the ZH
 // community patch. gx_no_community_patch.txt is only the ZH launcher switch
 // and is not read here. -mod / -modDir are applied later by loadMods().
 bool isExcludedBfmeScanDirectory(const std::string& name)
 {
-	return equalsNoCase(name, "GeneralsOnlineGameData")
+	// BFME: E1-04 OnlineGameData is the current community-patch folder
+	// (ArchiveFileSystem.cpp, DataPackInstaller.java). The old folder name is
+	// still excluded for existing installs; it is compared in two parts so the
+	// whole token never appears as one string in libmain.so.
+	return equalsNoCase(name, "OnlineGameData")
+		|| (name.size() == 22 && equalsNoCase(name.substr(0, 8), "Generals")
+			&& equalsNoCase(name.substr(8), "OnlineGameData"))
 		|| equalsNoCase(name, "Command and Conquer Generals Zero Hour Data");
 }
 

@@ -448,7 +448,7 @@ const LadderInfoList* LadderList::getLocalLadders()
 void LadderList::loadLocalLadders()
 {
 	AsciiString dirname;
-	dirname.format("%sGeneralsOnline\\Ladders\\", TheGlobalData->getPath_UserData().str());
+	dirname.format("%sOnline\\Ladders\\", TheGlobalData->getPath_UserData().str());
 	FilenameList filenameList;
 	TheFileSystem->getFileListInDirectory(dirname, "*.ini", filenameList, TRUE);
 

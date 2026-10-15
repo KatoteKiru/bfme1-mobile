@@ -10,10 +10,15 @@
 #   BFME_JOBS=4                    параллелизм ninja/vcpkg (бокс: 15 ГБ ОЗУ без swap -> 3-4)
 #   BFME_MEM_LIMIT=6g              лимит памяти контейнера (OOM убивает сборку, а не бокс)
 #   BFME_CACHE=<dir>               кэши ccache/vcpkg/gradle (по умолчанию <repo>/../cache или ~/.cache/bfme)
-#   BFME_SECRETS=<dir>             каталог ключа подписи ВНЕ git (по умолчанию <repo>/../secrets)
-#   BFME_DEBUG_KEYSTORE_B64        keystore в base64 (CI-секрет); иначе берётся/создаётся файл в BFME_SECRETS
-#   BFME_KEYSTORE_PASSWORD         пароль (CI-секрет); на боксе хранится в BFME_SECRETS/keystore.pass
+#   BFME_SECRETS=<dir>             каталог ключа подписи ВНЕ git
+#                                  (бокс: /workspace/bfme-mobile/secrets; иначе <repo>/../secrets)
+#   BFME_KEYSTORE_FILE             PKCS12-ключ (по умолчанию $BFME_SECRETS/bfme-debug.keystore)
+#   BFME_KEYSTORE_PASSWORD         пароль хранилища (на боксе: $BFME_SECRETS/keystore.pass, chmod 600)
+#   BFME_KEY_ALIAS                 алиас (по умолчанию bfmedebug)
+#   BFME_KEY_PASSWORD              пароль ключа (по умолчанию равен BFME_KEYSTORE_PASSWORD)
+#   BFME_DEBUG_KEYSTORE_B64        запасной путь: keystore в base64, только ручной запуск вне бокса
 #   BFME_REQUIRE_KEYSTORE=1        не генерировать ключ, а падать, если его нет (CI)
+#   GX_ANDROID_VERSION_NAME        versionName; по умолчанию 0.1.0-<короткий SHA HEAD>
 #   BFME_DOCKER="sudo -n /usr/local/sbin/bfme-ci-docker"   как вызывать docker (раннер CI)
 #   BFME_RELRO_WAIVE="libc++_shared.so ..."   готовые .so, которым прощается конец RELRO не на 16 КБ
 #   BFME_TOOLCHAIN=/opt/bfme-toolchain   префикс нативного тулчейна (--native)
@@ -48,18 +53,35 @@ fi
 ts() { echo "=== [$(date '+%F %T %Z')] $*"; }
 
 # ---------------------------------------------------------------- ключ подписи (вне git)
+secrets_dir() {
+  if [ -n "${BFME_SECRETS:-}" ]; then
+    printf '%s\n' "$BFME_SECRETS"
+    return
+  fi
+  # Бокс: репозиторий в /workspace/bfme-mobile, ключ рядом, не в git.
+  if [ -d /workspace/bfme-mobile ]; then
+    printf '%s\n' /workspace/bfme-mobile/secrets
+    return
+  fi
+  printf '%s\n' "$(cd "$REPO/.." && pwd)/secrets"
+}
+
 prepare_keystore() {
-  local dir="${BFME_SECRETS:-$(cd "$REPO/.." && pwd)/secrets}"
+  local dir; dir="$(secrets_dir)"
   mkdir -p "$dir"; chmod 700 "$dir"
   export BFME_KEY_ALIAS="${BFME_KEY_ALIAS:-bfmedebug}"
-  export BFME_KEYSTORE_FILE="$dir/bfme-debug.keystore"
+  if [ -z "${BFME_KEYSTORE_FILE:-}" ]; then
+    export BFME_KEYSTORE_FILE="$dir/bfme-debug.keystore"
+  fi
   if [ -n "${BFME_DEBUG_KEYSTORE_B64:-}" ]; then
     echo "$BFME_DEBUG_KEYSTORE_B64" | base64 -d > "$BFME_KEYSTORE_FILE"
+    chmod 600 "$BFME_KEYSTORE_FILE"
     : "${BFME_KEYSTORE_PASSWORD:?BFME_KEYSTORE_PASSWORD обязателен вместе с BFME_DEBUG_KEYSTORE_B64}"
     ts "ключ подписи: из секрета BFME_DEBUG_KEYSTORE_B64"
   else
     if [ -z "${BFME_KEYSTORE_PASSWORD:-}" ]; then
-      [ -f "$dir/keystore.pass" ] || { head -c 24 /dev/urandom | base64 | tr -d '/+=' > "$dir/keystore.pass"; chmod 600 "$dir/keystore.pass"; }
+      [ -f "$dir/keystore.pass" ] || { head -c 24 /dev/urandom | base64 | tr -d '/+=' > "$dir/keystore.pass"; }
+      [ -f "$dir/keystore.pass" ] && chmod 600 "$dir/keystore.pass"
       BFME_KEYSTORE_PASSWORD="$(cat "$dir/keystore.pass")"
     fi
     if [ ! -f "$BFME_KEYSTORE_FILE" ] && [ "${BFME_REQUIRE_KEYSTORE:-0}" = 1 ]; then
@@ -67,18 +89,31 @@ prepare_keystore() {
     elif [ ! -f "$BFME_KEYSTORE_FILE" ]; then
       ts "ключ подписи: генерирую новый отладочный ключ $BFME_KEYSTORE_FILE"
       keytool -genkeypair -noprompt -keystore "$BFME_KEYSTORE_FILE" -storetype PKCS12 \
-        -storepass "$BFME_KEYSTORE_PASSWORD" -keypass "$BFME_KEYSTORE_PASSWORD" -alias "$BFME_KEY_ALIAS" \
+        -storepass "$BFME_KEYSTORE_PASSWORD" -keypass "${BFME_KEY_PASSWORD:-$BFME_KEYSTORE_PASSWORD}" -alias "$BFME_KEY_ALIAS" \
         -keyalg RSA -keysize 3072 -validity 10000 -dname "CN=BFME1 Mobile Debug, O=bfme-mobile, C=RU"
       chmod 600 "$BFME_KEYSTORE_FILE"
     else
+      chmod 600 "$BFME_KEYSTORE_FILE"
       ts "ключ подписи: $BFME_KEYSTORE_FILE"
     fi
   fi
   export BFME_KEYSTORE_PASSWORD BFME_KEY_PASSWORD="${BFME_KEY_PASSWORD:-$BFME_KEYSTORE_PASSWORD}"
+  ts "ключ подписи: alias=${BFME_KEY_ALIAS} file=${BFME_KEYSTORE_FILE}"
 }
 
 # ---------------------------------------------------------------- сборка (в контейнере или нативно)
 build_inside() {
+  local git_sha
+  git_sha="$(git rev-parse --short=7 HEAD 2>/dev/null || true)"
+  if [ -z "$git_sha" ]; then
+    echo "ОШИБКА: не удалось прочитать короткий git SHA (versionName)"
+    exit 1
+  fi
+  export GX_ANDROID_VERSION_NAME="${GX_ANDROID_VERSION_NAME:-0.1.0-${git_sha}}"
+  ts "git ${git_sha}  versionName ${GX_ANDROID_VERSION_NAME}"
+  ts "E1-04: нет URL апстрима в исходниках"
+  tools/ci/check-no-upstream-urls.sh
+
   ts "окружение"; uname -a; nproc; free -m | head -2 || true
   echo "NDK: $(grep Pkg.Revision "$ANDROID_NDK_HOME/source.properties")"
   cmake --version | head -1; ninja --version; java -version 2>&1 | head -1; gradle --version 2>/dev/null | grep '^Gradle'
@@ -138,17 +173,32 @@ build_inside() {
 
   local APK=android/app/build/outputs/apk/debug/app-debug.apk
   [ -f "$APK" ] || { echo "APK не найден: $APK"; exit 1; }
-  local OUT="out/bfme-zh-$(git rev-parse --short HEAD).apk"
+  local OUT="out/bfme-zh-${git_sha}.apk"
   cp "$APK" "$OUT"
+  local sum
+  sum="$(sha256sum "$OUT" | awk '{print $1}')"
+  printf '%s  %s\n' "$sum" "$(basename "$OUT")" > "out/$(basename "$OUT").sha256"
+  ts "APK: ${REPO}/${OUT}"
+  ts "sha256: ${sum}"
+  ts "versionName: ${GX_ANDROID_VERSION_NAME}"
   verify_apk "$OUT" "$TB"
-  ( cd out && sha256sum "$(basename "$OUT")" > "$(basename "$OUT").sha256" )
-  ts "ГОТОВО: $OUT ($(du -h "$OUT" | cut -f1))"
+  ts "ГОТОВО: ${REPO}/${OUT} ($(du -h "$OUT" | cut -f1)) sha256=${sum}"
 }
 
 verify_apk() {
   local APK="$1" TB="$2" W; W="$(mktemp -d)"
-  ts "проверка APK: подпись"
-  apksigner verify --verbose --print-certs "$APK" | grep -E 'Verified using|Signer #1 certificate (DN|SHA-256)|Number of signers'
+  ts "проверка APK: apksigner verify"
+  if ! apksigner verify "$APK"; then
+    echo "ОШИБКА: apksigner verify не прошёл: $APK"
+    exit 1
+  fi
+  ts "проверка APK: apksigner verify --print-certs"
+  if ! apksigner verify --print-certs "$APK"; then
+    echo "ОШИБКА: apksigner verify --print-certs не прошёл: $APK"
+    exit 1
+  fi
+  ts "проверка APK: нет URL апстрима (classes.dex, .so, resources.arsc)"
+  "$REPO/tools/ci/check-no-upstream-urls.sh" "$APK"
   ts "проверка APK: DT_NEEDED libmain.so"
   unzip -q "$APK" 'lib/arm64-v8a/*' -d "$W"
   local missing=0
@@ -215,13 +265,17 @@ case "$MODE" in
       $DOCKER build --network host -f docker/android-build.Dockerfile --build-arg UBUNTU_IMAGE="$UBUNTU_IMAGE" -t "$IMAGE_TAG" .
     else ts "образ $IMAGE_TAG уже есть"; fi
     [ "$MODE" = image ] && exit 0
-    CACHE="${BFME_CACHE:-$(cd "$REPO/.." && pwd)/cache}"; SECRETS="${BFME_SECRETS:-$(cd "$REPO/.." && pwd)/secrets}"
+    CACHE="${BFME_CACHE:-$(cd "$REPO/.." && pwd)/cache}"; SECRETS="$(secrets_dir)"
     mkdir -p "$CACHE/home" "$SECRETS"
     ts "сборка в контейнере $IMAGE_TAG (jobs=$JOBS, mem=${BFME_MEM_LIMIT:-6g})"
     $DOCKER run --rm --network host --memory="${BFME_MEM_LIMIT:-6g}" --memory-swap="${BFME_MEM_LIMIT:-6g}" \
       -u "$(id -u):$(id -g)" -e HOME=/cache/home -e BFME_LOG="$BFME_LOG" -e BFME_JOBS="$JOBS" \
       -e BFME_CACHE_INNER=/cache -e BFME_SECRETS=/secrets -e BFME_BUILD_NUMBER="${BFME_BUILD_NUMBER:-0}" \
-      -e BFME_DEBUG_KEYSTORE_B64="${BFME_DEBUG_KEYSTORE_B64:-}" -e BFME_KEYSTORE_PASSWORD="${BFME_KEYSTORE_PASSWORD:-}" \
+      -e BFME_DEBUG_KEYSTORE_B64="${BFME_DEBUG_KEYSTORE_B64:-}" \
+      -e BFME_KEYSTORE_PASSWORD="${BFME_KEYSTORE_PASSWORD:-}" \
+      -e BFME_KEY_ALIAS="${BFME_KEY_ALIAS:-}" \
+      -e BFME_KEY_PASSWORD="${BFME_KEY_PASSWORD:-}" \
+      -e GX_ANDROID_VERSION_NAME="${GX_ANDROID_VERSION_NAME:-}" \
       -e BFME_ALLOW_4K="${BFME_ALLOW_4K:-0}" -e BFME_REQUIRE_KEYSTORE="${BFME_REQUIRE_KEYSTORE:-0}" \
       -v "$REPO:/src" -v "$CACHE:/cache" -v "$SECRETS:/secrets" -w /src "$IMAGE_TAG" tools/build-apk.sh --inside ;;
 esac

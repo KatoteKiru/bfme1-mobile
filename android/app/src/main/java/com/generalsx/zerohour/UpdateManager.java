@@ -60,8 +60,7 @@ import java.util.zip.GZIPInputStream;
 final class UpdateManager {
     private static final String TAG = "GXUpdate";
 
-    static final String BASE_URL =
-        "https://raw.githubusercontent.com/MYSOREZ/GeneralsZH-Android-Port/updates/";
+    // BFME: E1-04 the fork update host is not compiled into this APK.
 
     /** SubjectPublicKeyInfo (DER, base64) of the update signing key. */
     static final String PUBLIC_KEY_B64 =
@@ -108,7 +107,8 @@ final class UpdateManager {
     // Settings
 
     static boolean isAutoCheckEnabled(Context ctx) {
-        return prefs(ctx).getBoolean(KEY_AUTO, true);
+        // BFME: E1-04 auto-update stays off unless a future build turns it on.
+        return prefs(ctx).getBoolean(KEY_AUTO, false);
     }
 
     static void setAutoCheckEnabled(Context ctx, boolean enabled) {
@@ -248,67 +248,8 @@ final class UpdateManager {
      *        is the engine's place; the multiplayer screen passes false.
      */
     static Result check(Context ctx, boolean withEngine) {
-        Result r = new Result();
-        try {
-            byte[] manifestBytes = download(BASE_URL + "manifest.json", 256 * 1024);
-            byte[] signatureText = download(BASE_URL + "manifest.json.sig", 16 * 1024);
-            if (!verify(manifestBytes, signatureText)) {
-                r.error = "signature";
-                return r;
-            }
-            JSONObject manifest = new JSONObject(new String(manifestBytes, StandardCharsets.UTF_8));
-            r.serial = manifest.optInt("serial", 0);
-            if (r.serial < acceptedSerial(ctx)) {
-                r.error = "older manifest (" + r.serial + " < " + acceptedSerial(ctx) + ")";
-                return r;
-            }
-
-            File dir = updateDir(ctx);
-            if (!dir.isDirectory() && !dir.mkdirs()) {
-                r.error = "cannot create " + dir;
-                return r;
-            }
-
-            JSONObject config = manifest.optJSONObject("config");
-            if (config != null) {
-                r.configUpdated = writeRemoteConfig(ctx, config);
-            }
-
-            JSONObject engine = manifest.optJSONObject("engine");
-            if (engine != null && withEngine) {
-                applyEngine(ctx, engine, r);
-            }
-
-            noticeNewerDatapack(ctx, r);
-
-            writeBytes(new File(dir, "manifest.json"), manifestBytes);
-            SharedPreferences.Editor edit = prefs(ctx).edit();
-            if (r.serial != acceptedSerial(ctx) || !prefs(ctx).contains(KEY_SETTINGS_DATE)) {
-                // Players see the settings by date, not by serial. A manifest from before the
-                // "published" field is dated by the day it arrived.
-                String published = manifest.optString("published", "");
-                edit.putString(KEY_SETTINGS_DATE, published.matches("\\d{4}-\\d{2}-\\d{2}")
-                    ? published
-                    : new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-                        .format(new java.util.Date()));
-            }
-            edit
-                .putInt(KEY_SERIAL, r.serial)
-                .putLong(KEY_LAST_CHECK, System.currentTimeMillis())
-                .apply();
-            r.ok = r.error == null;
-        } catch (java.net.UnknownHostException | java.net.ConnectException
-                 | java.net.SocketTimeoutException | java.net.NoRouteToHostException e) {
-            // Offline is a normal state, not an error: the launcher and the game work without a
-            // network, and whatever was verified last time (settings, engine) stays in use.
-            r.offline = true;
-            r.error = "offline";
-        } catch (Exception e) {
-            Log.w(TAG, "update check failed", e);
-            String msg = e.getMessage();
-            r.error = (msg == null || msg.isEmpty()) ? e.getClass().getSimpleName() : msg;
-        }
-        return r;
+        // BFME: E1-04 delegated to UpdateProvider; no-op unless BFME_OTA_URL is set.
+        return UpdateProvider.forBuild().check(ctx, withEngine);
     }
 
     /**

@@ -2451,7 +2451,7 @@ void WOLGameSetupMenuUpdate( WindowLayout * layout, void *userData)
 		{
 			bool bForceShutdown = true;
 			WOLGameSetupMenuShutdown(layout, (void*)&bForceShutdown); // userdata is 'force shutdown'
-			TearDownGeneralsOnline();
+			TearDownOnlineServices();
 
 			TheShell->pop();
 			return;

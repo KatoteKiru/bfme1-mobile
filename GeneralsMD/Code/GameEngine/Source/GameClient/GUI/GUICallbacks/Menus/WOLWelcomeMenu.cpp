@@ -819,7 +819,7 @@ void WOLWelcomeMenuUpdate( WindowLayout * layout, void *userData)
 		TheShell->pop();
 
 		// NGMP: Don't need to logout here, just kill the WS connection, that triggers a log out
-		TearDownGeneralsOnline();
+		TearDownOnlineServices();
 	}
 
 	// TODO_NGMP: do we still care about FW helper?
@@ -1022,7 +1022,7 @@ WindowMsgHandledType WOLWelcomeMenuSystem( GameWindow *window, UnsignedInt msg,
 					// NGMP: Don't need to logout here, just kill the WS connection, that triggers a log out
 					NGMP_OnlineServicesManager::GetInstance()->SetPendingFullTeardown(EGOTearDownReason::USER_REQUESTED_SILENT);
 
-					DEBUG_LOG(("Tearing down GeneralsOnline from WOLWelcomeMenuSystem(GBM_SELECTED)\n"));
+					DEBUG_LOG(("Tearing down Online from WOLWelcomeMenuSystem(GBM_SELECTED)\n"));
 #else
 					PeerRequest req;
 					req.peerRequestType = PeerRequest::PEERREQUEST_LOGOUT;

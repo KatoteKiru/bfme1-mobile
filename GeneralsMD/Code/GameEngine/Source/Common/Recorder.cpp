@@ -1252,8 +1252,8 @@ void RecorderClass::handleCRCMessage(UnsignedInt newCRC, Int playerIndex, Bool f
 			{
 				fprintf(stderr, "[GX-NET] replay crc: recording uses logic CRC revision %s;"
 					" switching to it (frame %u)\n",
-					GameLogic::getLogicCRCRevision() ? "0x474F0001 (GeneralsOnline 23/09 and later)"
-						: "none (GeneralsOnline 28/08 and earlier)",
+					GameLogic::getLogicCRCRevision() ? "0x474F0001 (Online 23/09 and later)"
+						: "none (Online 28/08 and earlier)",
 					(unsigned)describedFrame);
 				fflush(stderr);
 			}

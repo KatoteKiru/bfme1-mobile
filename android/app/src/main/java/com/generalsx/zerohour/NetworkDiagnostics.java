@@ -81,6 +81,14 @@ final class NetworkDiagnostics {
         void onStep(String label);
     }
 
+    // BFME: E1-04 local copies of the session preference keys. The session class
+    // is excluded from this build, so this file must not name it.
+    private static final String SESSION_PREFS = "generalsonline_session";
+    private static final String PREF_SESSION_TOKEN = "session_token";
+    private static final String PREF_REFRESH_TOKEN = "refresh_token";
+    private static final String PREF_USER_ID = "user_id";
+    private static final String PREF_DISPLAY_NAME = "display_name";
+    private static final String SESSION_MARKER_NAME = "generalsonline_session.txt";
     private static final String PREF_INSTALL_ID = "install_id";
 
     private static final int CONNECT_TIMEOUT_MS = 10000;
@@ -113,7 +121,7 @@ final class NetworkDiagnostics {
      */
     static String installId(Context ctx) {
         SharedPreferences prefs =
-            ctx.getSharedPreferences(GeneralsOnlineSession.PREFS_NAME, Context.MODE_PRIVATE);
+            ctx.getSharedPreferences(SESSION_PREFS, Context.MODE_PRIVATE);
         String id = prefs.getString(PREF_INSTALL_ID, null);
         if (id == null || id.isEmpty()) {
             id = UUID.randomUUID().toString();
@@ -282,11 +290,8 @@ final class NetworkDiagnostics {
 
     // -------------------------------------------------------------------- DNS
 
-    private static final String[] HOSTS = {
-        "api.playgenerals.online",
-        "api-ru.playgenerals.online",
-        "www.playgenerals.online",
-    };
+    // BFME: E1-04 do not resolve online-service hosts.
+    private static final String[] HOSTS = {};
 
     private static void dns(StringBuilder r, Progress progress) {
         r.append("[2] DNS\n");
@@ -324,93 +329,13 @@ final class NetworkDiagnostics {
     // -------------------------------------------------------------- endpoints
 
     private static void endpoints(Context ctx, StringBuilder r, Progress progress) {
+        // BFME: E1-04 online endpoint probes are not part of this build.
         r.append("[3] Server endpoints\n");
-
-        // The login WEBSITE is a different host from the API, and one can work
-        // while the other is blocked -- that asymmetry is the whole reason the
-        // alternate API endpoint exists upstream, so the report has to test
-        // them separately rather than concluding anything from one of them.
-        step(progress, "login site");
-        Probe site = probe(ctx, "GET", "https://www.playgenerals.online/", null, null);
-        r.append("  login site        : ").append(site.describe()).append('\n');
-
-        step(progress, "API (primary)");
-        Probe primary = probeApi(ctx, GeneralsOnlineSession.API_BASE);
-        r.append("  API primary       : ").append(primary.describe()).append('\n');
-
-        step(progress, "API (alternate)");
-        Probe alt = probeApi(ctx, GeneralsOnlineSession.API_BASE_ALT);
-        r.append("  API alternate     : ").append(alt.describe()).append('\n');
-
-        // Clock check, from whichever probe actually reached a server.
-        Probe timed = site.serverDateMs > 0 ? site
-            : (primary.serverDateMs > 0 ? primary : alt);
-        if (timed.serverDateMs > 0) {
-            long skew = (timed.localDateMs - timed.serverDateMs) / 1000L;
-            r.append("  clock skew        : ").append(skew).append(" s");
-            if (Math.abs(skew) > 300) {
-                r.append("   <-- PROBLEM");
-            }
-            r.append('\n');
-            if (Math.abs(skew) > 300) {
-                r.append("       This device's clock is more than 5 minutes off. HTTPS\n");
-                r.append("       certificates and login tokens are both time-checked, so\n");
-                r.append("       sign-in can fail for this reason alone. Turn on automatic\n");
-                r.append("       date and time in Android settings and run this again.\n");
-            }
-            r.append("  device time zone  : ").append(TimeZone.getDefault().getID()).append('\n');
+        r.append("  skipped: online service checks are disabled\n\n");
+        if (ctx == null) {
+            return;
         }
-
-        r.append('\n');
-        r.append("[4] Sign-in API behaviour\n");
-
-        // The first thing a real sign-in does. If this fails there is no
-        // code to put in the browser and nothing downstream can work.
-        step(progress, "LoginCode");
-        Probe issued = probe(ctx, "GET", GeneralsOnlineSession.API_BASE + "LoginCode", null, null);
-        r.append("  LoginCode (issues the code the website claims)\n");
-        r.append("    status  : ").append(issued.status > 0
-            ? Integer.toString(issued.status) : "no response").append('\n');
-        r.append("    meaning : ").append(issued.status == 200
-            ? "the server issues login codes normally"
-            : "the server would not issue a login code -- sign-in cannot start")
-            .append('\n');
-
-        step(progress, "CheckLogin");
-
-        // A code that was never issued by the website. The answer to this is
-        // also the answer the poll loop gets for every second the user spends
-        // on the login page, so it documents the normal pending state.
-        String throwaway = "diagnostic" + UUID.randomUUID().toString().replace("-", "");
-        throwaway = throwaway.substring(0, Math.min(32, throwaway.length()));
-
-        JSONObject body = new JSONObject();
-        try {
-            body.put("code", throwaway);
-            body.put("client_id", GeneralsOnlineSession.clientId(ctx));
-            body.put("machine_guid", installId(ctx));
-            body.put("mac_addr", syntheticMac(ctx));
-            body.put("vol_serial", syntheticVolumeSerial(ctx));
-            body.put("exe_crc", 0);
-            body.put("ini_crc", 0);
-        } catch (Exception e) {
-            // A JSONObject.put of constants cannot actually throw; if it
-            // somehow did, an empty body still produces a usable status code.
-        }
-
-        Probe check = probe(ctx, "POST",
-            GeneralsOnlineSession.API_BASE + "CheckLogin", body.toString(), null);
-        r.append("  CheckLogin (unclaimed code)\n");
-        r.append("    status  : ").append(check.status > 0
-            ? Integer.toString(check.status) : "no response").append('\n');
-        if (!check.body.isEmpty()) {
-            r.append("    body    : ").append(NetworkTrace.snippet(check.body, 200)).append('\n');
-        }
-        if (!check.error.isEmpty()) {
-            r.append("    error   : ").append(check.error).append('\n');
-        }
-        r.append("    meaning : ").append(explainCheckLogin(check)).append('\n');
-        r.append('\n');
+        step(progress, "skipped");
     }
 
     private static String explainCheckLogin(Probe p) {
@@ -448,11 +373,11 @@ final class NetworkDiagnostics {
     private static void session(Context ctx, StringBuilder r) {
         r.append("[5] Stored sign-in\n");
         SharedPreferences prefs =
-            ctx.getSharedPreferences(GeneralsOnlineSession.PREFS_NAME, Context.MODE_PRIVATE);
-        String session = prefs.getString(GeneralsOnlineSession.PREF_SESSION_TOKEN, "");
-        String refresh = prefs.getString(GeneralsOnlineSession.PREF_REFRESH_TOKEN, "");
-        long userId = prefs.getLong(GeneralsOnlineSession.PREF_USER_ID, -1);
-        String name = prefs.getString(GeneralsOnlineSession.PREF_DISPLAY_NAME, "");
+            ctx.getSharedPreferences(SESSION_PREFS, Context.MODE_PRIVATE);
+        String session = prefs.getString(PREF_SESSION_TOKEN, "");
+        String refresh = prefs.getString(PREF_REFRESH_TOKEN, "");
+        long userId = prefs.getLong(PREF_USER_ID, -1);
+        String name = prefs.getString(PREF_DISPLAY_NAME, "");
 
         if (session.isEmpty() && refresh.isEmpty()) {
             r.append("  not signed in on this device\n");
@@ -465,7 +390,7 @@ final class NetworkDiagnostics {
                 ? "(none)" : refresh.length() + " chars").append('\n');
         }
 
-        File marker = new File(ctx.getFilesDir(), GeneralsOnlineSession.SESSION_MARKER_NAME);
+        File marker = new File(ctx.getFilesDir(), SESSION_MARKER_NAME);
         r.append("  game marker   : ").append(marker.isFile()
             ? "present (" + marker.length() + " bytes) -- the game can read this session"
             : "absent -- the game will start signed out").append('\n');

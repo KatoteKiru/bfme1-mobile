@@ -569,8 +569,8 @@ void WebSocket::Tick()
                             // would just sit there forever with no feedback.
                             ClearGSMessageBoxes();
                             UnicodeString msg;
-                            msg.format(UnicodeString(L"Could not connect to GeneralsOnline (%hs)."), curl_easy_strerror(m->data.result));
-                            GSMessageBoxOk(UnicodeString(L"GeneralsOnline"), msg, nullptr);
+                            msg.format(UnicodeString(L"Could not connect to Online (%hs)."), curl_easy_strerror(m->data.result));
+                            GSMessageBoxOk(UnicodeString(L"Online"), msg, nullptr);
                         }
                     }
                     else

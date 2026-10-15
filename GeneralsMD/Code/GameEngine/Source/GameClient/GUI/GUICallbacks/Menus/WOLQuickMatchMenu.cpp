@@ -1568,7 +1568,7 @@ void WOLQuickMatchMenuUpdate( WindowLayout * layout, void *userData)
         {
             bool bForceShutdown = true;
             WOLQuickMatchMenuShutdown(layout, (void*)&bForceShutdown); // userdata is 'force shutdown'
-            TearDownGeneralsOnline();
+            TearDownOnlineServices();
 
             TheShell->pop();
             return;

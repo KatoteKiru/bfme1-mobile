@@ -148,7 +148,7 @@ static Int getTotalDisconnectsFromFile(Int playerID)
 
 	UserPreferences pref;
 	AsciiString userPrefFilename;
-	userPrefFilename.format("GeneralsOnline\\MiscPref%d.ini", playerID);
+	userPrefFilename.format("Online\\MiscPref%d.ini", playerID);
 	DEBUG_LOG(("getTotalDisconnectsFromFile - reading stats from file %s", userPrefFilename.str()));
 	pref.load(userPrefFilename);
 
@@ -219,7 +219,7 @@ void GetAdditionalDisconnectsFromUserFile(PSPlayerStats *stats)
 
 	UserPreferences pref;
 	AsciiString userPrefFilename;
-	userPrefFilename.format("GeneralsOnline\\MiscPref%d.ini", stats->id);
+	userPrefFilename.format("Online\\MiscPref%d.ini", stats->id);
 	DEBUG_LOG(("GetAdditionalDisconnectsFromUserFile - reading stats from file %s", userPrefFilename.str()));
 	pref.load(userPrefFilename);
 

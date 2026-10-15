@@ -42,6 +42,7 @@
 #if defined(__ANDROID__)
 
 #include "Common/GXLogging.h"
+#include "Common/GXAndroidPackage.h"
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -269,9 +270,11 @@ void computeCrashLogPath() {
 		s_crashLogPath[0] = '\0';
 		return;
 	}
-	int userId = (int)(getuid() / 100000);
-	snprintf(s_crashLogPath, sizeof(s_crashLogPath),
-		"/data/user/%d/com.generalsx.zerohour/files/crash.log", userId);
+	// GeneralsX @bugfix Android port 08/10/2026 applicationId, not the Java package.
+	// BFME: E1-04 crash log path follows the Gradle applicationId.
+	if (!gxAndroidFilesPath(s_crashLogPath, sizeof(s_crashLogPath), "crash.log")) {
+		s_crashLogPath[0] = '\0';
+	}
 }
 
 // GeneralsX @bugfix Android port 30/07/2026 crash.log is append-only by
@@ -290,10 +293,10 @@ void rotatePrevCrashLog() {
 	if (s_crashLogPath[0] == '\0') {
 		return;
 	}
-	int userId = (int)(getuid() / 100000);
 	char prevPath[256];
-	snprintf(prevPath, sizeof(prevPath),
-		"/data/user/%d/com.generalsx.zerohour/files/crash-prev.log", userId);
+	if (!gxAndroidFilesPath(prevPath, sizeof(prevPath), "crash-prev.log")) {
+		return;
+	}
 	rename(s_crashLogPath, prevPath);
 }
 

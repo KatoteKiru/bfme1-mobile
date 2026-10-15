@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">GeneralsZH</string>
+    <string name="app_name">ME1 Mobile</string>
     <string name="common_cancel">취소</string>
 
     <!-- SetupActivity: title / fallback -->
@@ -53,7 +53,7 @@
     <string name="setup_sim_rate_30_short">30 Hz</string>
     <string name="setup_sim_rate_60_short">60 Hz</string>
     <string name="setup_sim_rate_30_desc">30Hz는 이 이식판의 모든 이전 빌드가 사용한 값입니다. 안드로이드끼리는 정상 동작하지만 윈도우 플레이어와의 대전은 동기화가 깨집니다.</string>
-    <string name="setup_sim_rate_60_desc">60Hz는 윈도우용 GeneralsOnline 클라이언트가 사용하는 값이며, 크로스플레이를 가능하게 하는 유일한 설정입니다. 초당 시뮬레이션 작업량이 두 배가 되므로 성능이 낮은 기기에서는 게임이 느려질 수 있습니다.</string>
+    <string name="setup_sim_rate_60_desc">60Hz는 윈도우용 Online 클라이언트가 사용하는 값이며, 크로스플레이를 가능하게 하는 유일한 설정입니다. 초당 시뮬레이션 작업량이 두 배가 되므로 성능이 낮은 기기에서는 게임이 느려질 수 있습니다.</string>
     <string name="setup_sim_rate_help">주기는 엔진을 빌드할 때 고정되므로 앱이 두 버전을 모두 담고 있으며 여기서 선택한 쪽을 불러옵니다. 변경은 다음 게임 실행부터 적용됩니다. 한 경기의 두 플레이어는 같은 주기를 써야 합니다.</string>
     <string name="setup_toast_sim_rate_saved">시뮬레이션 주기를 저장했습니다. 다음 게임 실행부터 적용됩니다.</string>
     <string name="online_crossplay_hz_title">시뮬레이션 주기가 60Hz로 전환되었습니다</string>
@@ -130,7 +130,7 @@
 
     <!-- SetupActivity: Online Multiplayer card -->
     <string name="setup_card_online">온라인 멀티플레이어</string>
-    <string name="setup_button_online_account">GeneralsOnline 계정</string>
+    <string name="setup_button_online_account">Online 계정</string>
     <string name="setup_online_signed_in">%1$s(으)로 로그인됨.</string>
     <string name="setup_online_signed_out">로그인되지 않음 — 온라인 대전에는 로그인이 필요합니다.</string>
 
@@ -179,12 +179,12 @@
     <string name="logviewer_toast_share_failed">공유할 로그 파일을 준비할 수 없습니다: %1$s</string>
     <string name="logviewer_read_failed">(%1$s을(를) 읽을 수 없습니다: %2$s)</string>
 
-    <!-- GeneralsOnlineActivity -->
-    <string name="online_window_title">GeneralsOnline 계정</string>
-    <string name="online_subtitle">온라인 멀티플레이어를 위해 로그인하세요 (playgenerals.online)</string>
+    <!-- OnlineActivity -->
+    <string name="online_window_title">Online 계정</string>
+    <string name="online_subtitle">온라인 멀티플레이어를 위해 로그인하세요</string>
     <string name="online_button_sign_out">로그아웃</string>
     <string name="online_card_sign_in">로그인</string>
-    <string name="online_signin_help">로그인을 누르세요. 처음 누르면 이 앱을 배터리 최적화에서 제외할지 묻는 화면이 나타날 수 있습니다 — 허용한 다음 돌아와서 로그인을 다시 누르세요. 그러면 이 기기용 일회용 코드가 이미 포함된 상태로 playgenerals.online 브라우저가 열립니다. 거기서 Steam, Discord 또는 GameReplays를 선택한 다음 이 앱으로 돌아오기만 하면 로그인이 자동으로 완료됩니다.</string>
+    <string name="online_signin_help">로그인을 누르세요. 처음 누르면 이 앱을 배터리 최적화에서 제외할지 묻는 화면이 나타날 수 있습니다 — 허용한 다음 돌아와서 로그인을 다시 누르세요. 그러면 이 기기용 일회용 코드가 이미 포함된 상태로  브라우저가 열립니다. 거기서 Steam, Discord 또는 GameReplays를 선택한 다음 이 앱으로 돌아오기만 하면 로그인이 자동으로 완료됩니다.</string>
     <string name="online_button_sign_in">로그인</string>
     <string name="online_status_signing_in">로그인 중...</string>
     <string name="online_status_battery_opt">다음 화면에서 GeneralsZH가 백그라운드에서 실행되도록 허용한 다음 돌아와서 로그인을 다시 누르세요 — 그렇지 않으면 브라우저에 있는 동안 Android가 로그인 확인을 중단할 수 있습니다.</string>
@@ -228,10 +228,10 @@
     <string name="setup_render_backend_gles_angle_short">ANGLE</string>
     <string name="setup_render_backend_vulkan_short">Vulkan</string>
     <string name="setup_switch_gx_net_trace">온라인 네트워크 로그</string>
-    <string name="setup_switch_gx_net_trace_desc">게임이 GeneralsOnline 서버에 보낸 모든 요청과 받은 응답을 기록합니다. 게임 안에서 로그인, 로비, 매치메이킹이 실패할 때 켜세요. 런처 자체의 요청은 항상 기록되며, 이 스위치는 게임의 요청을 추가합니다. 교차 플랫폼 플레이의 desync 진단도 함께 켭니다. 각 간격마다 비교되는 시뮬레이션 체크섬과, 리플레이에서는 개별 오브젝트마다의 체크섬을 기록합니다. (gx_net_trace.txt)</string>
+    <string name="setup_switch_gx_net_trace_desc">게임이 Online 서버에 보낸 모든 요청과 받은 응답을 기록합니다. 게임 안에서 로그인, 로비, 매치메이킹이 실패할 때 켜세요. 런처 자체의 요청은 항상 기록되며, 이 스위치는 게임의 요청을 추가합니다. 교차 플랫폼 플레이의 desync 진단도 함께 켭니다. 각 간격마다 비교되는 시뮬레이션 체크섬과, 리플레이에서는 개별 오브젝트마다의 체크섬을 기록합니다. (gx_net_trace.txt)</string>
     <string name="netdiag_title">네트워크 진단</string>
-    <string name="netdiag_row_note">이 기기가 GeneralsOnline 서버에 연결되는지 확인하고, 버그 신고에 첨부할 보고서를 만듭니다.</string>
-    <string name="netdiag_intro">네트워크가 작동하는지, GeneralsOnline 서버 이름이 해석되는지, 서버가 응답하는지, 로그인에 대해 뭐라고 답하는지를 순서대로 확인합니다.\n\n아무것도 외부로 전송되지 않습니다. 「실행」을 누르세요.</string>
+    <string name="netdiag_row_note">이 기기가 Online 서버에 연결되는지 확인하고, 버그 신고에 첨부할 보고서를 만듭니다.</string>
+    <string name="netdiag_intro">네트워크가 작동하는지, Online 서버 이름이 해석되는지, 서버가 응답하는지, 로그인에 대해 뭐라고 답하는지를 순서대로 확인합니다.\n\n아무것도 외부로 전송되지 않습니다. 「실행」을 누르세요.</string>
     <string name="netdiag_running">실행 중…</string>
     <string name="netdiag_running_step">실행 중… (%1$s)</string>
     <string name="netdiag_button_run">진단 실행</string>
@@ -240,12 +240,12 @@
     <string name="netdiag_toast_copied">보고서를 클립보드에 복사했습니다.</string>
     <string name="netdiag_toast_share_failed">보고서를 공유하지 못했습니다: %1$s</string>
     <string name="netdiag_share_subject">GeneralsZH 네트워크 로그</string>
-    <string name="online_status_banned">이 계정은 GeneralsOnline에서 차단되었습니다. 해당 Discord에서 이의를 제기할 수 있습니다.</string>
-    <string name="online_status_banned_reason">이 계정은 GeneralsOnline에서 차단되었습니다: %1$s</string>
+    <string name="online_status_banned">이 계정은 Online에서 차단되었습니다. 해당 Discord에서 이의를 제기할 수 있습니다.</string>
+    <string name="online_status_banned_reason">이 계정은 Online에서 차단되었습니다: %1$s</string>
     <string name="online_status_requesting_code">서버에 로그인 코드를 요청하는 중…</string>
     <string name="online_status_no_login_code">서버가 로그인 코드를 발급하지 않았습니다. 연결을 확인하고 다시 시도하거나, 도구에서 네트워크 진단을 실행하세요.</string>
     <string name="online_card_datapacks">온라인 게임 데이터</string>
-    <string name="online_datapacks_help">온라인 플레이에는 게임에 들어 있지 않은 두 가지가 필요합니다. PC 게임이 이 기기를 받아줄지 결정하는 커뮤니티 데이터 패치와, 그 게임들이 진행되는 커뮤니티 맵입니다. 여기서 둘 다 GeneralsOnline에서 바로 받습니다 — PC는 필요 없습니다.</string>
+    <string name="online_datapacks_help">온라인 플레이에는 게임에 들어 있지 않은 두 가지가 필요합니다. PC 게임이 이 기기를 받아줄지 결정하는 커뮤니티 데이터 패치와, 그 게임들이 진행되는 커뮤니티 맵입니다. 여기서 둘 다 Online에서 바로 받습니다 — PC는 필요 없습니다.</string>
     <string name="online_button_datapacks_update">업데이트</string>
     <string name="online_datapacks_checking">업데이트 확인 중…</string>
     <string name="online_datapacks_downloading">다운로드 중… %1$d%%</string>
@@ -293,11 +293,11 @@
     <string name="replaycheck_trace_failed">네트워크 추적을 켤 수 없습니다. 로그에 체크섬 세부 정보가 없습니다.</string>
     <string name="replaycheck_crc_every_frame">매 프레임 체크섬</string>
     <string name="replaycheck_crc_every_frame_help">매 프레임의 로직 체크섬도 로그에 기록합니다. PC 클라이언트가 프레임 단위로 검사할 리플레이 사본을 만드는 데 씁니다. 느려집니다.</string>
-    <string name="setup_online_anticheat_note">모바일 클라이언트에는 안티치트가 없습니다. 함께 플레이하려면 PC 플레이어가 GeneralsOnline 런처에서 안티치트(GeneralsOnline AntiCheat 또는 Easy Anti-Cheat)를 꺼야 합니다. 다른 안티치트를 쓰는 로비에는 휴대폰에서 참가할 수 없고, 그 반대도 마찬가지입니다.</string>
+    <string name="setup_online_anticheat_note">모바일 클라이언트에는 안티치트가 없습니다. 함께 플레이하려면 PC 플레이어가 Online 런처에서 안티치트(Online AntiCheat 또는 Easy Anti-Cheat)를 꺼야 합니다. 다른 안티치트를 쓰는 로비에는 휴대폰에서 참가할 수 없고, 그 반대도 마찬가지입니다.</string>
     <string name="setup_switch_logging">로그 수집</string>
     <string name="setup_switch_logging_desc">게임, 충돌, 네트워크 로그를 기기에 기록합니다. 끄면 다시 켤 때까지 백그라운드에서 아무것도 저장하지 않습니다. 버그 보고에 필요합니다.</string>
     <string name="setup_card_updates">업데이트</string>
-    <string name="setup_updates_help">새 엔진 빌드는 APK를 다시 설치하지 않고 프로젝트 GitHub에서 바로 받습니다. 모든 업데이트는 서명되어 있으며 올바른 서명이 없는 것은 무시됩니다. 네트워크 설정과 온라인 게임 데이터는 GeneralsOnline 계정 화면에 있습니다.</string>
+    <string name="setup_updates_help">새 엔진 빌드는 APK를 다시 설치하지 않고 프로젝트 GitHub에서 바로 받습니다. 모든 업데이트는 서명되어 있으며 올바른 서명이 없는 것은 무시됩니다. 네트워크 설정과 온라인 게임 데이터는 Online 계정 화면에 있습니다.</string>
     <string name="setup_updates_status">엔진: %1$s · 마지막 확인: %2$s</string>
     <string name="setup_updates_engine_bundled">내장, 빌드 %1$d</string>
     <string name="setup_updates_engine_updated">업데이트됨, 빌드 %1$d</string>
@@ -313,7 +313,7 @@
     <string name="setup_updates_not_published">아직 게시된 업데이트가 없습니다.</string>
     <string name="setup_updates_offline">인터넷에 연결되어 있지 않습니다. 런처와 게임은 오프라인에서도 작동하며, 업데이트는 다음에 확인합니다.</string>
     <string name="setup_updates_datapack_installed">커뮤니티 데이터 패치가 %1$s 버전으로 업데이트되었습니다.</string>
-    <string name="setup_updates_datapack_available">네트워크 게임 데이터 새 버전이 나왔습니다(%1$s). GeneralsOnline 계정 → 온라인 게임 데이터에서 업데이트하세요.</string>
+    <string name="setup_updates_datapack_available">네트워크 게임 데이터 새 버전이 나왔습니다(%1$s). Online 계정 → 온라인 게임 데이터에서 업데이트하세요.</string>
     <string name="setup_updates_datapack_line_new">네트워크 게임 데이터 새 버전: %1$s.</string>
     <string name="setup_button_open_online_data">네트워크 데이터 업데이트</string>
     <string name="online_datapacks_update_available">설치됨: 버전 %1$s. 새 버전이 나왔습니다: %2$s.</string>

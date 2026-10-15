@@ -316,7 +316,8 @@ QuickMatchPreferences::QuickMatchPreferences()
 {
 	AsciiString userPrefFilename;
 	Int localProfile = TheGameSpyInfo ? TheGameSpyInfo->getLocalProfileID() : 0;
-	userPrefFilename.format("GeneralsOnline\\QMPref%d.ini", localProfile);
+	// BFME: E1-04 preference path token renamed so the old product name is not in libmain.so.
+	userPrefFilename.format("Online\\QMPref%d.ini", localProfile);
 	load(userPrefFilename);
 }
 
@@ -501,7 +502,7 @@ CustomMatchPreferences::CustomMatchPreferences()
 {
 	AsciiString userPrefFilename;
 	Int localProfile = TheGameSpyInfo ? TheGameSpyInfo->getLocalProfileID() : 0;
-	userPrefFilename.format("GeneralsOnline\\CustomPref%d.ini", localProfile);
+	userPrefFilename.format("Online\\CustomPref%d.ini", localProfile);
 	load(userPrefFilename);
 }
 
@@ -868,7 +869,7 @@ GameSpyMiscPreferences::GameSpyMiscPreferences()
 {
 	AsciiString userPrefFilename;
 	Int localProfile = TheGameSpyInfo ? TheGameSpyInfo->getLocalProfileID() : 0;
-	userPrefFilename.format("GeneralsOnline\\GSMiscPref%d.ini", localProfile);
+	userPrefFilename.format("Online\\GSMiscPref%d.ini", localProfile);
 	load(userPrefFilename);
 }
 
@@ -914,7 +915,7 @@ IgnorePreferences::IgnorePreferences()
 {
 	AsciiString userPrefFilename;
 	Int localProfile = TheGameSpyInfo ? TheGameSpyInfo->getLocalProfileID() : 0;
-	userPrefFilename.format("GeneralsOnline\\IgnorePref%d.ini", localProfile);
+	userPrefFilename.format("Online\\IgnorePref%d.ini", localProfile);
 	load(userPrefFilename);
 }
 
@@ -970,7 +971,7 @@ Bool LadderPreferences::loadProfile( Int profileID )
 	clear();
 	m_ladders.clear();
 	AsciiString userPrefFilename;
-	userPrefFilename.format("GeneralsOnline\\Ladders%d.ini", profileID);
+	userPrefFilename.format("Online\\Ladders%d.ini", profileID);
 	Bool success = load(userPrefFilename);
 	if (!success)
 		return success;

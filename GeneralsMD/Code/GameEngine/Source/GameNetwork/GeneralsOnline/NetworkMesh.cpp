@@ -667,7 +667,8 @@ NetworkMesh::NetworkMesh()
 	// this port has always used, and the PC client's since that commit -- retry STUN forever.
 	// GeneralsX @feature Android port 27/09/2026 ...and overridable from the signed update
 	// manifest (GXRemoteConfig.h), so a server change does not need a new build.
-	const std::string stunList = GXRemoteConfig::get("stun_servers", "stun:stun.playgenerals.online:53,stun:stun.playgenerals.online:3478,stun:stun.l.google.com:19302");
+	// BFME: E1-04 no compiled-in STUN host. A local remote_config.ini may still supply one.
+	const std::string stunList = GXRemoteConfig::get("stun_servers", "");
 	SteamNetworkingUtils()->SetGlobalConfigValueString(k_ESteamNetworkingConfig_P2P_STUN_ServerList, stunList.c_str());
 	fprintf(stderr, "DEBUG-P2P: NetworkMesh ctor STUN server list set\n");
 	fflush(stderr);
@@ -678,7 +679,7 @@ NetworkMesh::NetworkMesh()
 	// gone, because this build's GameNetworkingSockets cannot read it and threw
 	// both TURN servers away over it:
 	//
-	//   Name lookup for "turn.playgenerals.online" failed
+	//   Name lookup for the TURN host failed
 	//       - servname not supported for ai_socktype
 	//
 	// Its TURN parser strips the leading "turn:" and hands the rest to
@@ -693,7 +694,8 @@ NetworkMesh::NetworkMesh()
 	// The result on two devices was a lobby where neither player could reach the
 	// other: credentials present, relays silently absent, and a mesh with
 	// nothing to fall back on when the direct path did not come up.
-	const std::string turnListValue = GXRemoteConfig::get("turn_servers", "turn:turn.playgenerals.online:53,turn:turn.playgenerals.online:3478");
+	// BFME: E1-04 no compiled-in TURN host. A local remote_config.ini may still supply one.
+	const std::string turnListValue = GXRemoteConfig::get("turn_servers", "");
 	const char* turnList = turnListValue.c_str();
 
 	m_strTurnUsername = pLobbyInterface->GetLobbyTurnUsername();

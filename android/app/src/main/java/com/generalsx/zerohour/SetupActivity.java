@@ -233,15 +233,9 @@ public class SetupActivity extends Activity {
         // re-applies the landscape lock itself the next time it's needed.
         setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         refreshStatus();
-        refreshGeneralsOnlineStatus();
+        // BFME: E1-04 no Updates card and no fork auto-check on resume.
         loadDxvkConfigIntoEditor();
         refreshDiagnosticsSwitches();
-        refreshUpdatesStatus();
-        // Once per process, not on every return to this screen.
-        if (!sAutoUpdateCheckedThisProcess && UpdateManager.isAutoCheckEnabled(this)) {
-            sAutoUpdateCheckedThisProcess = true;
-            runUpdateCheck(false);
-        }
     }
 
     // GeneralsX @feature Android port launcher-ui-2026 08/09/2026 The launcher
@@ -399,16 +393,14 @@ public class SetupActivity extends Activity {
         }
 
         refreshStatus();
-        refreshGeneralsOnlineStatus();
+        // BFME: E1-04 the Updates and GeneralsOnline cards are not on the home page.
         loadDxvkConfigIntoEditor();
         refreshDiagnosticsSwitches();
-        refreshUpdatesStatus();
     }
 
     /** Forgets every page-scoped view so a stale one is never written to. */
     private void clearPageReferences() {
         statusText = null;
-        onlineStatusView = null;
         updatesStatusView = null;
         gameLanguageStatusView = null;
         renderBackendStatusView = null;
@@ -445,12 +437,7 @@ public class SetupActivity extends Activity {
                 getString(R.string.setup_button_clear_base_generals), this::onClearBaseGeneralsFolder);
         }
 
-        // GeneralsX @bugfix Android port 01/08/2026 kept above the advanced
-        // settings -- signing into GeneralsOnline is a primary action most
-        // people want right after picking their game folder, not something to
-        // bury under settings most players never touch.
-        buildGeneralsOnlineSection(page);
-        buildUpdatesSection(page);
+        // BFME: E1-04 the GeneralsOnline account card and the Updates card are omitted.
     }
 
     // ------------------------------------------------------------ Updates
@@ -461,7 +448,6 @@ public class SetupActivity extends Activity {
     private TextView updatesStatusView;
     private View updatesOpenOnlineButton;
     private boolean updateCheckRunning;
-    private static boolean sAutoUpdateCheckedThisProcess;
 
     private void buildUpdatesSection(LinearLayout root) {
         LinearLayout content = UiKit.card(root);
@@ -471,11 +457,7 @@ public class SetupActivity extends Activity {
         updatesStatusView = UiKit.body(content, null);
         UiKit.button(content, UiKit.BTN_TONAL, R.drawable.ic_gzh_download,
             getString(R.string.setup_button_check_updates), () -> runUpdateCheck(true));
-        // The community data patch is updated on the multiplayer screen; this card only says a
-        // newer one is out and takes the player there.
-        updatesOpenOnlineButton = UiKit.button(content, UiKit.BTN_TONAL, R.drawable.ic_gzh_globe,
-            getString(R.string.setup_button_open_online_data), () ->
-                startActivity(new Intent(this, GeneralsOnlineActivity.class)));
+        // BFME: E1-04 no online-account button on this card.
         SwitchCompat auto = UiKit.switchRow(content,
             getString(R.string.setup_switch_auto_updates), getString(R.string.setup_switch_auto_updates_desc));
         auto.setChecked(UpdateManager.isAutoCheckEnabled(this));
@@ -1853,39 +1835,7 @@ public class SetupActivity extends Activity {
         }
     }
 
-    // GeneralsX @feature Android port 10/07/2026 GeneralsOnline (playgenerals.online)
-    // account status -- the actual sign-in flow lives in GeneralsOnlineActivity,
-    // this is just a status line + entry point.
-    private TextView onlineStatusView;
-
-    private void buildGeneralsOnlineSection(LinearLayout root) {
-        LinearLayout content = UiKit.card(root);
-        UiKit.sectionHeader(content, R.drawable.ic_gzh_account,
-            getString(R.string.setup_card_online), false);
-
-        onlineStatusView = UiKit.supporting(content, null);
-
-        // GeneralsX @feature Android port 27/09/2026 The service refuses a join between lobbies
-        // whose anti-cheat differs (anticheat_id, JoinLobbyResult_AnticheatMismatch), and this
-        // client has none. A PC player running GeneralsOnline AntiCheat or Easy Anti-Cheat is
-        // therefore unreachable from a phone until they turn it off -- say so up front instead
-        // of leaving players to discover it as a failed join.
-        UiKit.supporting(content, getString(R.string.setup_online_anticheat_note));
-
-        UiKit.button(content, UiKit.BTN_TONAL, R.drawable.ic_gzh_account,
-            getString(R.string.setup_button_online_account), () ->
-                startActivity(new Intent(this, GeneralsOnlineActivity.class)));
-    }
-
-    private void refreshGeneralsOnlineStatus() {
-        if (onlineStatusView == null) {
-            return;
-        }
-        String displayName = GeneralsOnlineActivity.getSignedInDisplayName(this);
-        onlineStatusView.setText(displayName != null
-            ? getString(R.string.setup_online_signed_in, displayName)
-            : getString(R.string.setup_online_signed_out));
-    }
+    // BFME: E1-04 the online account card is not compiled into this screen.
 
     // GeneralsX @bugfix Android port 27/09/2026 The Options.ini the game reads lives in the shared
     // user-data dir (SDL3Main.cpp, GENERALSX_USERDATA_DIR) since issue #9 moved it there on
@@ -2197,185 +2147,10 @@ public class SetupActivity extends Activity {
     }
 
 
-    // GeneralsX @feature Android port 09/09/2026 Fetch a language pack straight from the
-    // project's own repository.
-    //
-    // A language is one plain-text file now (languages/<token>/generals.str -- see
-    // languages/README.md), so installing one is downloading a file into
-    // data/<token>/generals.str inside the game folder. No archive, no unpacking, no
-    // asking a player to find a folder with a file manager. And because the pack is a text
-    // file in the repository, a translator's pull request reaches players as soon as it is
-    // merged.
-    private static final String LANGUAGE_PACK_INDEX =
-        "https://api.github.com/repos/MYSOREZ/GeneralsZH-Android-Port/contents/languages?ref=main";
-    private static final String LANGUAGE_PACK_BASE =
-        "https://raw.githubusercontent.com/MYSOREZ/GeneralsZH-Android-Port/main/languages/";
-
-    // GeneralsX @feature Android port 09/09/2026 Fetch every pack there is, and do not ask
-    // which one first.
-    //
-    // Asking was the wrong question twice over. The list it asked from was hardcoded, so a
-    // language nobody had thought of when it was written -- Ukrainian, the very next one
-    // contributed -- could not be chosen and therefore could not be downloaded. And the
-    // question is premature anyway: choosing belongs to the picker below, which lists what is
-    // really in the game folder, and there is nothing to choose between until something has
-    // been downloaded. So this downloads all of them, the picker then shows what arrived, and
-    // the set of languages comes from the repository rather than from this file.
+    // BFME: E1-04 language packs are not fetched from the fork repository.
     private void onDownloadLanguagePack() {
-        final String gamePath = getSavedGamePath();
-        if (gamePath == null) {
-            toast(getString(R.string.setup_langpack_no_folder));
-            return;
-        }
-        if (languagePackButton != null) {
-            languagePackButton.setEnabled(false);
-        }
-        toast(getString(R.string.setup_langpack_downloading));
-
-        new Thread(() -> {
-            final java.util.List<String> tokens = new java.util.ArrayList<>();
-            final String indexError = fetchLanguagePackIndex(tokens);
-            final java.util.List<String> installed = new java.util.ArrayList<>();
-            final java.util.List<String> failed = new java.util.ArrayList<>();
-            if (indexError == null) {
-                for (String token : tokens) {
-                    if (downloadLanguagePack(token, gamePath) == null) {
-                        installed.add(token);
-                    } else {
-                        failed.add(token);
-                    }
-                }
-            }
-            runOnUiThread(() -> {
-                if (languagePackButton != null) {
-                    languagePackButton.setEnabled(true);
-                }
-                if (indexError != null) {
-                    toast(getString(R.string.setup_langpack_failed, indexError));
-                    return;
-                }
-                if (installed.isEmpty()) {
-                    toast(getString(R.string.setup_langpack_failed,
-                        failed.isEmpty() ? getString(R.string.setup_langpack_err_none_yet)
-                                         : android.text.TextUtils.join(", ", failed)));
-                    return;
-                }
-                updateGameLanguageStatusView();
-                StringBuilder names = new StringBuilder();
-                for (String token : installed) {
-                    if (names.length() > 0) {
-                        names.append(", ");
-                    }
-                    names.append(gameTextName(token));
-                }
-                toast(getString(R.string.setup_langpack_done_n, installed.size(), names.toString()));
-            });
-        }, "gx-langpack").start();
-    }
-
-    /**
-     * Ask the repository which languages exist. Returns null on success, else a reason.
-     *
-     * The directory listing IS the list -- add languages/<name>/generals.str to the project
-     * and it appears here, with nothing in this app to update.
-     */
-    private String fetchLanguagePackIndex(java.util.List<String> out) {
-        HttpURLConnection conn = null;
-        try {
-            URL url = new URL(LANGUAGE_PACK_INDEX);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setConnectTimeout(15000);
-            conn.setReadTimeout(30000);
-            conn.setRequestProperty("Accept", "application/vnd.github+json");
-            final int status = conn.getResponseCode();
-            if (status < 200 || status >= 300) {
-                return "HTTP " + status;
-            }
-            StringBuilder body = new StringBuilder();
-            try (java.io.BufferedReader r = new java.io.BufferedReader(
-                     new java.io.InputStreamReader(conn.getInputStream(), "UTF-8"))) {
-                String line;
-                while ((line = r.readLine()) != null) {
-                    body.append(line);
-                }
-            }
-            org.json.JSONArray entries = new org.json.JSONArray(body.toString());
-            for (int i = 0; i < entries.length(); i++) {
-                org.json.JSONObject entry = entries.getJSONObject(i);
-                if ("dir".equals(entry.optString("type"))) {
-                    out.add(entry.optString("name"));
-                }
-            }
-            return out.isEmpty() ? getString(R.string.setup_langpack_err_none_yet) : null;
-        } catch (Exception e) {
-            String msg = e.getMessage();
-            return (msg == null || msg.isEmpty()) ? e.getClass().getSimpleName() : msg;
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
-    }
-
-    /** @return null on success, else a short reason to put in front of the user. */
-    private String downloadLanguagePack(String token, String gamePath) {
-        HttpURLConnection conn = null;
-        // Written beside the real file and renamed at the end: a half-downloaded
-        // generals.str in place would leave the game with a truncated string table, which
-        // fails in a far more confusing way than not having the file at all.
-        File dir = new File(gamePath, "data/" + token);
-        File tmp = new File(dir, "generals.str.part");
-        File dest = new File(dir, "generals.str");
-        try {
-            if (!dir.isDirectory() && !dir.mkdirs()) {
-                return getString(R.string.setup_langpack_err_mkdir);
-            }
-            URL url = new URL(LANGUAGE_PACK_BASE + token + "/generals.str");
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setConnectTimeout(15000);
-            conn.setReadTimeout(30000);
-            conn.setRequestProperty("Accept", "text/plain");
-            final int status = conn.getResponseCode();
-            if (status == 404) {
-                return getString(R.string.setup_langpack_err_none_yet);
-            }
-            if (status < 200 || status >= 300) {
-                return "HTTP " + status;
-            }
-            byte[] buf = new byte[16 * 1024];
-            long total = 0;
-            try (java.io.InputStream in = conn.getInputStream();
-                 java.io.FileOutputStream out = new java.io.FileOutputStream(tmp)) {
-                int n;
-                while ((n = in.read(buf)) > 0) {
-                    out.write(buf, 0, n);
-                    total += n;
-                    if (total > 8L * 1024 * 1024) {
-                        return "> 8 MB";   // a string table is a few hundred KB; this is not one
-                    }
-                }
-            }
-            if (total == 0) {
-                return getString(R.string.setup_langpack_err_empty);
-            }
-            if (dest.exists() && !dest.delete()) {
-                return getString(R.string.setup_langpack_err_replace);
-            }
-            if (!tmp.renameTo(dest)) {
-                return getString(R.string.setup_langpack_err_replace);
-            }
-            return null;
-        } catch (Exception e) {
-            String msg = e.getMessage();
-            return (msg == null || msg.isEmpty()) ? e.getClass().getSimpleName() : msg;
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-            if (tmp.exists()) {
-                tmp.delete();
-            }
-        }
+        toast(getString(R.string.setup_langpack_failed,
+            getString(R.string.setup_langpack_err_none_yet)));
     }
 
     private void toast(CharSequence text) {
