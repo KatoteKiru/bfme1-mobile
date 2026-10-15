@@ -25,16 +25,19 @@
 # until the pace fix of E1-35 lands (FramePacer: logic time scale off -> one tick per render
 # frame). Measured logic ticks per wall-clock second over the window, from the frames.csv
 # columns `logic_frame` and `t_ns`, must be 30 +- 1; otherwise the run is invalid (exit 2).
+# With --preliminary (runs for FPS, memory and heat before E1-35) a pace outside 30 +- 1 is only a
+# warning: exit by the thresholds (0/1), "valid": null in the JSON, not for acceptance (Лид, ревью #11).
 # Without a `logic_frame` column (or with < 2 rows carrying it) the pace cannot be checked:
 # in a perf/load/soak/crc-cost run (--run-kind, default perf) that makes the run INVALID
 # (exit 2, reason "logic pace not verifiable", TEST-PLAN §5.4.1: such a run does not go into
 # acceptance); with --preliminary it is only a warning (no exit 2). --run-kind other: old
 # behaviour, pace "не проверен" without consequences.
 # --logic-window A-B selects the window by logic frame (inclusive) instead of seconds;
-# --preliminary marks wall-clock results as preliminary (before the pace fix).
+# --preliminary marks wall-clock results as preliminary (before the pace fix): pace problems are warnings.
 #
 # Exit codes: 0 all thresholds pass, 1 some fail, 2 run invalid (thermal or logic pace),
-# 4 bad input.
+# 4 bad input (empty file, missing column in the header or in any row, non-numeric value,
+# t_ns going backwards, no frames in the window, zero time interval).
 from __future__ import annotations
 
 import argparse
@@ -58,6 +61,7 @@ LOGIC_HZ = 30.0                # LOGICFRAMES_PER_SECOND, ADR-0002
 LOGIC_HZ_TOL = 1.0             # sanity rule: measured logic ticks/s must be 30 +- 1
 PACE_RUN_KINDS = ("perf", "load", "soak", "crc-cost")   # TEST-PLAN §5.4.1: pace rule applies
 PACE_NOT_VERIFIABLE = "logic pace not verifiable"
+PACE_OUT_OF_RANGE = "logic pace out of range"
 THERMAL_NAMES = ["NONE", "LIGHT", "MODERATE", "SEVERE", "CRITICAL", "EMERGENCY", "SHUTDOWN"]
 
 THRESHOLDS = {
@@ -91,25 +95,48 @@ def percentile(sorted_vals: list[float], p: float) -> float:
     return sorted_vals[lo] + (sorted_vals[hi] - sorted_vals[lo]) * (k - lo)
 
 
+REQUIRED_COLUMNS = ("t_ns", "present_interval_ms")   # TEST-PLAN §5.3, in every row
+CHECKED_COLUMNS = ("logic_frame",)                    # optional, but if the header has it: every row
+
+
 def load_frames(path: Path) -> list[dict[str, float]]:
+    """Rows of frames.csv as floats. Bad input raises ValueError (exit 4): an empty file, a missing
+    required column, a row without a numeric t_ns / present_interval_ms (or logic_frame, when the
+    header has that column), t_ns going backwards."""
     rows = []
     with path.open(newline="", encoding="utf-8") as f:
-        for r in csv.DictReader(f):
+        rd = csv.DictReader(f)
+        header = rd.fieldnames
+        if not header:
+            raise ValueError(f"{path}: empty file (no header; TEST-PLAN §5.3 needs t_ns, present_interval_ms)")
+        missing = [c for c in REQUIRED_COLUMNS if c not in header]
+        if missing:
+            raise ValueError(f"{path}: column(s) missing in the header: {', '.join(missing)} "
+                             "(TEST-PLAN §5.3 needs t_ns and present_interval_ms)")
+        checked = REQUIRED_COLUMNS + tuple(c for c in CHECKED_COLUMNS if c in header)
+        for line, r in enumerate(rd, start=2):          # line 1 is the header
             row = {}
             for k, v in r.items():
-                if v is None or v == "":
+                if k is None or v is None or v == "":
                     continue
                 try:
                     row[k] = float(v)
                 except ValueError:
                     pass
+            bad = [c for c in checked if c not in row or not math.isfinite(row[c])]
+            if bad:
+                raise ValueError(f"{path}:{line}: no numeric value in column(s) {', '.join(bad)}")
+            if rows and row["t_ns"] < rows[-1]["t_ns"]:
+                raise ValueError(f"{path}:{line}: t_ns goes backwards ({row['t_ns']:.0f} < {rows[-1]['t_ns']:.0f})")
             rows.append(row)
-    if not rows or "t_ns" not in rows[0] or "present_interval_ms" not in rows[0]:
-        raise ValueError("frames.csv must have columns t_ns and present_interval_ms (TEST-PLAN §5.3)")
+    if not rows:
+        raise ValueError(f"{path}: no data rows (only the header)")
     return rows
 
 
 def window(rows: list[dict[str, float]], skip_s: float, duration_s: float | None) -> list[dict[str, float]]:
+    if not rows:
+        raise ValueError("frames.csv has no data rows")
     t0 = rows[0]["t_ns"] + skip_s * 1e9
     t1 = t0 + duration_s * 1e9 if duration_s else math.inf
     return [r for r in rows if t0 <= r["t_ns"] < t1]
@@ -127,41 +154,62 @@ def parse_logic_window(spec: str) -> tuple[int, int]:
 
 
 def logic_window(rows: list[dict[str, float]], first: int, last: int) -> list[dict[str, float]]:
-    if "logic_frame" not in rows[0]:
-        raise ValueError("--logic-window needs the logic_frame column in frames.csv (TEST-PLAN §5.3)")
-    return [r for r in rows if "logic_frame" in r and first <= r["logic_frame"] <= last]
+    if not rows or any("logic_frame" not in r for r in rows):   # load_frames checks every row
+        raise ValueError("--logic-window needs the logic_frame column in every row of frames.csv (TEST-PLAN §5.3)")
+    return [r for r in rows if first <= r["logic_frame"] <= last]
 
 
 def logic_pace(rows: list[dict[str, float]], required: bool = False, preliminary: bool = False) -> dict[str, object]:
     """Logic ticks per wall-clock second over the window: (Δlogic_frame) / (Δt_ns).
     required: perf/load/soak/crc-cost run (TEST-PLAN §5.4.1) -- a pace that cannot be measured makes
-    the run invalid, unless preliminary (then only a warning)."""
+    the run invalid, unless preliminary (then only a warning). A measured pace outside 30 +- 1 makes the run
+    invalid (exit 2); with preliminary it is a warning too (TEST-PLAN §5.4.1, Лид, ревью #11 п. 2)."""
     lf = [(r["t_ns"], r["logic_frame"]) for r in rows if "logic_frame" in r]
     if len(lf) < 2 or lf[-1][0] <= lf[0][0]:
-        why = "нет колонки logic_frame" if not lf else "меньше двух кадров с logic_frame в окне"
+        if not lf:
+            cause, why = "column_missing", "нет колонки logic_frame в frames.csv"
+        elif len(lf) < 2:
+            cause, why = "too_few_rows", f"в окне меньше двух строк с logic_frame ({len(lf)})"
+        else:
+            cause, why = "zero_interval", "нулевой интервал t_ns между первой и последней строкой окна"
+        base = {"logic_hz": None, "cause": cause}
         if required and not preliminary:
-            return {"logic_hz": None, "valid": False, "reason": PACE_NOT_VERIFIABLE,
+            return {**base, "valid": False, "reason": PACE_NOT_VERIFIABLE,
                     "note": f"{why}: темп логики не проверить, прогон недействителен (TEST-PLAN §5.4.1)"}
         if required:
-            return {"logic_hz": None, "valid": None, "reason": PACE_NOT_VERIFIABLE,
+            return {**base, "valid": None, "reason": PACE_NOT_VERIFIABLE,
                     "warning": f"{PACE_NOT_VERIFIABLE}: {why}",
                     "note": f"{why}: темп логики не проверен; предварительный прогон, в приёмку не идёт"}
-        return {"logic_hz": None, "valid": None, "note": f"{why}: темп логики не проверен"}
+        return {**base, "valid": None, "note": f"{why}: темп логики не проверен"}
     hz = (lf[-1][1] - lf[0][1]) / ((lf[-1][0] - lf[0][0]) / 1e9)
     valid = abs(hz - LOGIC_HZ) <= LOGIC_HZ_TOL
-    note = "" if valid else (f"темп логики {hz:.2f} тик/с вне {LOGIC_HZ:.0f} ± {LOGIC_HZ_TOL:.0f}: "
-                             "прогон недействителен (до фикса темпа E1-35 скирмиш с 2.22 идёт ≈ 38 Гц)")
-    out: dict[str, object] = {"logic_hz": round(hz, 3), "valid": valid, "note": note}
-    if not valid:
-        out["reason"] = "logic pace out of range"
+    out: dict[str, object] = {"logic_hz": round(hz, 3), "valid": valid, "note": ""}
+    if valid:
+        return out
+    out["reason"] = PACE_OUT_OF_RANGE
+    off = f"темп логики {hz:.2f} тик/с вне {LOGIC_HZ:.0f} ± {LOGIC_HZ_TOL:.0f}"
+    if preliminary:
+        # Лид (ревью #11 п. 2): до фикса E1-35 скирмиш с 2.22 идёт ≈ 38 Гц, а предварительные прогоны
+        # нужны для FPS, памяти и нагрева -> только предупреждение, код по порогам (0/1), в приёмку не идёт
+        out["valid"] = None
+        out["warning"] = f"{PACE_OUT_OF_RANGE}: {off}"
+        out["note"] = f"{off}: предварительный прогон (--preliminary), в приёмку не идёт (TEST-PLAN §5.4.1)"
+    else:
+        out["note"] = f"{off}: прогон недействителен (до фикса темпа E1-35 скирмиш с 2.22 идёт ≈ 38 Гц)"
     return out
 
 
 def metrics(rows: list[dict[str, float]]) -> dict[str, float]:
     iv = sorted(r["present_interval_ms"] for r in rows)
     if not iv:
-        raise ValueError("no frames in the measurement window (check --skip-s / --duration-s)")
+        raise ValueError("no frames in the measurement window (check --skip-s / --duration-s / --logic-window)")
+    if len(rows) >= 2 and rows[-1]["t_ns"] <= rows[0]["t_ns"]:
+        raise ValueError(f"all {len(rows)} frames of the window have the same t_ns ({rows[0]['t_ns']:.0f}): "
+                         "zero time interval, the window length and the logic pace cannot be computed")
     total_ms = sum(iv)
+    if not total_ms > 0:
+        raise ValueError(f"sum of present_interval_ms over the {len(iv)} frames of the window is {total_ms:g} ms: "
+                         "zero time interval, FPS cannot be computed")
     p99 = percentile(iv, 99)
     m = {
         "frames": len(iv),
@@ -288,7 +336,7 @@ def to_markdown(m: dict, thr: dict, phone: dict | None, therm: dict | None = Non
                   + (f" ({therm['note']})" if therm.get("note") else "")]
     if pace:
         lines += ["", f"Темп логики: {fmt(pace['logic_hz'])} тик/с (норма {LOGIC_HZ:.0f} ± {LOGIC_HZ_TOL:.0f}); "
-                  f"прогон {'действителен' if pace['valid'] else ('НЕДЕЙСТВИТЕЛЕН' if pace['valid'] is False else 'не проверен')}"
+                  f"прогон {'действителен' if pace['valid'] else ('НЕДЕЙСТВИТЕЛЕН' if pace['valid'] is False else ('⚠ предварительный' if pace.get('warning') else 'не проверен'))}"
                   + (f" ({pace['note']})" if pace.get("note") else "")]
     if preliminary:
         lines += ["", "**Предварительно:** замер по реальному времени до фикса темпа логики (E1-35), "
@@ -351,7 +399,7 @@ def main(argv: list[str] | None = None) -> int:
                     "(overrides --skip-s/--duration-s; TEST-PLAN §5.4 until the E1-35 pace fix)")
     ap.add_argument("--preliminary", action="store_true",
                     help="mark wall-clock results as preliminary (before the E1-35 logic pace fix); "
-                         "a missing logic_frame column is then only a warning")
+                         "a pace outside 30 +- 1 or a missing logic_frame column is then only a warning (exit 0/1)")
     ap.add_argument("--run-kind", choices=PACE_RUN_KINDS + ("other",), default="perf",
                     help="scenario of the run; for perf/load/soak/crc-cost (default perf) the logic pace "
                          "must be verifiable (TEST-PLAN §5.4.1)")
@@ -369,15 +417,15 @@ def main(argv: list[str] | None = None) -> int:
         else:
             rows = window(allrows, a.skip_s, a.duration_s or None)
         m = metrics(rows)
-    except (OSError, ValueError) as e:
-        print(f"error: {e}", file=sys.stderr)
+    except (OSError, ValueError, KeyError, ZeroDivisionError) as e:   # all bad input: exit 4, never a traceback
+        print(f"error: bad input: {e}", file=sys.stderr)
         return 4
     thr = throttling(Path(a.samples)) if a.samples else {}
     phone = json.loads(Path(a.summary).read_text(encoding="utf-8")) if a.summary else None
     therm = thermal_validity(rows, Path(a.samples) if a.samples else None)
     pace = logic_pace(rows, required=a.run_kind in PACE_RUN_KINDS, preliminary=a.preliminary)
     if pace.get("warning"):
-        print(f"warning: {pace['warning']} (--preliminary: not invalid)", file=sys.stderr)
+        print(f"warning: {pace['warning']} (--preliminary: run not invalid, not for acceptance)", file=sys.stderr)
     risk = risks(m)
     md = to_markdown(m, thr, phone, therm, risk, pace, a.preliminary)
     print(md, end="")
@@ -393,8 +441,10 @@ def main(argv: list[str] | None = None) -> int:
                                             "logic_window": a.logic_window, "pass": verdict},
                                            ensure_ascii=False, indent=2, default=str), encoding="utf-8")
     if therm["valid"] is False or pace["valid"] is False:
-        pace_why = (PACE_NOT_VERIFIABLE + ": нет logic_frame" if pace.get("reason") == PACE_NOT_VERIFIABLE
-                    else f"темп логики {fmt(pace['logic_hz'])} тик/с вне 30 ± 1")
+        pace_why = {"column_missing": PACE_NOT_VERIFIABLE + ": нет колонки logic_frame",
+                    "too_few_rows": PACE_NOT_VERIFIABLE + ": в окне меньше двух строк с logic_frame",
+                    "zero_interval": PACE_NOT_VERIFIABLE + ": нулевой интервал t_ns в окне",
+                    }.get(pace.get("cause"), f"темп логики {fmt(pace['logic_hz'])} тик/с вне 30 ± 1")
         why = [w for w, bad in (("начат при тепловом статусе >= MODERATE", therm["valid"] is False),
                                 (pace_why, pace["valid"] is False)) if bad]
         print(f"\nИтог: прогон НЕДЕЙСТВИТЕЛЕН ({'; '.join(why)}), повторить")

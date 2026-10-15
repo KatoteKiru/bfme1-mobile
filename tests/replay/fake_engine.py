@@ -11,6 +11,8 @@
 #   FAKE_CRASH_AT=F        die with SIGSEGV-like exit code 139 at frame F
 #   FAKE_HANG_AT=F         stop producing output and sleep (for the timeout path)
 #   FAKE_SLEEP=S           sleep S seconds (float) before the first frame, then run normally
+#   FAKE_CHILD_PIDFILE=P   start a child process (sleeps 3600 s, ignores SIGTERM if FAKE_CHILD_IGNORE_TERM=1)
+#                          and write its pid to P first, atomically (tests: the runner kills the whole process group)
 #   FAKE_LOGIC_HZ=N        value of "# logic_hz=" in the crclog (default 30)
 #   FAKE_NO_REP=1          scenario mode: do not write the scenario's own .rep
 #   FAKE_WRITE_CWD=NAME    try to create NAME in the cwd (like gx_replay_check_result.txt);
@@ -75,6 +77,16 @@ def main(argv: list[str]) -> int:
     diverge = int(os.environ.get("FAKE_DIVERGE_AT", "-1"))
     crash = int(os.environ.get("FAKE_CRASH_AT", "-1"))
     hang = int(os.environ.get("FAKE_HANG_AT", "-1"))
+    if os.environ.get("FAKE_CHILD_PIDFILE"):
+        import subprocess
+        code = ("import signal, time\n"
+                + ("signal.signal(signal.SIGTERM, signal.SIG_IGN)\n" if os.environ.get("FAKE_CHILD_IGNORE_TERM") == "1" else "")
+                + "time.sleep(3600)\n")
+        child = subprocess.Popen([sys.executable, "-c", code], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        pidfile = os.environ["FAKE_CHILD_PIDFILE"]
+        with open(pidfile + ".tmp", "w", encoding="utf-8") as fh:   # atomic: a reader never sees an empty file
+            fh.write(f"{child.pid}\n")
+        os.replace(pidfile + ".tmp", pidfile)
     if float(os.environ.get("FAKE_SLEEP", "0")) > 0:
         time.sleep(float(os.environ["FAKE_SLEEP"]))
 

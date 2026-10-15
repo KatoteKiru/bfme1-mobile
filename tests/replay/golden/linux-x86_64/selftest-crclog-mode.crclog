@@ -1,13 +1,13 @@
 # bfme-crclog/1
 # logic_hz=30
 # arch=linux-x86_64
-# blessed_at=2026-10-02T18:01:33+03:00
+# blessed_at=2026-10-09T00:24:59+03:00
 # case=selftest-crclog-mode
 # engine_build_id=unknown
 # git_sha=unknown
 # interval=1
-# reason=selftest: заголовок logic_hz (Лид 02.10.2026)
-# replay=/workspace/bfme-mobile/tests/replay/fixtures/selftest-b.rep
+# reason=selftest: в заголовке только имя реплея, без абсолютного пути (ревью #11 п. 5)
+# replay=selftest-b.rep
 # source=fake_engine
 0 1E30A00F Objects=993C1F13 Partition=25B39BA5 PlayerList=29242045 AI=1E30A00F
 1 89D3326E Objects=FA13CAB6 Partition=C1E1AAFD PlayerList=A1F7BFC5 AI=89D3326E

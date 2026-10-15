@@ -51,16 +51,7 @@ env:
   # /out контейнера на хосте: ci/out/<run_id>/<job> (создаёт обёртка) — REPLAY_OUT_HOST в env каждой джобы
   # (контекст env в jobs.<id>.env недоступен, поэтому путь там целиком).
   # <job> = id джобы ($GITHUB_JOB): хост ci/out/<GITHUB_RUN_ID>/<GITHUB_JOB> (Платформа 02.10.2026).
-  # Headless x86_64 (E1-43a). Отдельного пресета headless в bfme@c70bfa151 нет: берём linux64-deploy
-  # (Linux x86_64, SDL3; headless = ключ -headless + SDL dummy, как в replay-tests.yml форка).
-  # Цель z_generals, OUTPUT_NAME GeneralsXZH (GeneralsMD/Code/Main/CMakeLists.txt).
-  # TODO(Платформа, E1-43a/E1-10): свой пресет linux64-headless с флагами детерминизма -> поменять две строки ниже.
-  # Имя бинарника и пресет ПРЕДВАРИТЕЛЬНЫЕ (Платформа 02.10.2026).
-  HEADLESS_PRESET: linux64-deploy
-  HEADLESS_BIN: build/linux64-deploy/GeneralsMD/GeneralsXZH
-  # arm64 (E1-49): кросс-сборка g++-aarch64-linux-gnu. TODO(Платформа, E1-49): имя пресета/каталога сборки.
-  HEADLESS_PRESET_ARM64: linux-arm64-headless
-  HEADLESS_BIN_ARM64: build/linux-arm64-headless/GeneralsMD/GeneralsXZH
+  # Пресет и путь headless-бинарника — в env своей джобы (HEADLESS_* / HEADLESS_*_ARM64), по одному разу.
 
 jobs:
   # 1) Самопроверка раннера: без движка и без данных игры, ~10 с.
@@ -103,17 +94,22 @@ jobs:
         id: artifacts_ok
         if: always()
         shell: bash
-        # те же файлы, что уйдут в upload-artifact: глобы REPLAY_ARTIFACTS раскрывает bash (nullglob)
+        # те же файлы, что уйдут в upload-artifact: глобы REPLAY_ARTIFACTS раскрывает bash (nullglob globstar).
+        # Интерфейс Платформы: bfme-check-artifacts [--max-mb N] [--allow-missing] [--] FILE... (ci/README.md
+        # «Артефакты»): пустой список -> 0 и ::warning; любой запрещённый файл -> 1 -> выгрузки нет.
         run: |
-          shopt -s nullglob
+          shopt -s nullglob globstar
+          IFS=$'\n'
           files=( $REPLAY_ARTIFACTS )
-          [ ${#files[@]} -gt 0 ] || { echo "::warning::Нет файлов для артефакта"; exit 0; }
-          /usr/local/sbin/bfme-check-artifacts "${files[@]}"
+          unset IFS
+          /usr/local/sbin/bfme-check-artifacts -- "${files[@]}"
+          echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@<SHA-from-Platform> # v4
-        if: always() && steps.artifacts_ok.outcome == 'success'
+        if: always() && steps.artifacts_ok.outcome == 'success' && steps.artifacts_ok.outputs.count != '0'
         with:
           name: replay-selftest-${{ github.run_number }}
           path: ${{ env.REPLAY_ARTIFACTS }}
+          if-no-files-found: ignore
           retention-days: 7
 
   # 2) Синтетические сценарии (-qaScenario + -seed) и реплеи на headless-сборке x86_64 (с Э2 — основной, Лид 02.10.2026).
@@ -124,6 +120,14 @@ jobs:
     timeout-minutes: 90
     env:
       REPLAY_OUT_HOST: /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc
+      # Headless x86_64 (E1-43a). Отдельного пресета headless в bfme@c70bfa151 нет: берём linux64-deploy
+      # (Linux x86_64, SDL3; headless = ключ -headless + SDL dummy, как в replay-tests.yml форка).
+      # Цель z_generals, OUTPUT_NAME GeneralsXZH (GeneralsMD/Code/Main/CMakeLists.txt).
+      # TODO(Платформа, E1-43a/E1-10): свой пресет linux64-headless с флагами детерминизма -> поменять две строки ниже.
+      # Имя бинарника и пресет ПРЕДВАРИТЕЛЬНЫЕ (Платформа 02.10.2026). HEADLESS_BIN — от корня checkout (= /src
+      # в контейнере): и проверка после сборки, и --engine "/src/$HEADLESS_BIN" берут путь только отсюда.
+      HEADLESS_PRESET: linux64-deploy
+      HEADLESS_BIN: build/linux64-deploy/GeneralsMD/GeneralsXZH
       REPLAY_ARTIFACTS: |
         /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc/x86_64/*.crclog
         /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc/x86_64/*.engine.log
@@ -165,7 +169,7 @@ jobs:
           BFME_ENGINE_BUILD_ID: ${{ github.sha }}
           BFME_STAGE: ${{ inputs.stage || 'e1' }}
         run: |
-          $BFME_DOCKER replay tools/replay-test --engine /src/build/linux64-deploy/GeneralsMD/GeneralsXZH \
+          $BFME_DOCKER replay tools/replay-test --engine "/src/$HEADLESS_BIN" \
             --arch linux-x86_64 --out /out/x86_64 \
             run --stage "$BFME_STAGE" --deadline-min 75 --junit /out/x86_64/junit.xml --summary /out/x86_64/summary.md
       - name: Сводка
@@ -175,17 +179,22 @@ jobs:
         id: artifacts_ok
         if: always()
         shell: bash
-        # те же файлы, что уйдут в upload-artifact: глобы REPLAY_ARTIFACTS раскрывает bash (nullglob)
+        # те же файлы, что уйдут в upload-artifact: глобы REPLAY_ARTIFACTS раскрывает bash (nullglob globstar).
+        # Интерфейс Платформы: bfme-check-artifacts [--max-mb N] [--allow-missing] [--] FILE... (ci/README.md
+        # «Артефакты»): пустой список -> 0 и ::warning; любой запрещённый файл -> 1 -> выгрузки нет.
         run: |
-          shopt -s nullglob
+          shopt -s nullglob globstar
+          IFS=$'\n'
           files=( $REPLAY_ARTIFACTS )
-          [ ${#files[@]} -gt 0 ] || { echo "::warning::Нет файлов для артефакта"; exit 0; }
-          /usr/local/sbin/bfme-check-artifacts "${files[@]}"
+          unset IFS
+          /usr/local/sbin/bfme-check-artifacts -- "${files[@]}"
+          echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@<SHA-from-Platform> # v4
-        if: always() && steps.artifacts_ok.outcome == 'success'
+        if: always() && steps.artifacts_ok.outcome == 'success' && steps.artifacts_ok.outputs.count != '0'
         with:
           name: replay-crc-linux-x86_64-${{ github.run_number }}
           path: ${{ env.REPLAY_ARTIFACTS }}
+          if-no-files-found: ignore
           retention-days: 14
 
   # 3) arm64 против x86_64 (E1-45): headless arm64 под qemu-aarch64-static в образе Платформы.
@@ -199,6 +208,9 @@ jobs:
     continue-on-error: true
     env:
       REPLAY_OUT_HOST: /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc-arm64
+      # arm64 (E1-49): кросс-сборка g++-aarch64-linux-gnu. TODO(Платформа, E1-49): имя пресета/каталога сборки.
+      HEADLESS_PRESET_ARM64: linux-arm64-headless
+      HEADLESS_BIN_ARM64: build/linux-arm64-headless/GeneralsMD/GeneralsXZH
       REPLAY_ARTIFACTS: |
         /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc-arm64/arm64/*.crclog
         /workspace/bfme-mobile/ci/out/${{ github.run_id }}/replay-crc-arm64/arm64/*.engine.log
@@ -260,15 +272,20 @@ jobs:
         id: artifacts_ok
         if: always()
         shell: bash
-        # те же файлы, что уйдут в upload-artifact: глобы REPLAY_ARTIFACTS раскрывает bash (nullglob)
+        # те же файлы, что уйдут в upload-artifact: глобы REPLAY_ARTIFACTS раскрывает bash (nullglob globstar).
+        # Интерфейс Платформы: bfme-check-artifacts [--max-mb N] [--allow-missing] [--] FILE... (ci/README.md
+        # «Артефакты»): пустой список -> 0 и ::warning; любой запрещённый файл -> 1 -> выгрузки нет.
         run: |
-          shopt -s nullglob
+          shopt -s nullglob globstar
+          IFS=$'\n'
           files=( $REPLAY_ARTIFACTS )
-          [ ${#files[@]} -gt 0 ] || { echo "::warning::Нет файлов для артефакта"; exit 0; }
-          /usr/local/sbin/bfme-check-artifacts "${files[@]}"
+          unset IFS
+          /usr/local/sbin/bfme-check-artifacts -- "${files[@]}"
+          echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@<SHA-from-Platform> # v4
-        if: always() && steps.artifacts_ok.outcome == 'success'
+        if: always() && steps.artifacts_ok.outcome == 'success' && steps.artifacts_ok.outputs.count != '0'
         with:
           name: replay-crc-linux-arm64-${{ github.run_number }}
           path: ${{ env.REPLAY_ARTIFACTS }}
+          if-no-files-found: ignore
           retention-days: 14

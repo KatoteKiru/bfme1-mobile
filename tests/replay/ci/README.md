@@ -8,6 +8,9 @@ GitHub ничего не пушит. Версия 2 от 02.10.2026: все ша
 **v4 (02.10.2026, 23:00 МСК), по просьбе Платформы:** `--deadline-min` (общий лимит прогона), таймаут кейса arm64
 600 с (`[defaults].timeout_s_arch`, `--case-timeout`), `timeout-minutes` arm64 360, один список артефакта на джобу
 (`REPLAY_ARTIFACTS`), множитель таймаута не больше 50 — см. «Таймауты» и «Артефакты».
+**v5 (08.10.2026, ревью #11):** интерфейс `bfme-check-artifacts` от Платформы (`--` и список файлов, `count` в
+`$GITHUB_OUTPUT`, `if-no-files-found: ignore`), путь движка через `$HEADLESS_BIN`, раннер убивает группу процессов
+по таймауту и не создаёт ссылок под `--out` — см. «Артефакты».
 
 ## Что поменялось против v1
 
@@ -28,6 +31,7 @@ GitHub ничего не пушит. Версия 2 от 02.10.2026: все ша
 | `working-directory: tests/replay` | корень checkout (обёртка пускает пути от корня) |
 | `timeout-minutes: 240` у arm64, 900 с × 20 на кейс | **v4:** `timeout-minutes: 360`, кейс 600 с × 20, `--deadline-min 345`; x86_64 — 90 и `--deadline-min 75` |
 | список файлов в `path:` и каталог в `bfme-check-artifacts` | **v4:** один список `REPLAY_ARTIFACTS` в `env` джобы для обоих шагов |
+| пустой список — `exit 0` в YAML, выгрузка по `outcome` | **v5:** `bfme-check-artifacts -- "${files[@]}"` (пустой → 0 и `::warning` от проверки), `count` в `$GITHUB_OUTPUT`, выгрузка при `count != 0`, `if-no-files-found: ignore` |
 
 Без изменений: `on`, `permissions`, `concurrency`, проверка форков, `fetch-depth: 1`, `timeout-minutes` 10 и 90
 (selftest, x86_64), `retention-days` (7/14/14), `continue-on-error` у arm64.
@@ -73,7 +77,11 @@ $BFME_DOCKER replay <команда> [аргументы...]
   (Ninja, RelWithDebInfo, SDL3/OpenAL, DXVK). Цель `z_generals`, имя `GeneralsXZH`
   (`GeneralsMD/Code/Main/CMakeLists.txt`) → `build/linux64-deploy/GeneralsMD/GeneralsXZH` (так же в
   `build-linux.yml` форка). Headless — это ключ `-headless` плюс SDL dummy, как в `replay-tests.yml` форка.
-  **TODO(Платформа, E1-43a/E1-10):** пресет `linux64-headless` с флагами детерминизма → поменять `HEADLESS_*` в `env`.
+  **TODO(Платформа, E1-43a/E1-10):** пресет `linux64-headless` с флагами детерминизма → поменять `HEADLESS_*` в `env`
+  джобы `replay-crc`.
+- **Путь движка — только через `$HEADLESS_BIN`** (ревью #11 п. 6): `HEADLESS_PRESET`/`HEADLESS_BIN` заданы один раз в
+  `env` джобы `replay-crc` (arm64 — `HEADLESS_*_ARM64` в `env` джобы `replay-crc-arm64`); и `test -x` после сборки, и
+  `--engine "/src/$HEADLESS_BIN"` берут путь оттуда, литерального `build/…` в шагах нет.
 - `--engine` абсолютный (`/src/build/...`): раннер запускает движок с `cwd=$BFME_GAMEDATA`, и относительный путь
   `build/...` искался бы от `/gamedata`.
 - arm64 (E1-49): джоба только по `workflow_dispatch`, пока E1-49 не добавит в образ sysroot и кросс-g++.
@@ -116,18 +124,54 @@ SHA-256 в `gamedata/MANIFEST.sha256`, статус в `gamedata/COPY_LOG.md` (�
 проверка получает тот же список и `.rep` не видит. Реплеи до 1 МБ лежат в git в `tests/replay/fixtures/<case>.rep`
 (решение Оркестратора) и приходят с checkout.
 
-## Артефакты (`REPLAY_ARTIFACTS`)
+## Артефакты (`REPLAY_ARTIFACTS`, `bfme-check-artifacts`)
+
+### Интерфейс проверки (зафиксирован Платформой)
+
+```
+/usr/local/sbin/bfme-check-artifacts [--max-mb N] [--allow-missing] [--] FILE...
+```
+
+- Принимает **только обычные файлы**. Каталог в списке → **код 2** (ошибка вызова).
+- **Код 1** (выгружать нельзя), если хоть один файл:
+  - больше 5 МБ (`--max-mb N` меняет предел);
+  - начинается с сигнатуры архива BIG: `BIGF`, `BIG4` или `BIG ` (с пробелом);
+  - имеет расширение `.big` `.w3d` `.map` `.dds` `.tga` `.csf` `.str` `.wav` `.mp3` `.bik` `.ini` `.rep`;
+  - является символьной ссылкой или его `realpath` лежит вне `ci/out/<run_id>/` и вне `$GITHUB_WORKSPACE`.
+- Пустой список → **код 0** и `::warning`.
+- `--` отделяет ключи от списка файлов. `--max-mb` и `--allow-missing` в YAML не передаём: предел по умолчанию
+  5 МБ, а `nullglob` и так отдаёт только существующие файлы.
+- Скрипт — root, `/usr/local/sbin`, **не из checkout** (`tools/ci/` — только исходник для `setup-runner.sh`).
+
+### Как это в YAML (каждая джоба)
 
 Список файлов артефакта задан **один раз** в `env:` джобы (`REPLAY_ARTIFACTS: |`, по строке на глоб, полный путь
 на хосте — контекст `env` в `jobs.<id>.env` недоступен). Его используют оба шага:
 
-- «Проверка артефактов»: `shell: bash`, `shopt -s nullglob; files=( $REPLAY_ARTIFACTS )`, затем
-  `/usr/local/sbin/bfme-check-artifacts "${files[@]}"` (нет ни одного файла → предупреждение и выход 0);
-- `upload-artifact`: `path: ${{ env.REPLAY_ARTIFACTS }}`, только если проверка прошла.
+```bash
+shopt -s nullglob globstar
+IFS=$'\n'; files=( $REPLAY_ARTIFACTS ); unset IFS
+/usr/local/sbin/bfme-check-artifacts -- "${files[@]}"
+echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
+```
 
-В списке: `<arch>/*.crclog`, `*.engine.log`, `junit.xml`, `summary.md`, `results.json`. Без `.rep` и без
-подкаталогов `<case>/`. **Проверить Платформе:** `bfme-check-artifacts` принимает список файлов (раньше в YAML
-передавался каталог).
+- шаг «Проверка артефактов» (`id: artifacts_ok`, `shell: bash`, `if: always()`): раскрывает глобы в массив, отдаёт
+  его проверке (пустой массив — 0 и `::warning` от самой проверки), пишет `count` в `$GITHUB_OUTPUT`;
+- `upload-artifact`: `if: always() && steps.artifacts_ok.outcome == 'success' && steps.artifacts_ok.outputs.count != '0'`,
+  тот же `path: ${{ env.REPLAY_ARTIFACTS }}` и `if-no-files-found: ignore`. При `count == 0` выгрузка пропускается.
+
+В списке: `<arch>/*.crclog`, `*.engine.log`, `junit.xml`, `summary.md`, `results.json`. **Ни один глоб не может
+совпасть с запрещённым расширением**; `.rep` (в т. ч. `<case>/last.rep`) и подкаталоги `<case>/` не выгружаются.
+
+### Что гарантирует раннер
+
+- **Под `--out` раннер не создаёт символьных ссылок** и не пишет сквозь них: если по пути выходного файла
+  (`<case>.engine.log`, `<case>.actual.crclog`, `results.json`, `junit.xml`, `summary.md`) лежит ссылка, она удаляется
+  и пишется обычный файл (`plain_file()` в `run_replay_tests.py`).
+- Тесты (`test_replay_runner.ArtifactTests`, входят в `tools/replay-test selftest`): после прогона фейкового движка
+  под `--out` нет ни одной ссылки; подложенная ссылка заменяется, файл-цель не тронут; глобы `REPLAY_ARTIFACTS`
+  каждой джобы после фейкового прогона дают только разрешённые расширения, меньше 5 МБ, без сигнатуры BIG и без
+  `.rep`; ни один глоб не совпадает с именем с запрещённым расширением; шаги YAML совпадают с описанием выше.
 
 ## Время e1 при -jobs 1 (оценка)
 
@@ -192,3 +236,5 @@ arm64: 600 с × 20 = 12 000 с = 3,3 ч на кейс.
 5. Многословный `--engine` правок не требовал.
 6. **v4:** `--deadline-min`, `--case-timeout`, `[defaults].timeout_s_arch`, предел множителя 50 (раздел
    «Таймауты»); фейковый движок умеет `FAKE_SLEEP=S` (тесты дедлайна).
+7. **v5 (ревью #11):** движок в своей группе процессов, по таймауту/дедлайну `killpg` SIGTERM, через 5 с SIGKILL
+   (`FAKE_CHILD_PIDFILE` в фейковом движке для тестов); под `--out` нет символьных ссылок (раздел «Артефакты»).

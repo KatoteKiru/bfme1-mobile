@@ -159,3 +159,6 @@ android-staging/
 .docker-data/
 *.keystore.pass
 keystore.pass
+
+# QA: default --out of tools/replay-test / run_replay_tests.py (results, engine logs, scenario .rep)
+tests/replay/out/

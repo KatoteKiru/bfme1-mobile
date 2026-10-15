@@ -19,6 +19,7 @@ python3 run_replay_tests.py --case-timeout 600 run ...       # таймаут к
 python3 run_replay_tests.py run --deadline-min 75 ...         # лимит всего прогона: остальные кейсы -> deadline, код 4
 # из корня репозитория (так же в CI, через $BFME_DOCKER replay): все юнит-тесты tests/*/test_*.py
 tools/replay-test selftest                                     # код 0/1; -q, --only replay|perf|terrain
+tools/replay-test selftest --test-timeout 60                  # лимит на каждый тест (по умолчанию 120 с; 0 = выкл.)
 ```
 
 Кейсы с `-qaScenario` готовый `.rep` не требуют: сценарий пишет свой `.rep` в `-qaOut` (по умолчанию

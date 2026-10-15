@@ -2,9 +2,12 @@
 # Self-tests for the replay CRC runner (no engine, no game data): python3 -m unittest -v
 # (or, from the repo root, all unit tests under tests/: tools/replay-test selftest)
 import contextlib
+import fnmatch
+import glob
 import io
 import json
 import os
+import re
 import struct
 import subprocess
 import sys
@@ -294,6 +297,45 @@ class SelftestCommandTests(unittest.TestCase):
         self.assertNotIn("beta:", out)
         self.assertEqual(self._run("--only", "nope")[0], 1)
 
+    def test_hanging_test_fails_by_per_test_timeout(self):
+        import signal
+        import time
+        outer_left = signal.getitimer(signal.ITIMER_REAL)[0]        # > 0 when this runs under `selftest`
+        with tempfile.TemporaryDirectory() as d:
+            root = self._tree(Path(d), failing=False)
+            (root / "alpha" / "test_hang.py").write_text(
+                "import time, unittest\n\nclass H(unittest.TestCase):\n"
+                "    def test_hangs(self):\n        time.sleep(60)\n", encoding="utf-8")
+            buf = io.StringIO()
+            t0 = time.monotonic()
+            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(io.StringIO()):
+                rc = rrt.main(["selftest", "-q", "--root", str(root), "--test-timeout", "0.5"])
+            took = time.monotonic() - t0
+        out = buf.getvalue()
+        self.assertEqual(rc, 1, out)
+        self.assertLess(took, 30, "the hanging test was not stopped by --test-timeout")
+        self.assertIn("SelftestTimeout", out)
+        self.assertIn("test_hangs", out)
+        self.assertIn("alpha: 2 run, 1 failed/errors", out)           # the other tests still ran
+        self.assertIn("beta: 2 run, 0 failed/errors", out)
+        if outer_left > 0:                                             # the outer test's own limit is back
+            self.assertGreater(signal.getitimer(signal.ITIMER_REAL)[0], 0)
+
+    def test_test_timeout_values(self):
+        with mock.patch.dict(os.environ, {rrt.SELFTEST_TIMEOUT_ENV: ""}):
+            self.assertEqual(rrt.selftest_timeout(None), rrt.SELFTEST_TEST_TIMEOUT_S)
+            self.assertEqual(rrt.selftest_timeout(0.0), 0.0)                       # 0 = off
+        with mock.patch.dict(os.environ, {rrt.SELFTEST_TIMEOUT_ENV: "7.5"}):
+            self.assertEqual(rrt.selftest_timeout(None), 7.5)
+            self.assertEqual(rrt.selftest_timeout(3.0), 3.0)                       # CLI wins
+        for bad in ("fast", "-1", "inf"):
+            with mock.patch.dict(os.environ, {rrt.SELFTEST_TIMEOUT_ENV: bad}), self.assertRaises(ValueError):
+                rrt.selftest_timeout(None)
+        with self.assertRaises(ValueError):
+            rrt.selftest_timeout(-1.0)
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(rrt.main(["selftest", "--test-timeout", "-1", "--only", "nope"]), 1)
+
     def test_real_tree_has_the_three_suites(self):
         dirs = {d.name for d in rrt.SELFTEST_ROOT.iterdir() if d.is_dir() and any(d.glob("test_*.py"))}
         self.assertTrue({"replay", "perf", "terrain"} <= dirs, dirs)
@@ -336,7 +378,7 @@ class SelftestCommandTests(unittest.TestCase):
             self.assertNotIn(".rep", lst, n)
             self.assertEqual(len([x for x in lst.splitlines() if x.strip()]), 5, n)
             self.assertIn("files=( $REPLAY_ARTIFACTS )", p, n)
-            self.assertIn('/usr/local/sbin/bfme-check-artifacts "${files[@]}"', p, n)
+            self.assertIn('/usr/local/sbin/bfme-check-artifacts -- "${files[@]}"', p, n)
             self.assertIn("path: ${{ env.REPLAY_ARTIFACTS }}", p, n)
             self.assertNotIn("/*.crclog\n            ", p.split("steps:", 1)[1], n)   # no second list in steps
 
@@ -668,10 +710,12 @@ class DeadlineTests(unittest.TestCase):
         self.gold.stop()
         self.tmp.cleanup()
 
-    def manifest(self, sleep="0", hang=False):
+    def manifest(self, sleep="0", hang=False, slow_timeout_s=None):
         text = DEADLINE_MANIFEST.format(sleep=sleep)
         if hang:
             text = text.replace('FAKE_SLEEP = "%s"' % sleep, 'FAKE_HANG_AT = "5"')
+        if slow_timeout_s is not None:       # only slow-pass gets the short timeout, after-* keep 900 s
+            text = text.replace("timeout_s = 60\n", f"timeout_s = {slow_timeout_s}\n", 1)
         m = self.d / "m.toml"
         m.write_text(text, encoding="utf-8")
         return m
@@ -721,8 +765,10 @@ class DeadlineTests(unittest.TestCase):
         self.assertIn('type="timeout"', (self.d / "j" / "junit.xml").read_text())
 
     def test_case_timeout_before_the_deadline_is_a_real_timeout(self):
-        m = self.manifest(hang=True)
-        rc, res = self.run_deadline(m, 5, "--case-timeout", "1")
+        # 1 s only for the hanging case: --case-timeout 1 used to hit after-1/after-2 too (4 engine starts
+        # for --record-missing), which under CPU load turned "recorded" into "timeout"
+        m = self.manifest(hang=True, slow_timeout_s=1)
+        rc, res = self.run_deadline(m, 5)
         self.assertEqual((res["slow-pass"]["status"], res["slow-pass"]["note"]), ("timeout", ""))
         self.assertEqual(res["after-1"]["status"], "recorded")
         self.assertEqual(rc, rrt.EXIT_ENGINE)
@@ -755,6 +801,327 @@ class DeadlineTests(unittest.TestCase):
         for v in ("0", "-1"):
             self.assertEqual(run_cli("--out", str(self.d), "run", "--stage", "selftest", "--deadline-min", v),
                              rrt.EXIT_CONFIG)
+
+
+ABS_PATH_IN_TEXT = re.compile(r"(?<![\w.])(/workspace|/home|/tmp|/src|/root|/mnt|/var/tmp)(/|\b)|[A-Za-z]:[\\/]")
+
+
+class GoldenPathTests(unittest.TestCase):
+    """Ревью #11 п. 5: goldens and actual crclogs do not depend on where the checkout lives."""
+
+    def test_no_golden_contains_an_absolute_path(self):
+        goldens = sorted((HERE / "golden").rglob("*.crclog"))
+        self.assertTrue(goldens)
+        for g in goldens:
+            for n, line in enumerate(g.read_text(encoding="utf-8").splitlines(), 1):
+                self.assertIsNone(ABS_PATH_IN_TEXT.search(line), f"{g.relative_to(HERE)}:{n}: {line}")
+                if line.startswith("# ") and "=" in line:
+                    self.assertFalse(line.split("=", 1)[1].startswith("/"), f"{g.relative_to(HERE)}:{n}: {line}")
+
+    def test_pattern_catches_the_old_golden_line(self):
+        for line in ("# replay=/workspace/bfme-mobile/tests/replay/fixtures/selftest-b.rep", "# replay=/tmp/x.rep",
+                     "# replay=/home/box/a.rep", "# replay=/src/tests/replay/fixtures/a.rep", "# replay=C:\\g\\a.rep"):
+            self.assertIsNotNone(ABS_PATH_IN_TEXT.search(line), line)
+        for line in ("# replay=selftest-b.rep", "# blessed_at=2026-10-02T18:01:33+03:00",
+                     "# reason=selftest: заголовок logic_hz (Лид 02.10.2026)", "0 1E30A00F Objects=993C1F13"):
+            self.assertIsNone(ABS_PATH_IN_TEXT.search(line), line)
+
+    def test_crclog_mode_replay_header_is_the_file_name(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "deep" / "out"
+            r = rrt.run_case(fake_case("selftest-crclog-mode"), "linux-x86_64", out)
+            self.assertEqual(r.status, "pass", r.message)
+            raw = [f for f in out.glob("selftest-crclog-mode.actual.*.crclog")]
+            self.assertEqual(len(raw), 1, raw)                         # the engine's own file: absolute path
+            self.assertIn("# replay=" + str((HERE / "fixtures/selftest-b.rep").resolve()), raw[0].read_text())
+            text = (out / "selftest-crclog-mode.actual.crclog").read_text(encoding="utf-8")
+            self.assertIn("# replay=selftest-b.rep\n", text)
+            self.assertIsNone(ABS_PATH_IN_TEXT.search(text))
+            self.assertNotIn(d, text)
+
+    def test_normalize_meta_paths(self):
+        log = crclog.CRCLog(meta={"replay": "/a/b/c.rep", "win": "C:\\g\\x.rep", "rel": "fixtures/a.rep",
+                                  "logic_hz": "30", "reason": "/tmp is free text here"})
+        rrt.normalize_meta_paths(log)
+        self.assertEqual(log.meta, {"replay": "c.rep", "win": "x.rep", "rel": "fixtures/a.rep", "logic_hz": "30",
+                                    "reason": "/tmp is free text here"})
+
+
+def pid_alive(pid: int) -> bool:
+    """True if `pid` runs (a zombie waiting to be reaped counts as dead). The process may be reaped between
+    opening and reading /proc/<pid>/stat: that read fails with ESRCH (ProcessLookupError), i.e. dead too
+    (this race made ProcessGroupTests flaky: 1 of ~100 selftest runs, QA 09.10.2026)."""
+    try:
+        state = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[0]
+    except (OSError, IndexError):        # FileNotFoundError, ProcessLookupError (ESRCH)
+        return False
+    return state not in ("Z", "X")
+
+
+WAIT_DEAD_S = 15.0       # generous, but bounded: returns as soon as the process is gone
+
+
+def wait_dead(pid: int, seconds: float = WAIT_DEAD_S) -> bool:
+    """Wait until `pid` has exited, event-based: poll() on a pidfd (readable once the process is a zombie or
+    gone) instead of a sleep loop. Falls back to polling /proc where pidfd_open is missing (Linux < 5.3)."""
+    import select
+    import time
+    try:
+        fd = os.pidfd_open(pid)
+    except ProcessLookupError:
+        return True
+    except (AttributeError, OSError):
+        end = time.monotonic() + seconds
+        while time.monotonic() < end:
+            if not pid_alive(pid):
+                return True
+            time.sleep(0.05)
+        return not pid_alive(pid)
+    try:
+        poller = select.poll()
+        poller.register(fd, select.POLLIN)
+        return bool(poller.poll(int(seconds * 1000))) or not pid_alive(pid)
+    finally:
+        os.close(fd)
+
+
+class ProcessGroupTests(unittest.TestCase):
+    """Ревью #11 п. 3: on a timeout the runner kills the engine's whole process group (start_new_session +
+    killpg: SIGTERM, SIGKILL after KILL_GRACE_S), not only the engine process."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.out = Path(self.tmp.name)
+        self.pidfile = self.out / "child.pid"
+        self.child = None
+
+    def tearDown(self):
+        if self.child and pid_alive(self.child):
+            with contextlib.suppress(ProcessLookupError):     # it may die between the check and the kill
+                os.kill(self.child, 9)
+        self.tmp.cleanup()
+
+    def _child_pid(self) -> int:
+        self.assertTrue(self.pidfile.is_file(), "fake engine was killed before it started its child (box too slow?)")
+        self.child = int(self.pidfile.read_text().strip())
+        return self.child
+
+    def test_timeout_kills_the_engines_child(self):
+        c = fake_case(FAKE_HANG_AT=5, FAKE_CHILD_PIDFILE=self.pidfile)
+        c.timeout_s = 3.0                                 # room for the engine to start its child under load
+        r = rrt.run_case(c, "linux-x86_64", self.out)
+        self.assertEqual(r.status, "timeout")
+        self.assertTrue(wait_dead(self._child_pid()), "child of the engine survived the timeout")
+
+    def test_child_ignoring_sigterm_gets_sigkill_after_grace(self):
+        c = fake_case(FAKE_HANG_AT=5, FAKE_CHILD_PIDFILE=self.pidfile, FAKE_CHILD_IGNORE_TERM=1)
+        c.timeout_s = 3.0                                 # room for the engine to start its child under load
+        with mock.patch.object(rrt, "KILL_GRACE_S", 0.5):
+            r = rrt.run_case(c, "linux-x86_64", self.out)
+        self.assertEqual(r.status, "timeout")
+        self.assertTrue(wait_dead(self._child_pid()), "SIGTERM-ignoring child survived")
+
+    def test_deadline_kills_the_group_too(self):
+        c = fake_case(FAKE_HANG_AT=5, FAKE_CHILD_PIDFILE=self.pidfile)
+        c.timeout_s = 600
+        dl = rrt.Deadline(3.0 / 60.0)                     # 3 s left
+        r = rrt.run_case(c, "linux-x86_64", self.out, deadline=dl)
+        self.assertEqual((r.status, r.note), ("timeout", rrt.DEADLINE_NOTE))
+        self.assertTrue(wait_dead(self._child_pid()))
+
+    def test_leftover_child_of_a_finished_engine_is_killed(self):
+        r = rrt.run_case(fake_case(FAKE_CHILD_PIDFILE=self.pidfile), "linux-x86_64", self.out)
+        self.assertEqual(r.status, "pass", r.message)
+        self.assertTrue(wait_dead(self._child_pid()), "child outlived the finished engine")
+
+    def test_pid_alive_treats_esrch_as_dead(self):
+        # the flake of 08.10.2026: /proc/<pid>/stat opened, the process reaped before read() -> ESRCH
+        with mock.patch.object(Path, "read_text", side_effect=ProcessLookupError(3, "No such process")):
+            self.assertFalse(pid_alive(os.getpid()))
+        self.assertTrue(pid_alive(os.getpid()))
+
+    def test_wait_dead_returns_on_exit_not_after_the_limit(self):
+        import time
+        p = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(0.2)"])
+        t0 = time.monotonic()
+        self.assertTrue(wait_dead(p.pid, seconds=30))
+        self.assertLess(time.monotonic() - t0, 15)          # event-based: well before the 30 s limit
+        p.wait()
+        self.assertTrue(wait_dead(p.pid, seconds=0.1))      # reaped: gone at once
+        live = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+        try:
+            self.assertFalse(wait_dead(live.pid, seconds=0.2))
+        finally:
+            live.kill()
+            live.wait()
+
+    def test_engine_runs_in_its_own_session(self):
+        seen = {}
+        real = subprocess.Popen
+
+        def spy(*a, **kw):
+            seen.update(kw)
+            return real(*a, **kw)
+        with mock.patch.object(rrt.subprocess, "Popen", spy):
+            rrt.run_case(fake_case(), "linux-x86_64", self.out)
+        self.assertTrue(seen.get("start_new_session"))
+
+
+# Artifact rules of /usr/local/sbin/bfme-check-artifacts (interface fixed by Platform, ci/README.md «Артефакты»)
+FORBIDDEN_EXT = (".big", ".w3d", ".map", ".dds", ".tga", ".csf", ".str", ".wav", ".mp3", ".bik", ".ini", ".rep")
+BIG_MAGIC = (b"BIGF", b"BIG4", b"BIG ")
+MAX_ARTIFACT_BYTES = 5 * 1024 * 1024
+WORKFLOW = HERE / "ci" / "replay-tests.yml"
+HOST_OUT = "/workspace/bfme-mobile/ci/out/${{ github.run_id }}/"
+
+
+def artifact_problems(path: Path, root: Path) -> list[str]:
+    """What bfme-check-artifacts would reject (exit 1/2) in `path`; [] if the file may be uploaded."""
+    if path.is_symlink():
+        return ["symlink"]
+    if not path.is_file():
+        return ["not a regular file"]
+    bad = []
+    if path.suffix.lower() in FORBIDDEN_EXT:
+        bad.append(f"extension {path.suffix}")
+    if path.stat().st_size > MAX_ARTIFACT_BYTES:
+        bad.append("larger than 5 MB")
+    with path.open("rb") as fh:
+        if fh.read(4) in BIG_MAGIC:
+            bad.append("BIG archive signature")
+    if not str(Path(os.path.realpath(path))).startswith(str(Path(os.path.realpath(root))) + os.sep):
+        bad.append("realpath outside the run out dir")
+    return bad
+
+
+def workflow_artifact_lists() -> dict[str, list[str]]:
+    """job id -> globs of REPLAY_ARTIFACTS in the job env of ci/replay-tests.yml (stdlib only, no YAML module)."""
+    jobs: dict[str, list[str]] = {}
+    job, globs = None, None
+    for line in WORKFLOW.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"^  ([a-z0-9-]+):\s*$", line)
+        if m:
+            job, globs = m.group(1), None
+            continue
+        if job and line.strip() == "REPLAY_ARTIFACTS: |":
+            globs = jobs.setdefault(job, [])
+            continue
+        if globs is not None:
+            if line.startswith("        ") and line.strip():
+                globs.append(line.strip())
+            else:
+                globs = None
+    return jobs
+
+
+class ArtifactTests(unittest.TestCase):
+    """Ревью #11 / Платформа: the runner never leaves symlinks under --out; REPLAY_ARTIFACTS of every job matches
+    only logs and CRC (allowed extensions, < 5 MB) after a fake run, never .rep or EA file types."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def fake_run(self, out: Path) -> int:
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            return rrt.main(["--out", str(out), "run", "--stage", "selftest",
+                             "--junit", str(out / "junit.xml"), "--summary", str(out / "summary.md")])
+
+    def symlinks(self, top: Path) -> list[str]:
+        found = []
+        for d, dirs, files in os.walk(top):
+            found += [os.path.join(d, n) for n in dirs + files if os.path.islink(os.path.join(d, n))]
+        return found
+
+    def test_no_symlink_under_out_after_a_fake_run(self):
+        out = self.root / "out"
+        self.assertEqual(self.fake_run(out), rrt.EXIT_OK)
+        self.assertTrue(any(out.rglob("*.rep")), "the selftest scenario should leave its .rep under --out")
+        self.assertEqual(self.symlinks(out), [])
+
+    def test_runner_replaces_a_planted_symlink_instead_of_writing_through_it(self):
+        out = self.root / "out"
+        out.mkdir()
+        target = self.root / "outside.txt"
+        target.write_text("keep\n", encoding="utf-8")
+        for name in ("selftest-match.engine.log", "selftest-match.actual.crclog", "results.json",
+                     "junit.xml", "summary.md"):
+            os.symlink(target, out / name)
+        self.assertEqual(self.fake_run(out), rrt.EXIT_OK)
+        self.assertEqual(self.symlinks(out), [])
+        self.assertEqual(target.read_text(encoding="utf-8"), "keep\n")
+        self.assertTrue((out / "selftest-match.engine.log").is_file())
+
+    def test_artifact_patterns_allow_only_logs_and_crc(self):
+        lists = workflow_artifact_lists()
+        self.assertEqual(sorted(lists), ["replay-crc", "replay-crc-arm64", "replay-selftest"])
+        for job, globs in lists.items():
+            self.assertTrue(globs, job)
+            for g in globs:
+                self.assertTrue(g.startswith(HOST_OUT + job + "/"), (job, g))
+                base = g.rsplit("/", 1)[1]
+                for ext in FORBIDDEN_EXT:                      # no pattern can ever pick an EA type or a .rep
+                    for stem in ("x", "last", "selftest-match.actual", "map mp fords of isen"):
+                        self.assertFalse(fnmatch.fnmatchcase(stem + ext, base), (job, g, ext))
+                        self.assertFalse(fnmatch.fnmatchcase(stem + ext.upper(), base), (job, g, ext))
+
+    def test_artifact_patterns_after_a_fake_run(self):
+        for job, globs in workflow_artifact_lists().items():
+            job_out = self.root / job
+            subdirs = {g[len(HOST_OUT + job) + 1:].split("/", 1)[0] for g in globs}
+            self.assertEqual(len(subdirs), 1, (job, subdirs))      # one --out per job: selftest, x86_64, arm64
+            run_out = job_out / subdirs.pop()
+            self.assertEqual(self.fake_run(run_out), rrt.EXIT_OK, job)
+            matched = set()
+            for g in globs:                                    # bash: shopt -s nullglob globstar; files=( $X )
+                matched.update(glob.glob(str(job_out) + "/" + g[len(HOST_OUT + job) + 1:], recursive=True))
+            self.assertTrue(matched, job)
+            for f in sorted(matched):
+                self.assertEqual(artifact_problems(Path(f), job_out), [], f)
+            names = {Path(f).name for f in matched}
+            self.assertTrue({"junit.xml", "summary.md", "results.json"} <= names, (job, names))
+            self.assertTrue(any(n.endswith(".engine.log") for n in names), job)
+            self.assertTrue(any(n.endswith(".crclog") for n in names), job)
+            reps = list(job_out.rglob("*.rep"))
+            self.assertTrue(reps, job)                         # present under --out, but never matched
+            self.assertFalse({str(r) for r in reps} & matched, job)
+
+    def test_artifact_problems_mirrors_the_checker(self):
+        root = self.root / "run"
+        root.mkdir()
+        ok = root / "a.engine.log"
+        ok.write_text("log\n", encoding="utf-8")
+        self.assertEqual(artifact_problems(ok, root), [])
+        big = root / "b.crclog"
+        big.write_bytes(b"BIGF" + b"\0" * 12)
+        self.assertIn("BIG archive signature", artifact_problems(big, root))
+        rep = root / "last.rep"
+        rep.write_bytes(b"GENREP")
+        self.assertIn("extension .rep", artifact_problems(rep, root))
+        large = root / "c.crclog"
+        with large.open("wb") as fh:
+            fh.truncate(MAX_ARTIFACT_BYTES + 1)
+        self.assertIn("larger than 5 MB", artifact_problems(large, root))
+        link = root / "d.crclog"
+        os.symlink(ok, link)
+        self.assertEqual(artifact_problems(link, root), ["symlink"])
+        self.assertEqual(artifact_problems(root, root), ["not a regular file"])
+
+    def test_workflow_check_and_upload_steps(self):
+        y = WORKFLOW.read_text(encoding="utf-8")
+        for needle in ("shopt -s nullglob globstar", 'files=( $REPLAY_ARTIFACTS )',
+                       '/usr/local/sbin/bfme-check-artifacts -- "${files[@]}"',
+                       'echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"',
+                       "steps.artifacts_ok.outcome == 'success' && steps.artifacts_ok.outputs.count != '0'",
+                       "path: ${{ env.REPLAY_ARTIFACTS }}", "if-no-files-found: ignore"):
+            self.assertEqual(y.count(needle), 3, needle)
+        # ревью #11 п. 6: the engine path only via $HEADLESS_BIN (job env), no literal build path in a step
+        self.assertIn('--engine "/src/$HEADLESS_BIN"', y)
+        self.assertEqual(y.count("HEADLESS_BIN: "), 1)
+        self.assertEqual(y.count("build/linux64-deploy/GeneralsMD/GeneralsXZH"), 1)
 
 
 class ErofsTests(unittest.TestCase):

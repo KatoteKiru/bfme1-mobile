@@ -3,7 +3,8 @@
 Эталонные CRC по кадрам логики в формате `bfme-crclog/1` (docs/REPLAY-TESTS.md §3–4). Только числа —
 данных игры в них нет, храним в git.
 - Шапка: `# logic_hz=30` сразу после строки формата (Лид 02.10.2026), дальше `case`, `arch`, `reason`,
-  `blessed_at` (МСК), `engine_build_id`, `git_sha`, `replay_sha256`.
+  `blessed_at` (МСК), `engine_build_id`, `git_sha`, `replay_sha256`; `replay` — только имя файла, без абсолютного
+  пути (раннер нормализует; тест `GoldenPathTests` проверяет, что в golden нет `/workspace`, `/home`, `/tmp`, `/src`).
 - Набор на архитектуру: `linux-x86_64` (основной для CI с Э2), `linux-arm64`, `android-arm64`.
   Расхождение arm64 и x86_64 — дефект «серьёзный» (sev:major); расхождение двух прогонов на одной
   архитектуре — блокер (REPLAY-TESTS §5).

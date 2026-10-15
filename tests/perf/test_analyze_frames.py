@@ -131,12 +131,48 @@ class AnalyzeFramesTest(unittest.TestCase):
         one = rows[:1] + [{"t_ns": 1e9, "logic_frame": 30}] + rows[1:]   # a single row with logic_frame
         self.assertEqual(af.logic_pace(one[1:2], required=True)["reason"], "logic pace not verifiable")
 
-    def test_pace_out_of_range_with_preliminary_is_still_invalid(self):
-        # --preliminary only softens "not verifiable"; a measured 38 Hz is invalid in any case
+    def test_pace_out_of_range_with_preliminary_is_warning_exit_0(self):
+        # Лид, ревью #11 п. 2: before E1-35 skirmish logic runs at ~38 Hz; preliminary runs are needed for FPS,
+        # memory and heat -> with --preliminary a pace mismatch is a warning and exit 0; without the flag exit 2
+        import contextlib
+        import io
+        import json
+        with tempfile.TemporaryDirectory() as d:
+            fr, js = Path(d) / "f.csv", Path(d) / "o.json"
+            af.synthetic(fr, seed=1, seconds=360, jank_every=0, logic_hz=38.0)
+            outbuf, errbuf = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(outbuf), contextlib.redirect_stderr(errbuf):
+                rc = af.main([str(fr), "--preliminary", "--json", str(js)])
+            self.assertEqual(rc, 0)
+            out = json.loads(js.read_text(encoding="utf-8"))
+            self.assertIsNone(out["pace"]["valid"])
+            self.assertIsNone(out["valid"])
+            self.assertEqual(out["pace"]["reason"], "logic pace out of range")
+            self.assertAlmostEqual(out["pace"]["logic_hz"], 38.0, delta=0.3)
+            self.assertIn("warning: logic pace out of range", errbuf.getvalue())
+            self.assertIn("ПРЕДВАРИТЕЛЬНО", outbuf.getvalue())
+            self.assertNotIn("НЕДЕЙСТВИТЕЛЕН", outbuf.getvalue())
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(af.main([str(fr)]), 2)                       # without the flag: invalid
+                self.assertEqual(af.main([str(fr), "--logic-window", "1801-10800", "--preliminary"]), 0)
+
+    def test_pace_out_of_range_with_preliminary_still_fails_thresholds(self):
+        # the flag only softens the pace rule; FPS thresholds still give exit 1
+        import contextlib
+        import io
         with tempfile.TemporaryDirectory() as d:
             fr = Path(d) / "f.csv"
-            af.synthetic(fr, seed=1, seconds=360, jank_every=0, logic_hz=38.0)
-            self.assertEqual(af.main([str(fr), "--preliminary"]), 2)
+            af.synthetic(fr, seed=1, seconds=360, jank_every=30, logic_hz=38.0)
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(af.main([str(fr), "--preliminary"]), 1)
+
+    def test_logic_pace_function_preliminary(self):
+        rows = [{"t_ns": i * 1e9 / 30, "logic_frame": round(i * 38 / 30)} for i in range(301)]
+        self.assertFalse(af.logic_pace(rows)["valid"])
+        self.assertFalse(af.logic_pace(rows, required=True)["valid"])
+        soft = af.logic_pace(rows, required=True, preliminary=True)
+        self.assertIsNone(soft["valid"])
+        self.assertIn("warning", soft)
 
     def test_thermal_and_pace_both_invalid(self):
         rc, out = self.run_case(0, thermal_start=3, logic_hz=38.0)
@@ -172,6 +208,111 @@ class AnalyzeFramesTest(unittest.TestCase):
             af.synthetic(fr, seed=1, seconds=10, jank_every=0)
             self.assertEqual(af.main([str(fr), "--logic-window", "500-100"]), 4)
             self.assertEqual(af.main([str(fr), "--logic-window", "abc"]), 4)
+
+    # --- bad input: exit 4 with a clear message, never a traceback (Лид, ревью #11 п. 1) ---
+    def _main_text(self, content: str, *extra: str) -> tuple[int, str]:
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as d:
+            fr = Path(d) / "f.csv"
+            fr.write_text(content, encoding="utf-8")
+            outbuf, errbuf = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(outbuf), contextlib.redirect_stderr(errbuf):
+                rc = af.main([str(fr), *extra])
+            return rc, outbuf.getvalue() + errbuf.getvalue()
+
+    def test_empty_file_is_bad_input(self):
+        rc, text = self._main_text("")
+        self.assertEqual(rc, 4)
+        self.assertIn("empty file", text)
+
+    def test_header_only_is_bad_input(self):
+        rc, text = self._main_text("t_ns,present_interval_ms,logic_frame\n")
+        self.assertEqual(rc, 4)
+        self.assertIn("no data rows", text)
+
+    def test_missing_column_in_header_is_bad_input(self):
+        rc, text = self._main_text("t_ns,logic_frame\n0,0\n33333333,1\n")
+        self.assertEqual(rc, 4)
+        self.assertIn("present_interval_ms", text)
+
+    def test_empty_t_ns_in_a_later_row_is_bad_input(self):
+        # was KeyError in window() -> exit 1; every row is checked now, with the line number
+        lines = ["t_ns,present_interval_ms,logic_frame"] + [f"{int(i * 1e9 / 30)},33.333,{i}" for i in range(100)]
+        lines[51] = ",33.333,50"
+        rc, text = self._main_text("\n".join(lines) + "\n", "--skip-s", "0")
+        self.assertEqual(rc, 4)
+        self.assertIn(":52: no numeric value in column(s) t_ns", text)
+        rc, text = self._main_text("t_ns,present_interval_ms\n,33.3\n1,33.3\n", "--skip-s", "0")
+        self.assertEqual(rc, 4)
+        self.assertIn(":2:", text)
+
+    def test_empty_logic_frame_in_some_row_is_bad_input(self):
+        lines = ["t_ns,present_interval_ms,logic_frame"] + [f"{int(i * 1e9 / 30)},33.333,{i}" for i in range(100)]
+        lines[10] = f"{int(9 * 1e9 / 30)},33.333,"
+        rc, text = self._main_text("\n".join(lines) + "\n", "--logic-window", "0-50")
+        self.assertEqual(rc, 4)
+        self.assertIn("logic_frame", text)
+
+    def test_zero_present_intervals_is_bad_input(self):
+        # was ZeroDivisionError in metrics() -> exit 1
+        lines = ["t_ns,present_interval_ms,logic_frame"] + [f"{int(i * 1e9 / 30)},0,{i}" for i in range(100)]
+        rc, text = self._main_text("\n".join(lines) + "\n", "--skip-s", "0")
+        self.assertEqual(rc, 4)
+        self.assertIn("zero time interval", text)
+
+    def test_identical_t_ns_is_bad_input(self):
+        lines = ["t_ns,present_interval_ms,logic_frame"] + [f"5000,33.333,{i}" for i in range(100)]
+        rc, text = self._main_text("\n".join(lines) + "\n", "--skip-s", "0", "--duration-s", "0")
+        self.assertEqual(rc, 4)
+        self.assertIn("same t_ns", text)
+        rc, text = self._main_text("\n".join(lines) + "\n", "--logic-window", "0-99")
+        self.assertEqual(rc, 4)
+
+    def test_t_ns_going_backwards_is_bad_input(self):
+        rc, text = self._main_text("t_ns,present_interval_ms\n0,33.3\n66666666,33.3\n33333333,33.3\n", "--skip-s", "0")
+        self.assertEqual(rc, 4)
+        self.assertIn("backwards", text)
+
+    def test_time_gap_is_measured_not_a_crash(self):
+        # 10 s pause in the middle (app in background): no traceback; the window and the logic pace are taken
+        # over wall-clock time, gap included -> one freeze, FPS below 29.5, and the logic pace (3599 ticks in
+        # 129.9 s = 27.7/s) is outside 30 +- 1, so the run is invalid (exit 2), not bad input
+        lines, t = ["t_ns,present_interval_ms,logic_frame"], 0
+        for i in range(30 * 120):
+            iv = 10000.0 if i == 30 * 60 else 1000.0 / 30
+            t += int(iv * 1e6)
+            lines.append(f"{t},{iv:.3f},{i}")
+        rc, text = self._main_text("\n".join(lines) + "\n", "--skip-s", "0", "--duration-s", "0")
+        self.assertEqual(rc, 2, text)
+        self.assertRegex(text, r"Фризы > 250 мс, шт \| 1 ")
+        self.assertIn("Окно замера, с | 129.90", text)
+        self.assertIn("темп логики 27.70 тик/с вне 30 ± 1", text)
+        # the same file split at the gap is fine: before the pause everything passes
+        rc, text = self._main_text("\n".join(lines[:30 * 60]) + "\n", "--skip-s", "0", "--duration-s", "0")
+        self.assertEqual(rc, 0, text)
+
+    def test_gap_leaves_window_empty_is_bad_input(self):
+        rows = "t_ns,present_interval_ms\n0,33.3\n33333333,33.3\n" + f"{int(400e9)},33.3\n"
+        rc, text = self._main_text(rows, "--skip-s", "60", "--duration-s", "300")
+        self.assertEqual(rc, 4)
+        self.assertIn("no frames in the measurement window", text)
+
+    def test_invalid_message_tells_missing_column_from_too_few_rows(self):
+        # message at the end (ревью #11 п. 1): "нет колонки" vs "меньше двух строк в окне"
+        lines = ["t_ns,present_interval_ms"] + [f"{int(i * 1e9 / 30)},33.333" for i in range(30 * 10)]
+        rc, text = self._main_text("\n".join(lines) + "\n", "--skip-s", "0", "--duration-s", "0")
+        self.assertEqual(rc, 2)
+        self.assertIn("logic pace not verifiable: нет колонки logic_frame", text)
+        lines = ["t_ns,present_interval_ms,logic_frame"] + [f"{int(i * 1e9 / 30)},33.333,{i}" for i in range(30 * 10)]
+        rc, text = self._main_text("\n".join(lines) + "\n", "--logic-window", "5-5")
+        self.assertEqual(rc, 2)
+        self.assertIn("logic pace not verifiable: в окне меньше двух строк с logic_frame", text)
+        rows1 = [{"t_ns": 0.0, "logic_frame": 0.0}]
+        self.assertEqual(af.logic_pace(rows1, required=True)["cause"], "too_few_rows")
+        self.assertEqual(af.logic_pace([{"t_ns": 0.0}], required=True)["cause"], "column_missing")
+        same = [{"t_ns": 0.0, "logic_frame": 0.0}, {"t_ns": 0.0, "logic_frame": 1.0}]
+        self.assertEqual(af.logic_pace(same, required=True)["cause"], "zero_interval")
 
     def test_percentile(self):
         self.assertEqual(af.percentile([1.0, 2.0, 3.0, 4.0, 5.0], 50), 3.0)

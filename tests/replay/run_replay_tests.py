@@ -7,7 +7,11 @@
 #   bless    --case NAME --reason "why" [--deadline-min M]
 #   compare  EXPECTED ACTUAL [--rep-offset K]  (crclog, fork stderr log or .rep)
 #   rep-crcs FILE.rep [--offset K]           (CRCs the replay recorded itself)
-#   selftest [-q] [--only DIR ...]           (stdlib unittest of tests/replay, tests/perf, tests/terrain, ...)
+#   selftest [-q] [--only DIR ...] [--test-timeout S]   (stdlib unittest of tests/replay, tests/perf, tests/terrain, ...)
+#
+# selftest: every unit test has a hard limit (--test-timeout S > $BFME_SELFTEST_TEST_TIMEOUT > 120 s, 0 = off).
+# A test over the limit fails with SelftestTimeout and the traceback of where it hung; if even SIGALRM cannot
+# interrupt it, faulthandler dumps all stacks and exits 30 s later. A hang never stalls the CI job.
 #
 # --out is created (with parents) by run/bless; --junit/--summary parents too.
 #
@@ -42,6 +46,9 @@
 # (otherwise the engine exits with 1). The runner always passes an absolute path and refuses
 # replay names without ".rep" as a configuration error.
 #
+# The engine runs in its own process group (start_new_session); on a timeout or the deadline the
+# whole group gets SIGTERM, then SIGKILL after KILL_GRACE_S (qemu, -jobs workers and shells too).
+#
 # Exit codes: 0 all passed, 1 CRC mismatch (or failing unit tests in selftest), 2 engine
 # failure (crash, timeout, no CRC output), 3 configuration error / missing input, 4 golden
 # file missing or run incomplete (--deadline-min reached). With several problems the first in this
@@ -56,6 +63,7 @@ import json
 import os
 import re
 import shlex
+import signal
 import subprocess
 import sys
 import time
@@ -74,6 +82,7 @@ MAX_TIMEOUT_SCALE = 50.0       # the CI wrapper passes at most 50 (Platform 02.1
 TIMEOUT_SCALE_ENV = "BFME_REPLAY_TIMEOUT_SCALE"
 TIMEOUT_SCALE_RE = re.compile(r"[0-9]+(\.[0-9]+)?")   # format the wrapper lets through
 DEADLINE_NOTE = "deadline"
+KILL_GRACE_S = 5.0             # timeout: SIGTERM to the engine's process group, SIGKILL after this many seconds
 # errno 30: the engine tried to write into the read-only game-data cwd (/gamedata:ro)
 EROFS_RE = re.compile(r"read-only file system|\bEROFS\b|errno[ =:]*30\b", re.IGNORECASE)
 
@@ -278,6 +287,15 @@ def erofs_lines(text: str, limit: int = 3) -> list[str]:
     return out
 
 
+def plain_file(path: Path) -> Path:
+    """The runner never creates symlinks under --out and never writes through one: a symlink left at an output
+    path (old run, engine) is removed first, so the file written there is a regular file. bfme-check-artifacts
+    rejects symlinks and paths that resolve outside ci/out/<run_id>/ (ci/README.md «Артефакты»)."""
+    if path.is_symlink():
+        path.unlink()
+    return path
+
+
 def find_crclog(requested: Path) -> Path | None:
     """The engine hook writes "<stem>.<replay>.<pid><ext>" (unique per -jobs worker, engine-hooks/0001).
     Accept that or the exact path; more than one worker file means -jobs > 1 (use -jobs 1)."""
@@ -288,6 +306,58 @@ def find_crclog(requested: Path) -> Path | None:
         raise ValueError(f"{len(found)} crclog files for one case ({', '.join(f.name for f in found)}): "
                          "run the engine with -jobs 1")
     return found[0] if found else None
+
+
+def kill_group(proc: subprocess.Popen, grace_s: float = KILL_GRACE_S) -> None:
+    """SIGTERM to the whole process group of `proc` (the engine and everything it started: qemu, -jobs
+    workers, shells), SIGKILL to the group after `grace_s` if the leader is still there; reap the leader."""
+    try:
+        os.killpg(proc.pid, signal.SIGTERM)
+    except (ProcessLookupError, PermissionError):
+        pass
+    try:
+        proc.wait(timeout=grace_s)
+    except subprocess.TimeoutExpired:
+        pass
+    try:                      # also children that ignore SIGTERM or outlived the leader
+        os.killpg(proc.pid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        pass
+    proc.wait()
+
+
+def run_in_own_group(cmd: list[str], cwd, env, stdout, timeout: float | None) -> int:
+    """Run `cmd` as the leader of a new session/process group (start_new_session=True). On timeout the whole
+    group is killed (kill_group) and TimeoutExpired is raised; after a normal exit leftovers of the group are
+    killed too, so no engine child keeps running (or writing into --out) after the case."""
+    proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdout=stdout, stderr=subprocess.STDOUT,
+                            start_new_session=True)
+    try:
+        rc = proc.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        kill_group(proc)
+        raise
+    except BaseException:     # KeyboardInterrupt etc.: do not leave the group behind
+        kill_group(proc, grace_s=1.0)
+        raise
+    try:
+        os.killpg(proc.pid, signal.SIGKILL)   # stragglers of a finished engine (the group id stays valid)
+    except (ProcessLookupError, PermissionError):
+        pass
+    return rc
+
+
+ABS_PATH_RE = re.compile(r"^(/|[A-Za-z]:[\\/]|\\\\)")   # /x, C:\x or C:/x, \\server\share
+
+
+def normalize_meta_paths(log: crclog.CRCLog) -> crclog.CRCLog:
+    """Header values that are absolute paths (the engine hook / fake engine write "# replay=<path as passed>",
+    and the runner always passes an absolute one) keep only the file name, so actual crclogs and goldens do not
+    depend on where the checkout lives (ревью #11 п. 5). The replay content is identified by replay_sha256."""
+    for k, v in list(log.meta.items()):
+        if k != "reason" and ABS_PATH_RE.match(v.strip()):     # reason: free text of bless, left alone
+            log.meta[k] = re.split(r"[\\/]", v.strip().rstrip("/\\"))[-1]
+    return log
 
 
 def run_engine(case: Case, out_dir: Path, deadline: Deadline = NO_DEADLINE) -> tuple[crclog.CRCLog | None, Result]:
@@ -319,12 +389,10 @@ def run_engine(case: Case, out_dir: Path, deadline: Deadline = NO_DEADLINE) -> t
     timeout, by_deadline = deadline.limit(case.timeout_s)
     t0 = dt.datetime.now()
     try:
-        with stderr_log.open("w", encoding="utf-8", errors="replace") as logf:
+        with plain_file(stderr_log).open("w", encoding="utf-8", errors="replace") as logf:
             logf.write("$ " + shlex.join(cmd) + "\n")
             logf.flush()
-            proc = subprocess.run(cmd, cwd=cwd, env=env, stdout=logf, stderr=subprocess.STDOUT,
-                                  timeout=timeout)
-        rc = proc.returncode
+            rc = run_in_own_group(cmd, cwd=cwd, env=env, stdout=logf, timeout=timeout)
     except subprocess.TimeoutExpired:
         secs = (dt.datetime.now() - t0).total_seconds()
         if by_deadline:
@@ -351,6 +419,7 @@ def run_engine(case: Case, out_dir: Path, deadline: Deadline = NO_DEADLINE) -> t
     if case.mode == "crclog":
         written = find_crclog(actual_crclog)
         log = crclog.parse_crclog(written.read_text(encoding="utf-8")) if written else crclog.CRCLog()
+        normalize_meta_paths(log)
     else:
         log = crclog.parse_gx_stderr(text)
         log.meta.update({"replay": replay.name})
@@ -369,7 +438,7 @@ def run_engine(case: Case, out_dir: Path, deadline: Deadline = NO_DEADLINE) -> t
     elif log.logic_hz != case.logic_hz:
         raise ValueError(f"engine reports logic_hz={log.logic_hz}, manifest says {case.logic_hz}")
     if log.frames:   # normalised copy next to the engine log: <case>.actual.crclog
-        actual_crclog.write_text(crclog.format_crclog(log), encoding="utf-8")
+        plain_file(actual_crclog).write_text(crclog.format_crclog(log), encoding="utf-8")
     res = Result(case.name, "pass", "", secs, actual_path=str(actual_crclog), log_path=str(stderr_log),
                  warnings=warnings)
     if rc != 0:
@@ -533,7 +602,7 @@ def write_junit(results: list[Result], path: Path) -> None:
             lines.append(f'    <system-err>{escape(chr(10).join(r.warnings))}</system-err>')
         lines.append("  </testcase>")
     lines.append("</testsuite>")
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    plain_file(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 ICON = {"pass": "✅", "recorded": "📝", "mismatch": "❌", "engine_error": "💥", "timeout": "⏱", "no_golden": "❔",
@@ -550,7 +619,7 @@ def write_summary(results: list[Result], arch: str, path: Path, note: str = "") 
         msg = r.message + "".join(f" ⚠ {w}" for w in r.warnings)
         msg = msg.replace("|", "\\|").replace("\n", " ")
         lines.append(f"| `{r.case}` | {ICON.get(r.status, '')} {r.status} | {msg} | {r.seconds:.1f} |")
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    plain_file(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def exit_code(results: list[Result]) -> int:
@@ -664,7 +733,7 @@ def cmd_run(a) -> int:
         print(f"[{r.status.upper():12}] {r.case}: {r.message}", flush=True)
         for w in r.warnings:
             print(f"    warning: {w}", flush=True)
-    (out / "results.json").write_text(json.dumps([dataclasses.asdict(r) for r in results], indent=2), encoding="utf-8")
+    plain_file(out / "results.json").write_text(json.dumps([dataclasses.asdict(r) for r in results], indent=2), encoding="utf-8")
     if a.junit:
         write_junit(results, Path(a.junit))
     if a.summary:
@@ -728,11 +797,84 @@ def cmd_rep_crcs(a) -> int:
 
 
 SELFTEST_ROOT = HERE.parent      # tests/
+SELFTEST_TEST_TIMEOUT_S = 120.0  # per unit test (setUp + test + tearDown); the slowest one takes ~3 s
+SELFTEST_TIMEOUT_ENV = "BFME_SELFTEST_TEST_TIMEOUT"
+HARD_TIMEOUT_GRACE_S = 30.0      # if SIGALRM cannot interrupt the test: dump all stacks and exit after this
+
+
+class SelftestTimeout(Exception):
+    """A unit test ran longer than the per-test limit (selftest --test-timeout)."""
+
+
+_alarm_stack: list[tuple] = []   # nested selftests (the runner's own tests run `selftest` inside a test)
+
+
+def timed_result_class(seconds: float | None):
+    """TextTestResult that gives every test a hard limit: SIGALRM raises SelftestTimeout in the test (an error
+    with the traceback of where it hung); if that cannot fire (stuck in C code), faulthandler dumps all stacks
+    and exits the process HARD_TIMEOUT_GRACE_S later. A hang fails the selftest instead of stalling CI."""
+    import faulthandler
+    import unittest
+    base = unittest.TextTestResult
+    if not seconds or not hasattr(signal, "setitimer"):
+        return base
+
+    def arm_hard(after_s: float) -> None:
+        try:                        # sys.stderr may be redirected (StringIO): write to the real fd 2
+            faulthandler.dump_traceback_later(after_s, exit=True, file=sys.__stderr__)
+        except (AttributeError, OSError, ValueError):
+            pass                    # no real stderr: SIGALRM alone
+
+    def on_alarm(signum, frame):
+        raise SelftestTimeout(f"test ran longer than {seconds:g} s (per-test limit: selftest --test-timeout, "
+                              f"${SELFTEST_TIMEOUT_ENV})")
+
+    class Timed(base):
+        def startTest(self, test):
+            super().startTest(test)
+            old_handler = signal.signal(signal.SIGALRM, on_alarm)
+            old_left = signal.setitimer(signal.ITIMER_REAL, seconds)[0]
+            _alarm_stack.append((old_handler, old_left, time.monotonic()))
+            arm_hard(seconds + HARD_TIMEOUT_GRACE_S)
+
+        def stopTest(self, test):
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            faulthandler.cancel_dump_traceback_later()
+            if _alarm_stack:
+                old_handler, old_left, t0 = _alarm_stack.pop()
+                signal.signal(signal.SIGALRM, old_handler)
+                if old_left > 0:            # an outer selftest's test is still running: give its limit back
+                    left = max(old_left - (time.monotonic() - t0), 0.001)
+                    signal.setitimer(signal.ITIMER_REAL, left)
+                    arm_hard(left + HARD_TIMEOUT_GRACE_S)
+            super().stopTest(test)
+    return Timed
+
+
+def selftest_timeout(cli: float | None) -> float:
+    """Per-test limit in seconds: --test-timeout > $BFME_SELFTEST_TEST_TIMEOUT > 120; 0 switches it off."""
+    if cli is not None:
+        val, src = cli, "--test-timeout"
+    elif os.environ.get(SELFTEST_TIMEOUT_ENV, "").strip():
+        raw = os.environ[SELFTEST_TIMEOUT_ENV].strip()
+        if not TIMEOUT_SCALE_RE.fullmatch(raw):
+            raise ValueError(f"${SELFTEST_TIMEOUT_ENV} must look like 120 or 2.5 (digits[.digits]), got {raw!r}")
+        val, src = float(raw), f"${SELFTEST_TIMEOUT_ENV}"
+    else:
+        val, src = SELFTEST_TEST_TIMEOUT_S, "default"
+    if not (0 <= val < float("inf")):
+        raise ValueError(f"per-test timeout must be >= 0 seconds, got {val:g} ({src})")
+    return val
 
 
 def cmd_selftest(a) -> int:
     """stdlib unittest of every tests/<dir>/test_*.py (replay, perf, terrain, ...): 0 ok, 1 failed."""
     import unittest
+    try:
+        per_test = selftest_timeout(getattr(a, "test_timeout", None))
+    except ValueError as e:
+        print(f"selftest: {e}", file=sys.stderr)
+        return EXIT_MISMATCH
     root = Path(a.root) if a.root else SELFTEST_ROOT
     dirs = sorted(d for d in root.iterdir() if d.is_dir() and any(d.glob("test_*.py")))
     if a.only:
@@ -753,7 +895,8 @@ def cmd_selftest(a) -> int:
         try:
             suite = unittest.TestLoader().discover(str(d), pattern="test_*.py", top_level_dir=str(d))
             print(f"== selftest: {d.name} ({d}) ==", flush=True)
-            res = unittest.TextTestRunner(stream=sys.stdout, verbosity=1 if a.quiet else 2).run(suite)
+            res = unittest.TextTestRunner(stream=sys.stdout, verbosity=1 if a.quiet else 2,
+                                          resultclass=timed_result_class(per_test)).run(suite)
         finally:
             sys.path[:] = saved_path
             for name in set(sys.modules) - before:
@@ -806,6 +949,9 @@ def main(argv: list[str] | None = None) -> int:
     st = sub.add_parser("selftest", help="unit tests under tests/ (stdlib unittest)")
     st.add_argument("-q", "--quiet", action="store_true")
     st.add_argument("--only", action="append", help="only this tests/<dir> (replay, perf, terrain, ...)")
+    st.add_argument("--test-timeout", type=float, default=None,
+                    help=f"hard limit per unit test in seconds (default ${SELFTEST_TIMEOUT_ENV}, "
+                         f"else {SELFTEST_TEST_TIMEOUT_S:g}; 0 = off): a hang fails the test instead of stalling")
     st.add_argument("--root", help=argparse.SUPPRESS)   # for the runner's own tests
     a = p.parse_args(argv)
     return {"run": cmd_run, "bless": cmd_bless, "compare": cmd_compare, "rep-crcs": cmd_rep_crcs,
