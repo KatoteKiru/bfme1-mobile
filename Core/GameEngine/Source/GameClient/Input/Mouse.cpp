@@ -85,6 +85,7 @@ static const FieldParse TheMouseCursorFieldParseTable[] =
 	{ "Frames",							INI::parseInt,	nullptr,	offsetof( CursorInfo, numFrames ) },
 	{ "FPS",							INI::parseReal, nullptr, offsetof( CursorInfo, fps)},
 	{ "Directions",							INI::parseInt,	nullptr,	offsetof( CursorInfo, numDirections ) },
+	{ nullptr, nullptr, nullptr, 0 }	// BFME: E1-23a: terminator; findFieldParse() walks until a null token
 };
 
 static const FieldParse TheMouseFieldParseTable[] =
@@ -111,6 +112,7 @@ static const FieldParse TheMouseFieldParseTable[] =
 	{ "DragTolerance3D",						INI::parseUnsignedInt,	nullptr,		offsetof( Mouse, m_dragTolerance3D) },
 	{ "DragToleranceMS",						INI::parseUnsignedInt,	nullptr,		offsetof( Mouse, m_dragToleranceMS) },
 
+	{ nullptr, nullptr, nullptr, 0 }	// BFME: E1-23a: terminator; findFieldParse() walks until a null token
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

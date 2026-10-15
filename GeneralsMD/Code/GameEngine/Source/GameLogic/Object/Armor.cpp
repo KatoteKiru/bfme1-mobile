@@ -32,6 +32,7 @@
 
 
 #include "Common/INI.h"
+#include "Common/INILenient.h"	// BFME: E1-23a
 #include "Common/ThingFactory.h"
 #include "GameLogic/Armor.h"
 #include "GameLogic/Damage.h"
@@ -97,6 +98,9 @@ Real ArmorTemplate::adjustDamage(DamageType t, Real damage) const
 	}
 
 	DamageType dt = (DamageType)DamageTypeFlags::getSingleBitFromName(damageName);
+	// BFME: E1-23a. Unknown damage type gives -1 = out-of-bounds write; lenient mode rejects the field.
+	if (dt < 0)
+		INILenient::rejectToken(damageName);
 	self->m_damageCoefficient[dt] = pct;
 }
 
@@ -146,7 +150,8 @@ const ArmorTemplate* ArmorStore::findArmorTemplate(const char* name) const
 {
 	static const FieldParse myFieldParse[] =
 	{
-		{ "Armor", ArmorTemplate::parseArmorCoefficients, nullptr, 0 }
+		{ "Armor", ArmorTemplate::parseArmorCoefficients, nullptr, 0 },
+		{ nullptr, nullptr, nullptr, 0 }	// BFME: E1-23a: terminator; findFieldParse() walks until a null token
 	};
 
 	const char *c = ini->getNextToken();

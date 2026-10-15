@@ -61,6 +61,15 @@
 #include "GameLogic/ScriptEngine.h"
 #include "GameLogic/Weapon.h"
 #include "GXTrace.h"
+#include "Common/INILenient.h"	// BFME: E1-23a
+
+// BFME: E1-23a
+#include <algorithm>
+#include <map>
+#include <set>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 // GeneralsX @bugfix Android port 24/09/2026 The GeneralsOnline client defines
 // GENERALS_ONLINE_DISABLE_STD_FROM_CHARS_PARSING and so parses INI numbers with sscanf.
@@ -81,6 +90,286 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 static Xfer *s_xfer = nullptr;
+
+// BFME: E1-23a ----------------------------------------------------------------------------------
+// Lenient mode for BFME1 2.22 data (Common/INILenient.h, docs/bfme/INI_LENIENT.md). Everything in
+// this section and every `if (lenientOn())` branch below is dead while the mode is off, so the
+// Zero Hour path (and its exceptions) is unchanged.
+namespace
+{
+struct LenientState
+{
+	LenientState() : enabled(FALSE), report(nullptr), reportOpened(FALSE), lastSummaryTotal(0), noted(FALSE) { memset(&c, 0, sizeof(c)); }
+	Bool enabled;
+	std::unordered_map<std::string, std::string> macros;	///< SAGE #define, global across files
+	std::set<std::string> seen;													///< kind|file|block|token already logged
+	std::map<std::string, UnsignedInt> perFile;					///< skips of any kind per file
+	INILenient::Counters c;
+	std::string path;					///< block path for the log: top-level type, then nested fields ("Object.Draw")
+	std::string lastBad;			///< token that made the last scan*() throw (detail for "value")
+	FILE *report;							///< BFME_INI_LENIENT_REPORT (TSV)
+	Bool reportOpened;
+	UnsignedInt lastSummaryTotal;
+	Bool noted;								///< the throwing parser already logged its skip (rejectBlock)
+};
+
+LenientState &lenient()
+{
+	static LenientState s;
+	return s;
+}
+
+inline Bool lenientOn()
+{
+	return lenient().enabled;
+}
+
+inline void lenientBadToken( const char *token )
+{
+	if (lenientOn())
+		lenient().lastBad = token ? token : "(no token)";
+}
+
+/// Skips lines with the lenient rules. depth: open blocks to close (1 = the block whose header was
+/// just read). scriptOnly: skip a BeginScript body up to EndScript. FALSE at end of file.
+template <typename NextLine>
+Bool lenientSkip( NextLine nextLine, Int depth, Bool scriptOnly )
+{
+	LenientState &s = lenient();
+	Bool inScript = scriptOnly;
+	for (;;)
+	{
+		const char *line = nextLine();
+		if (line == nullptr)
+			return FALSE;
+		++s.c.linesSkipped;
+		const INILenient::LineKind k = INILenient::classifyLine(line);
+		if (inScript)
+		{
+			if (k == INILenient::LINE_SCRIPT_END)
+			{
+				inScript = FALSE;
+				if (scriptOnly)
+					return TRUE;
+			}
+			continue;
+		}
+		switch (k)
+		{
+			case INILenient::LINE_SCRIPT_BEGIN: inScript = TRUE; ++s.c.scriptsSkipped; break;
+			case INILenient::LINE_END: if (--depth == 0) return TRUE; break;
+			case INILenient::LINE_OPENER: ++depth; ++s.c.subBlocksSkipped; break;
+			default: break;
+		}
+	}
+}
+
+/// Text of the exception being handled (call only inside a catch block).
+std::string lenientWhat()
+{
+	std::string what;
+	try { throw; }
+	catch (const INIException &e) { what = e.mFailureMessage ? e.mFailureMessage : "INIException"; }
+	catch (ErrorCode e) { char b[32]; snprintf(b, sizeof(b), "ErrorCode=0x%X", (unsigned)e); what = b; }
+	catch (...) { what = "INI error"; }
+	if (!lenient().lastBad.empty())
+		what += " at '" + lenient().lastBad + "'";
+	for (char &ch : what)
+		if (ch == '\n' || ch == '\r' || ch == '\t')
+			ch = ' ';
+	while (!what.empty() && what.back() == ' ')
+		what.pop_back();
+	return what;
+}
+
+/// readLine() hook: executes "#define NAME value" (line becomes empty) and substitutes macro names
+/// (whole identifiers, case-sensitive) in other lines.
+void lenientPreprocess( char *buf, size_t cap )
+{
+	LenientState &s = lenient();
+	char *p = buf;
+	while (*p == ' ')
+		++p;
+	if (*p == '#')
+	{
+		if (strncmp(p, "#define", 7) == 0 && p[7] == ' ')
+		{
+			char *name = p + 7;
+			while (*name == ' ')
+				++name;
+			char *nameEnd = name;
+			while (*nameEnd && *nameEnd != ' ')
+				++nameEnd;
+			char *value = nameEnd;
+			while (*value == ' ')
+				++value;
+			char *valueEnd = value + strlen(value);
+			while (valueEnd > value && valueEnd[-1] == ' ')
+				--valueEnd;
+			if (nameEnd > name)
+			{
+				s.macros[std::string(name, nameEnd)] = std::string(value, valueEnd);
+				++s.c.macrosDefined;
+			}
+		}
+		buf[0] = 0;	// BFME1 2.22 has no other directives; a line starting with '#' is not INI data
+		return;
+	}
+	if (s.macros.empty())
+		return;
+	char out[INI_MAX_CHARS_PER_LINE + 1];
+	size_t o = 0;
+	Bool changed = FALSE;
+	for (const char *q = buf; *q; )
+	{
+		const Bool identStart = (isalpha((unsigned char)*q) || *q == '_')
+			&& (q == buf || !(isalnum((unsigned char)q[-1]) || q[-1] == '_'));
+		if (identStart)
+		{
+			const char *e = q;
+			while (isalnum((unsigned char)*e) || *e == '_')
+				++e;
+			std::unordered_map<std::string, std::string>::const_iterator it = s.macros.find(std::string(q, e));
+			const char *from = q;
+			size_t len = e - q;
+			if (it != s.macros.end())
+			{
+				from = it->second.c_str();
+				len = it->second.size();
+				changed = TRUE;
+				++s.c.macroSubstitutions;
+			}
+			if (o + len >= sizeof(out) || o + len >= cap)
+				return;	// would not fit: keep the line as it is
+			memcpy(out + o, from, len);
+			o += len;
+			q = e;
+			continue;
+		}
+		if (o + 1 >= sizeof(out) || o + 1 >= cap)
+			return;
+		out[o++] = *q++;
+	}
+	if (changed)
+	{
+		out[o] = 0;
+		memcpy(buf, out, o + 1);
+	}
+}
+
+void lenientWriteReport( const char *kind, const char *file, UnsignedInt line, const char *block, const char *token, const char *detail )
+{
+	LenientState &s = lenient();
+	if (!s.reportOpened)
+	{
+		s.reportOpened = TRUE;
+		const char *path = getenv("BFME_INI_LENIENT_REPORT");
+		if (path && *path)
+		{
+			s.report = fopen(path, "w");
+			if (s.report)
+				fprintf(s.report, "kind\tfile\tline\tblock\ttoken\tdetail\n");
+			else
+				fprintf(stderr, "[ini-lenient] cannot write report '%s'\n", path);
+		}
+	}
+	if (s.report)
+	{
+		fprintf(s.report, "%s\t%s\t%u\t%s\t%s\t%s\n", kind, file, line, block, token, detail ? detail : "");
+		fflush(s.report);
+	}
+}
+} // namespace
+
+void INILenient::setEnabled( Bool on )
+{
+	lenient().enabled = on;
+	fprintf(stderr, "[ini-lenient] lenient INI mode %s (BFME: E1-23a)\n", on ? "ON" : "OFF");
+	fflush(stderr);
+}
+
+Bool INILenient::isEnabled()
+{
+	return lenientOn();
+}
+
+void INILenient::note( const char *kind, const char *file, UnsignedInt line, const char *block, const char *token, const char *detail )
+{
+	LenientState &s = lenient();
+	const Bool isField = strcmp(kind, "field") == 0;
+	const Bool isBlock = strcmp(kind, "block") == 0;
+	if (isField) ++s.c.fields; else if (isBlock) ++s.c.blocks; else ++s.c.values;
+	++s.perFile[file ? file : ""];
+	// An unknown field warns once per field name (E1-23a); block/value skips once per (file, block, token).
+	std::string key = isField ? std::string(kind) + '|' + (token ? token : "")
+		: std::string(kind) + '|' + (file ? file : "") + '|' + (block ? block : "") + '|' + (token ? token : "");
+	if (!s.seen.insert(key).second)
+		return;
+	if (isField) ++s.c.uniqueFields; else if (isBlock) ++s.c.uniqueBlocks; else ++s.c.uniqueValues;
+	fprintf(stderr, "[ini-lenient] skip %s %s:%u %s %s%s%s\n", kind, file ? file : "?", line,
+		(block && *block) ? block : "-", token ? token : "?", (detail && *detail) ? " " : "", detail ? detail : "");
+	lenientWriteReport(kind, file ? file : "", line, (block && *block) ? block : "-", token ? token : "", detail);
+}
+
+void INILenient::rejectToken( const char *token )
+{
+	if (!lenientOn())
+		return;
+	lenientBadToken(token);
+	throw INI_INVALID_DATA;
+}
+
+void INILenient::rejectBlock( INI *ini, const char *token, const char *detail )
+{
+	if (!lenientOn())
+		return;
+	LenientState &s = lenient();
+	note("block", ini ? ini->getFilename().str() : "", ini ? ini->getLineNum() : 0, s.path.c_str(), token, detail);
+	s.noted = TRUE;
+	throw INI_INVALID_DATA;
+}
+
+INILenient::Counters INILenient::counters()
+{
+	return lenient().c;
+}
+
+void INILenient::printSummary( const char *where, Bool withTopFiles )
+{
+	LenientState &s = lenient();
+	if (!s.enabled)
+		return;
+	const UnsignedInt total = s.c.fields + s.c.blocks + s.c.values + s.c.macrosDefined;
+	if (!withTopFiles && total == s.lastSummaryTotal)
+		return;
+	s.lastSummaryTotal = total;
+	fprintf(stderr, "[ini-lenient] summary %s: fields=%u (unique %u) blocks=%u (unique %u) values=%u (unique %u); "
+		"sub-blocks=%u scripts=%u lines=%u; macros=%u substitutions=%u\n", where ? where : "",
+		s.c.fields, s.c.uniqueFields, s.c.blocks, s.c.uniqueBlocks, s.c.values, s.c.uniqueValues,
+		s.c.subBlocksSkipped, s.c.scriptsSkipped, s.c.linesSkipped, s.c.macrosDefined, s.c.macroSubstitutions);
+	if (withTopFiles)
+	{
+		std::vector<std::pair<UnsignedInt, std::string> > files;
+		for (std::map<std::string, UnsignedInt>::const_iterator it = s.perFile.begin(); it != s.perFile.end(); ++it)
+			files.push_back(std::make_pair(it->second, it->first));
+		std::sort(files.begin(), files.end(), [](const std::pair<UnsignedInt, std::string> &a, const std::pair<UnsignedInt, std::string> &b)
+			{ return a.first != b.first ? a.first > b.first : a.second < b.second; });
+		for (size_t i = 0; i < files.size() && i < 10; ++i)
+			fprintf(stderr, "[ini-lenient]   top %u: %s %u\n", (unsigned)(i + 1), files[i].second.c_str(), files[i].first);
+	}
+	fflush(stderr);
+}
+
+void INILenient::reset()
+{
+	LenientState &s = lenient();
+	const Bool on = s.enabled;
+	if (s.report)
+		fclose(s.report);
+	s = LenientState();
+	s.enabled = on;
+}
+// BFME: E1-23a end ------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
 /** This is the table of data types we can have in INI files.  To add a new data type
@@ -246,6 +535,7 @@ UnsignedInt INI::loadFileDirectory( AsciiString fileDirName, INILoadType loadTyp
 
 	fprintf(stderr, "[INI] loadFileDirectory('%s') END - filesRead=%d\n", fileDirName.str(), filesRead);
 	fflush(stderr);
+	INILenient::printSummary(fileDirName.str(), FALSE);	// BFME: E1-23a (cumulative, only if something changed)
 	return filesRead;
 }
 
@@ -446,7 +736,53 @@ UnsignedInt INI::load( AsciiString filename, INILoadType loadType, Xfer *pXfer )
 			if( token )
 			{
 				INIBlockParse parse = findBlockParse(token);
-				if (parse)
+				// BFME: E1-23a. Lenient: a block whose parser throws is skipped to its End; an unknown
+				// block type is skipped to its matching End (a header with no End is one line).
+				if (lenientOn())
+				{
+					const std::string blockType(token);
+					const char *nameTok = strtok(nullptr, getSeps());
+					const std::string blockName(nameTok ? nameTok : "");
+					const unsigned headerNext = m_readBufferNext;
+					const UnsignedInt headerLine = m_lineNum;
+					const Bool headerEof = m_endOfFile;
+					Bool skip = parse == nullptr;
+					std::string detail = "unknown block type";
+					if (parse)
+					{
+						// the block parsers read the name themselves: restore the header line
+						strlcpy(m_buffer, currentLine.str(), ARRAY_SIZE(m_buffer));
+						strtok(m_buffer, getSeps());
+						lenient().path = blockType;
+						lenient().lastBad.clear();
+						try
+						{
+							(*parse)( this );
+						}
+						catch (...)
+						{
+							detail = "parse error: " + lenientWhat();
+							skip = TRUE;
+						}
+						lenient().path.clear();
+					}
+					if (skip)
+					{
+						INILenient::note("block", m_filename.str(), headerLine, parse ? blockType.c_str() : "(top)",
+							parse ? blockName.c_str() : blockType.c_str(), detail.c_str());
+						m_readBufferNext = headerNext;
+						m_lineNum = headerLine;
+						m_endOfFile = headerEof;
+						if (!lenientSkip([this]() -> const char* { if (m_endOfFile) return nullptr; readLine(); return m_buffer; }, 1, FALSE))
+						{
+							// no matching End before EOF: treat the header as a single line
+							m_readBufferNext = headerNext;
+							m_lineNum = headerLine;
+							m_endOfFile = headerEof;
+						}
+					}
+				}
+				else if (parse)
 				{
 					#ifdef DEBUG_CRASHING
 					static_assert(ARRAY_SIZE(m_curBlockStart) >= ARRAY_SIZE(m_buffer), "Incorrect array size");
@@ -626,6 +962,10 @@ void INI::readLine()
 		}
 	}
 
+	// BFME: E1-23a. Lenient: SAGE #define and macro substitution.
+	if (lenientOn())
+		lenientPreprocess(m_buffer, ARRAY_SIZE(m_buffer));
+
 	if (s_xfer)
 	{
 		s_xfer->xferUser( m_buffer, sizeof( char ) * strlen( m_buffer ) );
@@ -788,6 +1128,7 @@ void INI::parseBitInInt32( INI *ini, void *instance, void *store, const void* us
 	else
 	{
 		DEBUG_CRASH(("invalid boolean token %s -- expected Yes or No",token));
+		lenientBadToken(token);	// BFME: E1-23a
 		throw INI_INVALID_DATA;
 		return false;	// keep compiler happy
 	}
@@ -1634,6 +1975,11 @@ void INI::initFromINIMulti( void *what, const MultiIniFieldParse& parseTableList
 		// read next line
 		readLine();
 
+		// BFME: E1-23a. Lenient: keep the whole line, strtok() below cuts it.
+		char lenientLine[INI_MAX_CHARS_PER_LINE + 1];
+		if (lenientOn())
+			strlcpy(lenientLine, m_buffer, ARRAY_SIZE(lenientLine));
+
 		// check for end token
 		const char* field = strtok( m_buffer, INI::getSeps() );
 		if( field )
@@ -1651,6 +1997,46 @@ void INI::initFromINIMulti( void *what, const MultiIniFieldParse& parseTableList
 					int offset = 0;
 					const void* userData = nullptr;
 					INIFieldParseProc parse = findFieldParse(parseTableList.getNthFieldParse(ptIdx), field, offset, userData);
+					// BFME: E1-23a. Lenient: a value that does not parse keeps the Zero Hour default; the
+					// field's sub-block (if the line opens one, or the parser already read past it) is skipped.
+					if (parse && lenientOn())
+					{
+						const std::string fieldName(field);
+						const unsigned fieldNext = m_readBufferNext;
+						const UnsignedInt fieldLine = m_lineNum;
+						const Bool fieldEof = m_endOfFile;
+						LenientState &ls = lenient();
+						const size_t pathLen = ls.path.size();
+						ls.path += '.';
+						ls.path += fieldName;
+						ls.lastBad.clear();
+						ls.noted = FALSE;
+						try
+						{
+							(*parse)( this, what, (char *)what + offset + parseTableList.getNthExtraOffset(ptIdx), userData );
+						}
+						catch (...)
+						{
+							const std::string why = lenientWhat();
+							ls.path.resize(pathLen);
+							if (ls.noted)
+								ls.noted = FALSE;
+							else
+								INILenient::note("value", m_filename.str(), fieldLine, ls.path.c_str(), fieldName.c_str(), why.c_str());
+							const Bool readPast = m_lineNum != fieldLine;
+							m_readBufferNext = fieldNext;
+							m_lineNum = fieldLine;
+							m_endOfFile = fieldEof;
+							const INILenient::LineKind k = INILenient::classifyLine(lenientLine);
+							if (k == INILenient::LINE_OPENER || readPast)
+								lenientSkip([this]() -> const char* { if (m_endOfFile) return nullptr; readLine(); return m_buffer; }, 1, FALSE);
+							else if (k == INILenient::LINE_SCRIPT_BEGIN)
+								lenientSkip([this]() -> const char* { if (m_endOfFile) return nullptr; readLine(); return m_buffer; }, 0, TRUE);
+						}
+						ls.path.resize(pathLen);
+						found = true;
+						break;
+					}
 					if (parse)
 					{
 						// GeneralsX @bugfix Android port 12/07/2026 - Log every field as it
@@ -1712,7 +2098,18 @@ void INI::initFromINIMulti( void *what, const MultiIniFieldParse& parseTableList
 					}
 				}
 
-				if (!found)
+				if (!found && lenientOn())
+				{
+					// BFME: E1-23a. Lenient: unknown field, with its sub-block or Lua script if the line opens one.
+					const INILenient::LineKind k = INILenient::classifyLine(lenientLine);
+					INILenient::note("field", m_filename.str(), m_lineNum, lenient().path.c_str(), field,
+						k == INILenient::LINE_OPENER ? "sub-block" : (k == INILenient::LINE_SCRIPT_BEGIN ? "script" : nullptr));
+					if (k == INILenient::LINE_OPENER)
+						lenientSkip([this]() -> const char* { if (m_endOfFile) return nullptr; readLine(); return m_buffer; }, 1, FALSE);
+					else if (k == INILenient::LINE_SCRIPT_BEGIN)
+						lenientSkip([this]() -> const char* { if (m_endOfFile) return nullptr; readLine(); return m_buffer; }, 0, TRUE);
+				}
+				else if (!found)
 				{
 					DEBUG_CRASH( ("[LINE: %d - FILE: '%s'] Unknown field '%s' in block '%s'",
 														 INI::getLineNum(), INI::getFilename().str(), field, m_curBlockStart) );
@@ -1723,6 +2120,12 @@ void INI::initFromINIMulti( void *what, const MultiIniFieldParse& parseTableList
 		}
 
 		// sanity check for reaching end of file with no closing end token
+		if( done == FALSE && INI::isEOF() == TRUE && lenientOn() )
+		{
+			// BFME: E1-23a. Lenient: the block ends with the file.
+			INILenient::note("block", m_filename.str(), m_lineNum, lenient().path.c_str(), getEndToken(), "missing End at end of file");
+			done = TRUE;
+		}
 		if( done == FALSE && INI::isEOF() == TRUE )
 		{
 
@@ -1742,7 +2145,10 @@ void INI::initFromINIMulti( void *what, const MultiIniFieldParse& parseTableList
 {
 	const char *token = ::strtok(nullptr, seps);
 	if (!token)
+	{
+		lenientBadToken(nullptr);	// BFME: E1-23a
 		throw INI_INVALID_DATA;
+	}
 	return token;
 }
 
@@ -1832,7 +2238,10 @@ Type scanType(std::string_view token)
 #else
 	Int value;
 	if (sscanf( token, "%d", &value ) != 1)
+	{
+		lenientBadToken(token);	// BFME: E1-23a
 		throw INI_INVALID_DATA;
+	}
 
 #if USE_STD_FROM_CHARS_PARSING == -1
 	if (value != scanType<Int>(token))
@@ -1851,7 +2260,10 @@ Type scanType(std::string_view token)
 #else
 	UnsignedInt value;
 	if (sscanf( token, "%u", &value ) != 1)	// unsigned int is %u, not %d
+	{
+		lenientBadToken(token);	// BFME: E1-23a
 		throw INI_INVALID_DATA;
+	}
 
 #if USE_STD_FROM_CHARS_PARSING == -1
 	if (value != scanType<UnsignedInt>(token))
@@ -1870,7 +2282,10 @@ Type scanType(std::string_view token)
 #else
 	Real value;
 	if (sscanf( token, "%f", &value ) != 1)
+	{
+		lenientBadToken(token);	// BFME: E1-23a
 		throw INI_INVALID_DATA;
+	}
 
 #if USE_STD_FROM_CHARS_PARSING == -1
 	if (value != scanType<Real>(token))
@@ -1948,6 +2363,7 @@ Type scanType(std::string_view token)
 #endif
 
 	DEBUG_CRASH(("token %s is not a valid member of the index list",token));
+	lenientBadToken(token);	// BFME: E1-23a
 	throw INI_INVALID_DATA;
 	return 0;	// never executed, but keeps compiler happy
 
@@ -1971,6 +2387,7 @@ Type scanType(std::string_view token)
 	}
 
 	DEBUG_CRASH(("token %s is not a valid member of the lookup list",token));
+	lenientBadToken(token);	// BFME: E1-23a
 	throw INI_INVALID_DATA;
 	return 0;	// never executed, but keeps compiler happy
 

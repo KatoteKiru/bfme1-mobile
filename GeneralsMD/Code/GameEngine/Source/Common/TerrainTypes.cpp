@@ -34,6 +34,59 @@
 
 #include "Common/INI.h"
 #include "Common/TerrainTypes.h"
+#include "Common/INILenient.h"	// BFME: E1-26b
+
+// BFME: E1-26b. BFME1 2.22 terrain.ini writes "Class = Type Grass NEXT Region Edoras NEXT Region
+// Rivendell": a terrain type word plus World Builder region groups. Zero Hour expects one
+// TerrainClass name, and INI::parseIndexList threw on "Type". In the lenient (BFME) mode the word
+// after "Type" is looked up case-insensitively in terrainTypeNames (Dirt, Grass, Rock, Cliff, Sand,
+// Wood map to the Zero Hour classes; Misc, Snow, ... give TERRAIN_NONE), the "NEXT Region" tail is
+// read and dropped; both are logged by INILenient::note. Off the BFME mode this is
+// INI::parseIndexList, as before. The class only groups textures in the editor.
+static void parseTerrainClass( INI *ini, void *instance, void *store, const void *userData )
+{
+	if (!INILenient::isEnabled())
+	{
+		INI::parseIndexList(ini, instance, store, userData);
+		return;
+	}
+	const char *token = ini->getNextToken();
+	const Bool bfmeForm = stricmp(token, "Type") == 0;
+	if (bfmeForm)
+		token = ini->getNextToken();
+	Int index = -1;
+	for (Int i = 0; terrainTypeNames[i]; ++i)
+	{
+		if (stricmp(terrainTypeNames[i], token) == 0)
+		{
+			index = i;
+			break;
+		}
+	}
+	if (index >= 0)
+	{
+		*(Int *)store = index;
+	}
+	else
+	{
+		*(Int *)store = TERRAIN_NONE;
+		AsciiString what;
+		what.format("Class.Type=%s", token);
+		INILenient::note("value", ini->getFilename().str(), ini->getLineNum(), "Terrain", what.str(), "not a Zero Hour terrain class, TERRAIN_NONE");
+	}
+	Int regions = 0;
+	for (const char *t = ini->getNextTokenOrNull(); t; t = ini->getNextTokenOrNull())
+	{
+		if (stricmp(t, "Region") == 0)
+			++regions;
+	}
+	if (regions > 0)
+	{
+		AsciiString detail;
+		detail.format("NEXT Region tail dropped (%d regions)", regions);
+		INILenient::note("value", ini->getFilename().str(), ini->getLineNum(), "Terrain", "Class.Region", detail.str());
+	}
+}
 
 // PUBLIC DATA ////////////////////////////////////////////////////////////////////////////////////
 TerrainTypeCollection *TheTerrainTypes = nullptr;
@@ -44,7 +97,7 @@ const FieldParse TerrainType::m_terrainTypeFieldParseTable[] =
 
 	{ "Texture",		INI::parseAsciiString,			nullptr,		offsetof( TerrainType, m_texture ) },
 	{ "BlendEdges", INI::parseBool,							nullptr,		offsetof( TerrainType, m_blendEdgeTexture ) },
-	{ "Class",			INI::parseIndexList,				terrainTypeNames, offsetof( TerrainType, m_class ) },
+	{ "Class",			parseTerrainClass,					terrainTypeNames, offsetof( TerrainType, m_class ) },	// BFME: E1-26b
 	{ "RestrictConstruction", INI::parseBool,		nullptr,		offsetof( TerrainType, m_restrictConstruction ) },
 
 	{ nullptr,					nullptr,												nullptr,		0 },

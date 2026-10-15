@@ -43,6 +43,7 @@
 #include "Common/GameCommon.h"
 #include "Common/GlobalData.h"
 #include "Common/INI.h"
+#include "Common/INILenient.h"	// BFME: E1-23a
 #include "Common/MessageStream.h"
 #include "Common/Module.h"
 #include "Common/ModuleFactory.h"
@@ -550,6 +551,11 @@ void ThingTemplate::parseModuleName(INI* ini, void *instance, void* store, const
 		throw;
 
 	}
+
+	// BFME: E1-23a. Unknown module class (BFME: AttributeModifierPoolUpdate, ...): newModuleDataFromINI()
+	// below returns nullptr and ZH dereferences it. Lenient mode skips the module block and logs it.
+	if (INILenient::isEnabled() && TheModuleFactory->findModuleInterfaceMask(tokenStr, type == 999 ? MODULETYPE_BEHAVIOR : type) == 0)
+		INILenient::rejectBlock(ini, tokenStr.str(), "unknown module class");
 
 	Int interfaceMask;
 

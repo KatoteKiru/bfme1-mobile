@@ -17,6 +17,7 @@
 #   BFME_SMOKE_TIMEOUT=60    сколько секунд даём движку под Xvfb
 #   BFME_SMOKE_ARGS="-win"   аргументы движка
 #   BFME_SMOKE_REQUIRE_RENDER=1  считать дым успешным только при DX8Wrapper::Init на llvmpipe
+#   BFME_SMOKE_REQUIRE_DX8INIT=1 считать дым успешным только если движок дошёл до DX8Wrapper::Init (E1-23a)
 # Результат: build/linux64-deploy/GeneralsMD/GeneralsXZH (RUNPATH на _deps/dxvk-src/lib, sdl3*-build, openal_soft-build),
 # журнал: logs/build-linux-<время>.log, журнал запуска: logs/smoke-linux-<время>.log
 set -euo pipefail
@@ -150,6 +151,8 @@ smoke_inside() {
     have_data=1
     # BFME_GAMEDATA включает BfmeBIGFileSystem (E1-21b): слои base -> patch222 -> MobileLayer вместо поиска ассетов ZH.
     export BFME_GAMEDATA="${BFME_GAMEDATA:-$gamedir}"
+    # E1-23a: мягкий режим INI пишет машиночитаемый список пропусков (TSV) рядом с журналом дыма.
+    export BFME_INI_LENIENT_REPORT="${BFME_INI_LENIENT_REPORT:-/src/logs/$(basename "${BFME_LOG:-smoke-linux}" .log).ini-lenient.tsv}"
     ts "данные игры: $gamedir (только чтение), $(ls "$gamedir" | wc -l) записей, BFME_GAMEDATA=$BFME_GAMEDATA"
   else
     ts "данные игры: нет (пустой каталог)"
@@ -182,18 +185,26 @@ smoke_inside() {
   stage "ФС архивов: BfmeBIGFileSystem"       'createArchiveFileSystem\(\) -> BfmeBIGFileSystem'
   stage "ФС архивов: StdBIGFileSystem (ZH)"   'createArchiveFileSystem\(\) -> StdBIGFileSystem'
   stage "INI: GameData прочитан"              'initSubsystem\(.TheWritableGlobalData.\) END'
-  stage "DX8Wrapper::Init"                    'DX8Wrapper::Init'
+  stage "INI: мягкий режим BFME (E1-23a)"    'lenient INI mode ON'
+  stage "INI: все INI до TheGameClient"       'summary before TheGameClient'
+  stage "DX8Wrapper::Init"                    'DX8Wrapper::Init\(\)'
   stage "Vulkan-устройство llvmpipe (DXVK)"   'llvmpipe'
   stage "ReleaseCrash"                        'ReleaseCrash reason'
   echo "  последняя подсистема: $(grep -oE "initSubsystem\('[^']+'\) (START|END)" /tmp/game.log | tail -1)"
   grep -E 'ReleaseCrash reason|INIException|ERROR: No files read|threw ' /tmp/game.log | head -5 | sed 's/^/  > /' || true
+  grep -E '^\[ini-lenient\] (summary|  top)' /tmp/game.log | tail -12 | sed 's/^/  > /' || true
+  [ -n "${BFME_INI_LENIENT_REPORT:-}" ] && [ -f "$BFME_INI_LENIENT_REPORT" ] && \
+    echo "  пропуски INI (TSV): logs/$(basename "$BFME_INI_LENIENT_REPORT"), строк $(($(wc -l < "$BFME_INI_LENIENT_REPORT") - 1))"
 
   # Критерий: процесс стартовал, окно SDL3 под Vulkan создано и движок дошёл до чтения INI.
   # Рендер (DX8Wrapper::Init + llvmpipe) на данных BFME сейчас недостижим: init падает раньше на terrain.ini (E1-26b);
   # BFME_SMOKE_REQUIRE_RENDER=1 делает его обязательным (для E1-26b/E1-32).
   grep -q 'SDL3 window created successfully' /tmp/game.log && grep -q 'loadFileDirectory' /tmp/game.log \
     || { ts "SMOKE: движок не дошёл до чтения INI"; return 3; }
-  if [ "${BFME_SMOKE_REQUIRE_RENDER:-0}" = 1 ] && ! { grep -q 'DX8Wrapper::Init' /tmp/game.log && grep -q llvmpipe /tmp/game.log; }; then
+  if [ "${BFME_SMOKE_REQUIRE_DX8INIT:-0}" = 1 ] && ! grep -q 'DX8Wrapper::Init()' /tmp/game.log; then
+    ts "SMOKE: DX8Wrapper::Init не достигнут (BFME_SMOKE_REQUIRE_DX8INIT=1)"; return 5
+  fi
+  if [ "${BFME_SMOKE_REQUIRE_RENDER:-0}" = 1 ] && ! { grep -q 'DX8Wrapper::Init()' /tmp/game.log && grep -q llvmpipe /tmp/game.log; }; then
     ts "SMOKE: рендер не достигнут (BFME_SMOKE_REQUIRE_RENDER=1)"; return 4
   fi
   [ "$have_data" = 1 ] || ts "без данных ожидаемо: остановка на отсутствии Data\\INI (ReleaseCrash)"
@@ -222,7 +233,7 @@ run_smoke() {
   ts "запуск под Xvfb в контейнере $IMAGE_TAG (--network none)"
   $DOCKER run --rm --network none --memory="${BFME_MEM_LIMIT:-5g}" --memory-swap="${BFME_MEM_LIMIT:-5g}" "${HARDEN[@]}" \
     -e BFME_LOG="$BFME_LOG" -e BFME_SMOKE_TIMEOUT="${BFME_SMOKE_TIMEOUT:-60}" -e BFME_SMOKE_ARGS="${BFME_SMOKE_ARGS:--win}" \
-    -e BFME_SMOKE_REQUIRE_RENDER="${BFME_SMOKE_REQUIRE_RENDER:-0}" \
+    -e BFME_SMOKE_REQUIRE_RENDER="${BFME_SMOKE_REQUIRE_RENDER:-0}" -e BFME_SMOKE_REQUIRE_DX8INIT="${BFME_SMOKE_REQUIRE_DX8INIT:-0}" \
     -v "$REPO:/src" "${gd[@]}" -w /src "$IMAGE_TAG" tools/build-linux.sh --smoke-inside
 }
 

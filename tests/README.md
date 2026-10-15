@@ -19,6 +19,8 @@
 - `tests/perf/analyze_frames.py` — разбор `frames.csv` perf-run по TEST-PLAN §5.4, включая проверку темпа логики
   `logic_pace` (§5.4.1: 30 ± 1 тик/с); синтетические данные — `--synthetic`.
 - `tests/terrain/` — модель высот 16 бит (E1-25) без данных игры.
+- `tests/ini/` — правила мягкого режима INI (E1-23a), `cmake -S tests/ini -B build/tests-ini && cmake --build build/tests-ini && ctest --test-dir build/tests-ini`.
+- `ini.*` в общем дереве `tests` (`bfme_ini_mode_tests`, E1-23a/E1-26b): настоящий `INI.cpp` на синтетических файлах — в режиме ZH (по умолчанию) неизвестный блок, неверное значение списка индексов и отсутствующий `End` по-прежнему бросают исключение, неизвестное поле молча пропускается, как в upstream; в режиме BFME всё это логируется и пропускается.
 - `tests/vfs/` — VFS BIG4/BIGF и порядок монтирования (E1-21, владелец кода: Форматы и данные), см. ниже.
 - `tests/reports/` — отчёты прогонов на устройствах.
 

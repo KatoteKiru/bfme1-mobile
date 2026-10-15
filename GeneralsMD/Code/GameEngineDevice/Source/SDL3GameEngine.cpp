@@ -56,6 +56,7 @@
 #include "StdDevice/Common/StdLocalFileSystem.h"
 #include "StdDevice/Common/StdBIGFileSystem.h"
 #include "bfme/vfs/BfmeBIGFileSystem.h"
+#include "Common/INILenient.h"	// BFME: E1-23a
 #include "Common/GlobalData.h"
 #include "GXTrace.h"
 #include <SDL3/SDL.h>
@@ -2608,6 +2609,9 @@ ArchiveFileSystem *SDL3GameEngine::createArchiveFileSystem(void)
 	// Unset or empty keeps the upstream ZH filesystem. See docs/UPSTREAM-PATCHES.md.
 	if (BfmeBIGFileSystem::isRequestedByEnvironment()) {
 		fprintf(stderr, "INFO: SDL3GameEngine::createArchiveFileSystem() -> BfmeBIGFileSystem\n");
+		// BFME: E1-23a. BFME 2.22 data on the Zero Hour INI parser: lenient INI mode (unknown
+		// fields/blocks/values are skipped and logged, docs/bfme/INI_LENIENT.md). ZH data never gets here.
+		INILenient::setEnabled(TRUE);
 		return NEW BfmeBIGFileSystem;
 	}
 	fprintf(stderr, "INFO: SDL3GameEngine::createArchiveFileSystem() -> StdBIGFileSystem\n");

@@ -32,6 +32,7 @@
 #include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
 
 #include "Common/INI.h"
+#include "Common/INILenient.h"	// BFME: E1-23a
 #include "Common/ThingFactory.h"
 #include "Common/ThingTemplate.h"
 #include "Common/DamageFX.h"
@@ -165,6 +166,10 @@ static void parseCommonStuff(
 	else
 	{
 		damageFirst = (DamageType)DamageTypeFlags::getSingleBitFromName(damageName);
+		// BFME: E1-23a. Unknown damage type (BFME: GOOD_ARROW_PIERCE, ...) gives -1, which the callers
+		// use as an m_dfx index (heap corruption). Lenient mode rejects the field instead.
+		if (damageFirst < 0)
+			INILenient::rejectToken(damageName);
 		damageLast = damageFirst;
 	}
 }

@@ -156,3 +156,37 @@ endforeach()
 # Guard: every TEST() in the binary is registered above.
 add_test(NAME vfs.registry_complete COMMAND ${CMAKE_COMMAND}
     -DBIN=$<TARGET_FILE:bfme_vfs_tests> "-DEXPECTED=${BFME_VFS_TESTS}" -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_registry.cmake)
+
+# E1-23a/E1-26b: the real INI.cpp in Zero Hour (strict) and BFME (lenient) mode, on synthetic files.
+add_executable(bfme_ini_mode_tests
+    ${BFME_ENGINE_VFS_SOURCES}
+    ${R}/Core/GameEngine/Source/Common/INI/INI.cpp
+    ${R}/Core/GameEngine/Source/Common/INI/INILenientRules.cpp
+    vfs/TestMain.cpp
+    vfs/GlobalDataStub.cpp
+    ini/IniEngineStubs.cpp
+    ini/TestIniMode.cpp
+)
+target_link_libraries(bfme_ini_mode_tests PRIVATE bfme_formats_vfs_core liblzhl ${BFME_TEST_ZLIB})
+get_target_property(_vfs_defs bfme_vfs_tests COMPILE_DEFINITIONS)
+get_target_property(_vfs_incs bfme_vfs_tests INCLUDE_DIRECTORIES)
+get_target_property(_vfs_opts bfme_vfs_tests COMPILE_OPTIONS)
+target_compile_definitions(bfme_ini_mode_tests PRIVATE ${_vfs_defs})
+target_include_directories(bfme_ini_mode_tests PRIVATE ${_vfs_incs})
+target_compile_options(bfme_ini_mode_tests PRIVATE ${_vfs_opts})
+
+set(BFME_INI_MODE_TESTS
+    zh_mode_is_default_off zh_mode_throws_on_unknown_block zh_mode_ignores_unknown_field_unlogged
+    zh_mode_throws_on_bad_index_list_value zh_mode_throws_on_missing_end zh_mode_parses_valid_file
+    bfme_mode_skips_unknown_block bfme_mode_skips_unknown_field bfme_mode_skips_bad_index_list_value
+    bfme_mode_closes_block_at_eof
+)
+foreach(t IN LISTS BFME_INI_MODE_TESTS)
+    add_test(NAME ini.${t} COMMAND bfme_ini_mode_tests ${t})
+    set_tests_properties(ini.${t} PROPERTIES LABELS "unit")
+endforeach()
+add_test(NAME ini.registry_complete COMMAND ${CMAKE_COMMAND}
+    -DBIN=$<TARGET_FILE:bfme_ini_mode_tests> "-DEXPECTED=${BFME_INI_MODE_TESTS}" -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_registry.cmake)
+
+# Line rules (tests/ini also builds on its own, without the engine sources).
+add_subdirectory(ini)

@@ -47,6 +47,7 @@
 #include "Common/GameEngine.h"
 #include "Common/GXReplayCheck.h"
 #include "Common/INI.h"
+#include "Common/INILenient.h"	// BFME: E1-23a
 #include "Common/INIException.h"
 #include "Common/MessageStream.h"
 #include "Common/ThingFactory.h"
@@ -755,6 +756,7 @@ void GameEngine::init()
 		// GeneralsX @bugfix Android port 24/09/2026 Only now, with the stores whose keys travel
 		// in lockstep commands numbered as on the PC, and before any window is loaded.
 		TheFunctionLexicon->gxKeyPortOnlyEntries();
+		INILenient::printSummary("before TheGameClient", TRUE);	// BFME: E1-23a (no-op off the BFME mode)
 		initSubsystem(TheGameClient,"TheGameClient", createGameClient(), nullptr);
 
 
@@ -830,6 +832,7 @@ void GameEngine::init()
 		xferCRC.close();
 		TheWritableGlobalData->m_iniCRC = xferCRC.getCRC();
 		DEBUG_LOG(("INI CRC is 0x%8.8X", TheGlobalData->m_iniCRC));
+		INILenient::printSummary("GameEngine::init", TRUE);	// BFME: E1-23a (no-op off the BFME mode)
 
 		// GeneralsX @feature Android port 13/09/2026 Report both checksums once, in
 		// release too. They decide whether this installation can join a PC-hosted
