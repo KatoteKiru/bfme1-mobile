@@ -9,6 +9,7 @@
 #include "TestHarness.h"
 
 #include "Common/ArchiveFile.h"
+#include "Common/GlobalData.h"
 #include "Common/file.h"
 #include "Compression.h"
 #include "StdDevice/Common/StdBIGFileSystem.h"
@@ -412,6 +413,7 @@ TEST(engine_layer_priority_beats_names)
 {
 	// "aaa.big" in the mobile layer and "zzz.big" in base: the layer decides, not the name.
 	TempDir root;
+	writeBig(root.path() / "ini.big", {{"required.ini", "ini"}});
 	writeBig(root.path() / "zzz.big", {{"x.ini", "base"}});
 	writeBig(root.path() / "MobileLayer" / "aaa.big", {{"x.ini", "mobile"}});
 	MountedVfs vfs(configFor(root));
@@ -426,6 +428,7 @@ TEST(engine_intra_layer_first_by_stricmp_wins)
 	// Same path in three archives of one layer (base). _stricmp order: "A_X.big" < "aa.big" < "b.big"
 	// ('_' 0x5F < 'a' 0x61). An upper-case-folding sort (NTFS / OpenSAGE) would put "aa.big" first instead.
 	TempDir root;
+	writeBig(root.path() / "ini.big", {{"required.ini", "ini"}});
 	writeBig(root.path() / "b.big", {{"data\\ini\\x.ini", "b"}});
 	writeBig(root.path() / "aa.big", {{"data\\ini\\x.ini", "aa"}, {"only_aa.ini", "aa"}});
 	writeBig(root.path() / "A_X.big", {{"Data/INI/X.ini", "A_X"}});
@@ -640,6 +643,181 @@ TEST(bfme_skips_zh_community_patch)
 	}
 }
 
+bool candidateUnderExcludedDir(const std::string& relPath)
+{
+	std::string path = relPath;
+	std::transform(path.begin(), path.end(), path.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+	return path.find("generalsonlinegamedata") != std::string::npos
+		|| path.find("command and conquer generals zero hour data") != std::string::npos
+		|| path.find("500_900_communitypatch") != std::string::npos;
+}
+
+// The base layer walks the game root recursively. userdata ZH and
+// GeneralsOnlineGameData inside that root must not contribute archives.
+// gx_no_community_patch.txt is not created: it is not the BFME switch.
+TEST(bfme_scan_skips_zh_userdata_dirs)
+{
+	TempDir root;
+	TempDir outside;
+	writeBig(root.path() / "ini.big", {
+		{"data\\ini\\gamedata.ini", "BASE"}, {"data\\ini\\neutralunits.ini", "BASE"}});
+	writeBig(root.path() / "_patch222.big", {{"data\\ini\\gamedata.ini", "PATCH"}});
+	writeBig(root.path() / "lang" / "english.big", {{"lang.ini", "LANG"}});
+	writeBig(root.path() / "MobileLayer" / "ui.big", {{"hud.ini", "UI"}});
+	const std::filesystem::path online = root.path() / "GeneralsOnlineGameData";
+	writeBig(online / "500_900_CommunityPatch_CoreINI.big", {
+		{"data\\ini\\gamedata.ini", "ZH"}, {"data\\ini\\neutralunits.ini", "ZH"}, {"only_zh.ini", "ZH"}});
+	writeBig(online / "side.big", {{"only_side.ini", "SIDE"}});
+	writeBig(root.path() / "generalsOnlineGameData" / "also.big", {{"only_also.ini", "ALSO"}});
+	const std::filesystem::path userdata = root.path() / "Command and Conquer Generals Zero Hour Data";
+	writeBig(userdata / "loose.big", {{"only_loose.ini", "LOOSE"}});
+	writeBig(userdata / "GeneralsOnlineGameData" / "500_900_CommunityPatch_CoreINI.big", {
+		{"data\\ini\\neutralunits.ini", "ZH2"}});
+	writeBig(outside.path() / "ok.big", {{"outside.ini", "OUT"}});
+	writeBig(outside.path() / "GeneralsOnlineGameData" / "500_900_CommunityPatch_CoreINI.big", {
+		{"data\\ini\\neutralunits.ini", "ZH3"}});
+	REQUIRE(!std::filesystem::exists(root.path() / "gx_no_community_patch.txt"));
+	REQUIRE(!std::filesystem::exists(userdata / "gx_no_community_patch.txt"));
+	REQUIRE(!std::filesystem::exists(online / "gx_no_community_patch.txt"));
+
+	MountRules rules = defaultBfme1MountRules();
+	rules.findLayer("mobile")->dir = outside.str();
+	const std::vector<ArchiveCandidate> found = scanArchives(root.str(), resolveLayerDirs(rules, root.str()));
+	bool sawIni = false;
+	bool sawLang = false;
+	bool sawUi = false;
+	bool sawOutside = false;
+	for (const ArchiveCandidate& candidate : found) {
+		REQUIRE(!candidateUnderExcludedDir(candidate.relPath));
+		REQUIRE(!candidateUnderExcludedDir(candidate.path));
+		const std::string rel = lower(candidate.relPath);
+		if (rel == "ini.big") {
+			sawIni = true;
+		}
+		if (rel == "lang/english.big") {
+			sawLang = true;
+		}
+		if (rel == "mobilelayer/ui.big") {
+			sawUi = true;
+		}
+		if (rel.find("ok.big") != std::string::npos) {
+			sawOutside = true;
+		}
+	}
+	REQUIRE(sawIni);
+	REQUIRE(sawLang);
+	REQUIRE(sawUi);
+	REQUIRE(sawOutside);
+
+	MountedVfs vfs(configFor(root));
+	REQUIRE_EQ(vfs.fs().getMountedArchiveCount(), 4);
+	std::string data;
+	REQUIRE(vfs.read("data\\ini\\gamedata.ini", data));
+	REQUIRE_EQ(data, std::string("PATCH"));
+	REQUIRE(vfs.read("data\\ini\\neutralunits.ini", data));
+	REQUIRE_EQ(data, std::string("BASE"));
+	REQUIRE(vfs.winner("data\\ini\\neutralunits.ini").find("ini.big") != std::string::npos);
+	REQUIRE(vfs.winner("data\\ini\\neutralunits.ini").find("500_900") == std::string::npos);
+	REQUIRE(!vfs.exists("only_zh.ini"));
+	REQUIRE(!vfs.exists("only_side.ini"));
+	REQUIRE(!vfs.exists("only_also.ini"));
+	REQUIRE(!vfs.exists("only_loose.ini"));
+	REQUIRE(vfs.read("lang.ini", data));
+	REQUIRE_EQ(data, std::string("LANG"));
+	REQUIRE(vfs.read("hud.ini", data));
+	REQUIRE_EQ(data, std::string("UI"));
+}
+
+// -mod <file> stores the path in m_modBIG; -mod <dir> stores it in m_modDir
+// (CommandLine::parseMod). loadMods() still mounts both with overwrite, including
+// a file that lives inside a directory scanArchives skipped. The community patch
+// stays off for BfmeBIGFileSystem and on for StdBIGFileSystem.
+TEST(bfme_loadmods_mounts_mod_not_community_patch)
+{
+	TempDir root;
+	TempDir user;
+	TempDir zhRoot;
+	TempDir modDir;
+	writeBig(root.path() / "ini.big", {
+		{"data\\ini\\gamedata.ini", "BASE"},
+		{"data\\ini\\neutralunits.ini", "BASE"},
+		{"data\\ini\\object\\gondor.ini", "BASE"}});
+	writeBig(root.path() / "_patch222.big", {{"data\\ini\\gamedata.ini", "PATCH"}});
+	const std::filesystem::path patch = user.path() / "GeneralsOnlineGameData" / "500_900_CommunityPatch_CoreINI.big";
+	writeBig(patch, {
+		{"data\\ini\\gamedata.ini", "ZH"}, {"data\\ini\\neutralunits.ini", "ZH"}, {"only_zh.ini", "ZH"}});
+	writeBig(root.path() / "GeneralsOnlineGameData" / "500_900_CommunityPatch_CoreINI.big", {
+		{"data\\ini\\gamedata.ini", "ZH"}, {"data\\ini\\neutralunits.ini", "ZH"}, {"only_zh.ini", "ZH"}});
+	const std::filesystem::path modBig = root.path() / "GeneralsOnlineGameData" / "explicit-mod.big";
+	writeBig(modBig, {{"data\\ini\\gamedata.ini", "MODBIG"}, {"only_mod.ini", "MODBIG"}});
+	writeBig(modDir.path() / "pack.big", {{"data\\ini\\object\\gondor.ini", "MODDIR"}, {"only_dir.ini", "MODDIR"}});
+	writeBig(zhRoot.path() / "ini.big", {
+		{"data\\ini\\gamedata.ini", "BASE"}, {"data\\ini\\neutralunits.ini", "BASE"}});
+	REQUIRE(!std::filesystem::exists(user.path() / "gx_no_community_patch.txt"));
+	ensureLocalFileSystem();
+
+	struct Install {
+		GlobalData* data = nullptr;
+		explicit Install(const std::string& userDir)
+		{
+			setTestUserDataDir(userDir);
+			data = new GlobalData();
+			TheWritableGlobalData = data;
+		}
+		~Install()
+		{
+			TheWritableGlobalData = nullptr;
+			delete data;
+			setTestUserDataDir("");
+		}
+	} install(user.str());
+	TheWritableGlobalData->m_modBIG = modBig.string().c_str();
+	TheWritableGlobalData->m_modDir = (modDir.str() + "/").c_str();
+
+	{
+		MountedVfs vfs(configFor(root));
+		std::string before;
+		REQUIRE(vfs.read("data\\ini\\gamedata.ini", before));
+		REQUIRE_EQ(before, std::string("PATCH"));
+		REQUIRE(vfs.read("data\\ini\\neutralunits.ini", before));
+		REQUIRE_EQ(before, std::string("BASE"));
+		REQUIRE(!vfs.exists("only_zh.ini"));
+		StderrCapture cap;
+		vfs.fs().loadMods();
+		const std::string log = cap.stop();
+		REQUIRE(log.find("community patch skipped (BFME)") != std::string::npos);
+		REQUIRE(log.find("community patch mounted") == std::string::npos);
+		std::string data;
+		REQUIRE(vfs.read("data\\ini\\gamedata.ini", data));
+		REQUIRE_EQ(data, std::string("MODBIG"));
+		REQUIRE(vfs.winner("data\\ini\\gamedata.ini").find("explicit-mod.big") != std::string::npos);
+		REQUIRE(vfs.read("only_mod.ini", data));
+		REQUIRE_EQ(data, std::string("MODBIG"));
+		REQUIRE(vfs.read("data\\ini\\object\\gondor.ini", data));
+		REQUIRE_EQ(data, std::string("MODDIR"));
+		REQUIRE(vfs.winner("data\\ini\\object\\gondor.ini").find("pack.big") != std::string::npos);
+		REQUIRE(vfs.read("only_dir.ini", data));
+		REQUIRE_EQ(data, std::string("MODDIR"));
+		REQUIRE(vfs.read("data\\ini\\neutralunits.ini", data));
+		REQUIRE_EQ(data, std::string("BASE"));
+		REQUIRE(!vfs.exists("only_zh.ini"));
+	}
+
+	{
+		StdBIGFileSystem zh;
+		REQUIRE(zh.loadBigFilesFromDirectory(AsciiString(zhRoot.str().c_str()), "*.big", FALSE));
+		StderrCapture cap;
+		zh.loadMods();
+		const std::string log = cap.stop();
+		REQUIRE(log.find("community patch skipped (BFME)") == std::string::npos);
+		REQUIRE(log.find("community patch mounted") != std::string::npos);
+		REQUIRE_EQ(readAll(zh, "only_zh.ini"), std::string("ZH"));
+		REQUIRE_EQ(readAll(zh, "data\\ini\\gamedata.ini"), std::string("MODBIG"));
+		REQUIRE_EQ(readAll(zh, "data\\ini\\object\\gondor.ini"), std::string("MODDIR"));
+		REQUIRE(std::string(zh.getArchiveFile("data\\ini\\gamedata.ini")->getName().str()).find("explicit-mod.big") != std::string::npos);
+	}
+}
+
 // A rules file that does not parse must not return from init() in a release build.
 TEST(bfme_init_exits_when_rules_do_not_parse)
 {
@@ -678,6 +856,104 @@ TEST(bfme_init_exits_when_no_archive_mounts)
 	REQUIRE(WIFEXITED(child.status));
 	REQUIRE(WEXITSTATUS(child.status) != 0);
 	REQUIRE(child.err.find("[bfmevfs] FATAL: No BFME archives were mounted from " + root.str()) != std::string::npos);
+}
+
+// maps.big opened. A nested ini.big does not stand in for the root archive.
+TEST(bfme_init_exits_when_root_ini_missing)
+{
+	TempDir root;
+	writeBig(root.path() / "maps.big", {{"maps\\x.map", "MAP"}});
+	writeBig(root.path() / "lang" / "ini.big", {{"data\\ini\\x.ini", "NESTED"}});
+	ensureLocalFileSystem();
+	BfmeVfsConfig config;
+	config.gameRoot = root.str();
+
+	const ChildExit child = exitInChild([config] {
+		BfmeBIGFileSystem fs(config);
+		fs.init();
+	});
+	REQUIRE(WIFEXITED(child.status));
+	REQUIRE(WEXITSTATUS(child.status) != 0);
+	REQUIRE(child.err.find("[bfmevfs] FATAL: required ini.big was not opened from " + root.str()) != std::string::npos);
+	REQUIRE(child.err.find("maps.big") != std::string::npos);
+	REQUIRE(child.err.find("[bfmevfs] mounted") != std::string::npos);
+	REQUIRE(child.err.find("No BFME archives were mounted") == std::string::npos);
+}
+
+// The root archive is present and unreadable. Other archives still mounted.
+TEST(bfme_init_exits_when_root_ini_unreadable)
+{
+	TempDir root;
+	writeBig(root.path() / "maps.big", {{"maps\\x.map", "MAP"}});
+	writeFile(root.path() / "ini.big", "not a big file at all");
+	ensureLocalFileSystem();
+	BfmeVfsConfig config;
+	config.gameRoot = root.str();
+
+	const ChildExit child = exitInChild([config] {
+		BfmeBIGFileSystem fs(config);
+		fs.init();
+	});
+	REQUIRE(WIFEXITED(child.status));
+	REQUIRE(WEXITSTATUS(child.status) != 0);
+	REQUIRE(child.err.find("[bfmevfs] FATAL: required ini.big was not opened from " + root.str()) != std::string::npos);
+	REQUIRE(child.err.find("FAILED TO OPEN") != std::string::npos);
+	REQUIRE(child.err.find("[bfmevfs] mounted") != std::string::npos);
+}
+
+TEST(bfme_root_ini_name_is_case_insensitive)
+{
+	TempDir root;
+	writeBig(root.path() / "INI.BIG", {{"data\\ini\\gamedata.ini", "BASE"}});
+	writeBig(root.path() / "maps.big", {{"m.map", "M"}});
+	MountedVfs vfs(configFor(root));
+	std::string data;
+	REQUIRE(vfs.read("data\\ini\\gamedata.ini", data));
+	REQUIRE_EQ(data, std::string("BASE"));
+}
+
+// Dumps are not next to the game copy and are not in git. Only BFME_ORACLE_DIR counts.
+TEST(oracle_dir_requires_bfme_oracle_dir)
+{
+	struct Restore {
+		bool hadRoot;
+		std::string root;
+		bool hadOracle;
+		std::string oracle;
+		Restore()
+		{
+			const char* g = getenv("BFME_GAMEDATA");
+			hadRoot = g != nullptr;
+			if (hadRoot) {
+				root = g;
+			}
+			const char* o = getenv("BFME_ORACLE_DIR");
+			hadOracle = o != nullptr;
+			if (hadOracle) {
+				oracle = o;
+			}
+		}
+		~Restore()
+		{
+			if (hadRoot) {
+				setenv("BFME_GAMEDATA", root.c_str(), 1);
+			} else {
+				unsetenv("BFME_GAMEDATA");
+			}
+			if (hadOracle) {
+				setenv("BFME_ORACLE_DIR", oracle.c_str(), 1);
+			} else {
+				unsetenv("BFME_ORACLE_DIR");
+			}
+		}
+	} restore;
+
+	TempDir root;
+	unsetenv("BFME_ORACLE_DIR");
+	setenv("BFME_GAMEDATA", root.str().c_str(), 1);
+	REQUIRE(oracleDir().empty());
+	setenv("BFME_ORACLE_DIR", "/tmp/bfme-oracle-not-created", 1);
+	REQUIRE_EQ(oracleDir(), std::string("/tmp/bfme-oracle-not-created"));
 }
 
 // --- RefPack stays in CompressionManager -----------------------------------------------------

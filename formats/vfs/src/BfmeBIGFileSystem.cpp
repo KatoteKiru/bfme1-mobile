@@ -9,6 +9,13 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <string>
+
+#ifdef __ANDROID__
+// BFME: this translation unit is compiled into z_gameenginedevice, which links SDL3.
+// The host vfs tests are not __ANDROID__ and do not include SDL.
+#include <SDL3/SDL_log.h>
+#endif
 
 namespace {
 
@@ -17,12 +24,56 @@ namespace {
 // That macro is empty in a release build, so a failed rules file or an empty
 // mount used to return with no message (and mountedAny tripped -Wunused-variable).
 // Log the cause and leave the process in every build.
+//
+// BFME: on Android, native stderr is /dev/null (SDL3Main.cpp mirrors it into a
+// file only when the launcher has not turned logging off). SDL_Log still
+// reaches logcat. The host keeps the stderr line only.
 [[noreturn]] void failBfmeVfsInit(const char* message)
 {
 	fprintf(stderr, "[bfmevfs] FATAL: %s\n", message);
 	fflush(stderr);
+#ifdef __ANDROID__
+	SDL_Log("[bfmevfs] FATAL: %s", message);
+#endif
 	DEBUG_ASSERTCRASH(false, ("[bfmevfs] FATAL: %s", message));
 	std::_Exit(EXIT_FAILURE);
+}
+
+bool equalsIniBig(const std::string& name)
+{
+	const char* expected = "ini.big";
+	if (name.size() != 7) {
+		return false;
+	}
+	for (size_t i = 0; i < name.size(); ++i) {
+		char c = name[i];
+		if (c >= 'A' && c <= 'Z') {
+			c = char(c - 'A' + 'a');
+		}
+		if (c != expected[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+// Root ini.big only. A nested archive with the same file name does not satisfy it.
+bool isRootIniBigRelPath(const std::string& relPath)
+{
+	std::string path = relPath;
+	for (char& c : path) {
+		if (c == '\\') {
+			c = '/';
+		}
+	}
+	while (path.size() > 1 && path.back() == '/') {
+		path.pop_back();
+	}
+	const size_t slash = path.rfind('/');
+	if (slash != std::string::npos) {
+		return false;
+	}
+	return equalsIniBig(path);
 }
 
 } // namespace
@@ -96,6 +147,11 @@ void BfmeBIGFileSystem::init()
 	if (!mountPlan(m_plan)) {
 		failBfmeVfsInit(("No BFME archives were mounted from " + m_config.gameRoot).c_str());
 	}
+	// BFME: other archives may have opened. The game still cannot start without
+	// the root ini.big (data\ini\* lives there; _patch222 does not replace every file).
+	if (!rootIniBigOpened()) {
+		failBfmeVfsInit(("required ini.big was not opened from " + m_config.gameRoot).c_str());
+	}
 
 	// Loose files (Data\..., maps) resolve against the game root, as StdBIGFileSystem does for ZH.
 	TheLocalFileSystem->setAssetRootPath(AsciiString(m_config.gameRoot.c_str()));
@@ -124,6 +180,20 @@ Bool BfmeBIGFileSystem::mountPlan(const bfme::vfs::MountPlan& plan)
 	}
 	fflush(stderr);
 	return m_mounted > 0;
+}
+
+bool BfmeBIGFileSystem::rootIniBigOpened() const
+{
+	for (const bfme::vfs::PlannedArchive& planned : m_plan.resolutionOrder) {
+		if (!isRootIniBigRelPath(planned.archive.relPath)) {
+			continue;
+		}
+		const ArchiveFileMap::const_iterator it = m_archiveFileMap.find(AsciiString(planned.archive.path.c_str()));
+		if (it != m_archiveFileMap.end() && it->second != nullptr) {
+			return true;
+		}
+	}
+	return false;
 }
 
 AsciiString BfmeBIGFileSystem::getWinningArchiveName(const AsciiString& path) const

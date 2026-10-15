@@ -13,7 +13,6 @@
 #include "bfme/vfs/BfmeBIGFileSystem.h"
 
 #include <cstdlib>
-#include <filesystem>
 
 namespace bfmetest {
 
@@ -109,17 +108,10 @@ std::string gamedataDir()
 
 std::string oracleDir()
 {
+	// No sibling guess. <gamedata>/../tools/oracle/out is not where the dumps live,
+	// and the dumps are not in git. Callers set BFME_ORACLE_DIR.
 	const char* o = getenv("BFME_ORACLE_DIR");
-	if (o != nullptr && o[0] != '\0') {
-		return o;
-	}
-	const std::string g = gamedataDir();
-	if (g.empty()) {
-		return {};
-	}
-	const std::filesystem::path guess = std::filesystem::path(g) / ".." / "tools" / "oracle" / "out";
-	std::error_code ec;
-	return std::filesystem::is_directory(guess, ec) ? guess.lexically_normal().string() : std::string();
+	return (o != nullptr && o[0] != '\0') ? std::string(o) : std::string();
 }
 
 } // namespace bfmetest

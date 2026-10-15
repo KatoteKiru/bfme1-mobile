@@ -118,7 +118,11 @@ VFS отдаёт **сохранённые** байты, без распаков�
   текст, что в `bfme1-mount-order.cfg`). Файл правил с диска читается только если задан `BFME_VFS_MOUNT_ORDER`
   (`BfmeVfsConfig::fromEnvironment`). Сканируются все `*.big` под корнем и в абсолютных каталогах слоёв
   (`scanArchives`); каждый относится к слою по каталогу и маске, и монтируются все, кому слой нашёлся, а не
-  только `ini.big`, `maps.big` и `_patch222*.big`. В stderr пишутся строки
+  только `ini.big`, `maps.big` и `_patch222*.big`. Обход не заходит в каталоги
+  `Command and Conquer Generals Zero Hour Data` (userdata ZH) и `GeneralsOnlineGameData`
+  (на любой глубине, без учёта регистра): там лежит `500_900_CommunityPatch_CoreINI.big`, и он
+  перекрывал бы `ini.big` для путей, которых нет в `_patch222`. `gx_no_community_patch.txt` этот
+  обход не читает. `-mod` и `-modDir` по-прежнему монтирует `loadMods()`. В stderr пишутся строки
   `[bfmevfs] mounted #N (слой, приоритет): путь`.
 - переменная не задана или пустая — возвращается `StdBIGFileSystem`, как в апстриме ZH.
 
@@ -127,3 +131,7 @@ VFS отдаёт **сохранённые** байты, без распаков�
 (`ArchiveFileSystem`: в режиме `BfmeBIGFileSystem` community patch ZH не монтируется), `# BFME:` в
 `CMakeLists.txt`, строки в `docs/UPSTREAM-PATCHES.md`. Если `TheLocalFileSystem` ещё нет, файл правил
 не разобрался или не смонтирован ни один архив, `init()` пишет `[bfmevfs] FATAL` и завершает процесс.
+То же самое, если корневой `ini.big` не открылся, даже когда другие архивы уже смонтированы
+(`[bfmevfs] FATAL: required ini.big was not opened from ...`). На Android та же строка FATAL
+дополнительно уходит в logcat (`SDL_Log`): stderr процесса там `/dev/null`, пока `SDL3Main.cpp`
+не перенаправил его в файл. На хосте остаётся только stderr.

@@ -91,7 +91,10 @@ MountPlan planMount(const std::vector<ArchiveCandidate>& archives, const MountRu
 MountRules resolveLayerDirs(const MountRules& rules, const std::string& gameRoot);
 
 // Lists *.big under the game root (recursive) and under every absolute layer dir outside the root.
-// Pass rules through resolveLayerDirs() first.
+// Does not descend into "Command and Conquer Generals Zero Hour Data" (ZH user data) or
+// "GeneralsOnlineGameData", at any depth, case-insensitively. Those trees hold the Zero Hour
+// community patch; gx_no_community_patch.txt is not a BFME switch. Pass rules through
+// resolveLayerDirs() first.
 std::vector<ArchiveCandidate> scanArchives(const std::string& gameRoot, const MountRules& rules);
 
 // One line per archive, for logs and tests: "<rank> <layer> <relPath>".

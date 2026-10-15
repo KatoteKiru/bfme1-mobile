@@ -15,7 +15,7 @@
 #include "Common/Registry.h"
 #include "Common/SubsystemInterface.h"
 
-GlobalData* TheWritableGlobalData = nullptr;      // only ArchiveFileSystem::loadMods() reads it (not called)
+GlobalData* TheWritableGlobalData = nullptr;      // loadMods() tests install the stub from GlobalDataStub.cpp
 AudioManager* TheAudio = nullptr;                  // only closeArchiveFile(Music.big) uses it
 CriticalSection* TheAsciiStringCriticalSection = nullptr;   // single-threaded test: no locking
 CriticalSection* TheUnicodeStringCriticalSection = nullptr;

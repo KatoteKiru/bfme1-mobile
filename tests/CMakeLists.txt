@@ -87,6 +87,7 @@ add_executable(bfme_vfs_tests
     ${BFME_ENGINE_VFS_SOURCES}
     vfs/TestMain.cpp
     vfs/EngineStubs.cpp
+    vfs/GlobalDataStub.cpp
     vfs/EngineFixture.cpp
     vfs/TestSynthetic.cpp
     vfs/TestGamedata.cpp
@@ -133,6 +134,12 @@ set(BFME_VFS_TESTS
     bfme_gamedata_requests_bfme_filesystem
     bfme_skips_zh_community_patch bfme_init_exits_when_rules_do_not_parse
     bfme_init_exits_when_no_archive_mounts
+    bfme_scan_skips_zh_userdata_dirs
+    bfme_loadmods_mounts_mod_not_community_patch
+    bfme_init_exits_when_root_ini_missing
+    bfme_init_exits_when_root_ini_unreadable
+    bfme_root_ini_name_is_case_insensitive
+    oracle_dir_requires_bfme_oracle_dir
     refpack_roundtrip_compression_manager
     gamedata_ini_big_matches_oracle gamedata_maps_big_matches_oracle gamedata_m1_map_refpack
     gamedata_all_maps_refpack gamedata_full_mount_follows_plan gamedata_patch222_over_base

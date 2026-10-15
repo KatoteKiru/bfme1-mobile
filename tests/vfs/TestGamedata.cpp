@@ -4,7 +4,10 @@
 // Integration tests on the user's BFME1 copy. EA data is never in git: the game root comes from
 // BFME_GAMEDATA and the OpenSAGE oracle dumps (tools/oracle, E1-20) from BFME_ORACLE_DIR; without
 // them the tests are skipped (exit 77). Nothing is written to BFME_GAMEDATA: single archives are
-// mounted through symlinks in a temporary directory.
+// mounted through symlinks in a temporary directory. A root that is not itself ini.big also
+// symlinks the copy's ini.big. init() fatals when other archives opened and the root ini.big
+// did not; the symlink satisfies that check without mounting _patch222 over maps.big. The test
+// skips when the copy has no ini.big.
 #include "PreRTS.h"
 
 #include "EngineFixture.h"
@@ -49,7 +52,7 @@ std::string requireArchive(const std::string& name)
 Json requireOracle(const std::string& file)
 {
 	const std::string dir = oracleDir();
-	if (dir.empty()) SKIP("BFME_ORACLE_DIR is not set and <gamedata>/../tools/oracle/out does not exist");
+	if (dir.empty()) SKIP("BFME_ORACLE_DIR is not set");
 	const fs::path p = fs::path(dir) / file;
 	if (!fs::exists(p)) SKIP(p.string() + " is missing (run tools/oracle/oracle.sh)");
 	return Json::parseFile(p.string());
@@ -62,8 +65,39 @@ std::string canonical(std::string path)
 	return path;
 }
 
-// Mounts exactly one archive (via a symlink in a temp root) and checks it entry by entry
-// against the oracle: count, names, sizes and SHA-256 of the raw stored bytes.
+bool nameIsIniBig(const std::string& name)
+{
+	if (name.size() != 7) {
+		return false;
+	}
+	for (size_t i = 0; i < name.size(); ++i) {
+		char c = name[i];
+		if (c >= 'A' && c <= 'Z') {
+			c = char(c - 'A' + 'a');
+		}
+		if (c != "ini.big"[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+// init() leaves the process when any archive opened and root ini.big did not.
+// Isolated maps.big mounts symlink the copy's ini.big into the same temp root.
+// Skip when that file is absent: the copy cannot meet the check.
+void linkCopyIniBig(const fs::path& root)
+{
+	const fs::path dest = root / "ini.big";
+	if (fs::exists(dest) || fs::is_symlink(dest)) {
+		return;
+	}
+	fs::create_symlink(fs::absolute(requireArchive("ini.big")), dest);
+}
+
+// Checks one archive entry by entry against the oracle: count, names, sizes and SHA-256 of
+// the raw stored bytes. The archive is a symlink in a temp root. Anything other than ini.big
+// also gets a symlink to the copy's ini.big so init() can pass; those entries are not part
+// of the oracle comparison, and the winner of each oracle path stays the archive under test.
 void checkArchiveAgainstOracle(const std::string& archiveName, size_t expectedCount)
 {
 	const std::string archive = requireArchive(archiveName);
@@ -83,19 +117,36 @@ void checkArchiveAgainstOracle(const std::string& archiveName, size_t expectedCo
 
 	TempDir root;
 	fs::create_symlink(fs::absolute(archive), root.path() / archiveName);
+	const bool soleIni = nameIsIniBig(archiveName);
+	if (!soleIni) {
+		linkCopyIniBig(root.path());
+	}
 	BfmeVfsConfig config;
 	config.gameRoot = root.str();
 	MountedVfs vfs(config);
-	REQUIRE_EQ(vfs.fs().getMountedArchiveCount(), 1);
+	REQUIRE_EQ(vfs.fs().getMountedArchiveCount(), soleIni ? 1 : 2);
 
 	std::set<std::string> listed;
 	for (const std::string& p : vfs.listAll()) listed.insert(canonical(p));
-	REQUIRE_EQ(listed.size(), expectedCount);
+	if (soleIni) {
+		REQUIRE_EQ(listed.size(), expectedCount);
+	} else {
+		// ini.big is mounted only so init() can pass. Its paths join the listing;
+		// each oracle path must still be served by the archive under test.
+		std::set<std::string> expectedListed;
+		for (const Json& e : oracle["entries"].arr) expectedListed.insert(canonical(e["path"].str));
+		BigDirectory iniDir;
+		std::string iniError;
+		REQUIRE(readBigDirectory((root.path() / "ini.big").string(), iniDir, &iniError));
+		for (const BigEntry& ent : iniDir.entries) expectedListed.insert(canonical(ent.path));
+		REQUIRE_EQ(listed.size(), expectedListed.size());
+	}
 
 	size_t matched = 0;
 	for (const Json& e : oracle["entries"].arr) {
 		const std::string path = e["path"].str;
 		REQUIRE(listed.count(canonical(path)) == 1);
+		REQUIRE(vfs.winner(path).find(archiveName) != std::string::npos);
 		REQUIRE_EQ(vfs.sizeOf(path), e["size"].asInt());
 		std::string data;
 		REQUIRE(vfs.read(path, data));
@@ -138,12 +189,15 @@ TEST(gamedata_m1_map_refpack)
 	const Json oracle = requireOracle("map mp fords of isen.json");
 	TempDir root;
 	fs::create_symlink(fs::absolute(archive), root.path() / "maps.big");
+	linkCopyIniBig(root.path());
 	BfmeVfsConfig config;
 	config.gameRoot = root.str();
 	MountedVfs vfs(config);
+	REQUIRE_EQ(vfs.fs().getMountedArchiveCount(), 2);
 
 	std::string stored;
 	REQUIRE(vfs.read(kM1Map, stored));
+	REQUIRE(vfs.winner(kM1Map).find("maps.big") != std::string::npos);
 	REQUIRE_EQ((long long)stored.size(), oracle["storedSize"].asInt());
 	REQUIRE_EQ((long long)stored.size(), 518519LL);
 	REQUIRE_EQ(Sha256::of(stored.data(), stored.size()), oracle["storedSha256"].str);
@@ -166,15 +220,18 @@ TEST(gamedata_all_maps_refpack)
 	const Json oracle = requireOracle("maps.big.maps.json");
 	TempDir root;
 	fs::create_symlink(fs::absolute(archive), root.path() / "maps.big");
+	linkCopyIniBig(root.path());
 	BfmeVfsConfig config;
 	config.gameRoot = root.str();
 	MountedVfs vfs(config);
+	REQUIRE_EQ(vfs.fs().getMountedArchiveCount(), 2);
 
 	size_t checked = 0;
 	for (const Json& m : oracle["maps"].arr) {
 		std::string stored;
 		const std::string path = m["source"]["entry"].str;
 		REQUIRE(vfs.read(path, stored));
+		REQUIRE(vfs.winner(path).find("maps.big") != std::string::npos);
 		REQUIRE(CompressionManager::getCompressionType(stored.data(), Int(stored.size())) == COMPRESSION_REFPACK);
 		const std::string map = decompress(stored);
 		REQUIRE_EQ(Sha256::of(map.data(), map.size()), m["decompressedSha256"].str);

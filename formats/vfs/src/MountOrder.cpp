@@ -61,6 +61,44 @@ bool startsWithNoCase(const std::string& text, const std::string& prefix)
 	return text.size() >= prefix.size() && equalsNoCase(text.substr(0, prefix.size()), prefix);
 }
 
+// BFME: the base layer is a recursive *.big walk. If the Zero Hour user-data
+// directory or GeneralsOnlineGameData sits inside the game root, that walk
+// mounts 500_900_CommunityPatch_CoreINI.big. The name sorts ahead of ini.big
+// ('5' < 'i'), so paths that _patch222 does not contain come from the ZH
+// community patch. gx_no_community_patch.txt is only the ZH launcher switch
+// and is not read here. -mod / -modDir are applied later by loadMods().
+bool isExcludedBfmeScanDirectory(const std::string& name)
+{
+	return equalsNoCase(name, "GeneralsOnlineGameData")
+		|| equalsNoCase(name, "Command and Conquer Generals Zero Hour Data");
+}
+
+bool pathEntersExcludedDirectory(const std::string& relPath)
+{
+	const std::string path = normalizeSlashes(relPath);
+	const size_t lastSlash = path.rfind('/');
+	if (lastSlash == std::string::npos) {
+		return false;
+	}
+	size_t start = 0;
+	while (start < lastSlash) {
+		if (path[start] == '/') {
+			++start;
+			continue;
+		}
+		const size_t next = path.find('/', start);
+		const size_t end = next == std::string::npos ? path.size() : next;
+		if (end > start && isExcludedBfmeScanDirectory(path.substr(start, end - start))) {
+			return true;
+		}
+		if (next == std::string::npos || next >= lastSlash) {
+			break;
+		}
+		start = next + 1;
+	}
+	return false;
+}
+
 std::string parentOf(const std::string& relPath)
 {
 	const size_t slash = relPath.rfind('/');
@@ -332,6 +370,14 @@ std::vector<ArchiveCandidate> scanArchives(const std::string& gameRoot, const Mo
 
 	auto addFrom = [&](const fs::path& dir, bool outsideRoot) {
 		for (fs::recursive_directory_iterator it(dir, fs::directory_options::skip_permission_denied, ec), end; !ec && it != end; it.increment(ec)) {
+			std::error_code entryEc;
+			if (it->is_directory(entryEc) && !entryEc) {
+				// Do not descend. A .big next to these directories is still listed.
+				if (isExcludedBfmeScanDirectory(it->path().filename().generic_string())) {
+					it.disable_recursion_pending();
+				}
+				continue;
+			}
 			if (!it->is_regular_file(ec)) {
 				continue;
 			}
@@ -344,6 +390,9 @@ std::vector<ArchiveCandidate> scanArchives(const std::string& gameRoot, const Mo
 			ArchiveCandidate candidate;
 			candidate.path = p.string();
 			candidate.relPath = outsideRoot ? normalizeSlashes(p.generic_string()) : normalizeSlashes(p.lexically_relative(root).generic_string());
+			if (pathEntersExcludedDirectory(candidate.relPath)) {
+				continue;
+			}
 			result.push_back(candidate);
 		}
 		ec.clear();

@@ -35,6 +35,9 @@ bool engineAcceptsArchive(const std::string& path, std::vector<std::string>* fil
 
 // Environment helpers for the integration tests.
 std::string gamedataDir();   // BFME_GAMEDATA or "" (test skips)
-std::string oracleDir();     // BFME_ORACLE_DIR or <BFME_GAMEDATA>/../tools/oracle/out, "" if absent
+std::string oracleDir();     // BFME_ORACLE_DIR, or "" if unset (no path is guessed)
+
+// Copied into the stub GlobalData before loadMods() tests construct it.
+void setTestUserDataDir(const std::string& dir);
 
 } // namespace bfmetest

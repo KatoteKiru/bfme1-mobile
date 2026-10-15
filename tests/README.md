@@ -38,6 +38,6 @@ BFME_GAMEDATA=/workspace/bfme-mobile/gamedata BFME_ORACLE_DIR=/workspace/bfme-mo
 ```
 
 - `unit`: синтетические BIG4/BIGF генерируются в тесте (`vfs/SyntheticBig.h`), данных EA нет.
-- `gamedata`: копия игры из `BFME_GAMEDATA` и выгрузки оракула OpenSAGE из `BFME_ORACLE_DIR`. Если `BFME_ORACLE_DIR` не задан, фикстура смотрит `<BFME_GAMEDATA>/../tools/oracle/out`. Нет ни того, ни другого — тест пропускается (код 77).
-  В `BFME_GAMEDATA` тесты ничего не пишут: отдельные архивы монтируются через симлинки во временном каталоге.
+- `gamedata`: копия игры из `BFME_GAMEDATA` и выгрузки оракула OpenSAGE из `BFME_ORACLE_DIR`. Без `BFME_ORACLE_DIR` тест пропускается (код 77). Запасного пути `<BFME_GAMEDATA>/../tools/oracle/out` нет, дампы в git не лежат. Каталог задаётся явно (`export BFME_ORACLE_DIR=/path/to/tools/oracle/out`); в нём после прогона оракула лежат `ini.big.json` и `maps.big.maps.json`.
+  В `BFME_GAMEDATA` тесты ничего не пишут: отдельные архивы монтируются через симлинки во временном каталоге. Корень, где проверяется не сам `ini.big`, получает ещё симлинк на `ini.big` из той же копии: без него `init()` завершается, потому что корневой `ini.big` обязателен. Если в копии нет `ini.big`, такой тест пропускается (код 77). Весь корень игры при этом не монтируется, чтобы `_patch222` не перекрыл `maps.big`.
 - `vfs.registry_complete` проверяет, что каждый `TEST()` зарегистрирован в ctest.

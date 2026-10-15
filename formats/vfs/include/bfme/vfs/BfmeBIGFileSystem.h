@@ -55,6 +55,8 @@ public:
 
 private:
 	Bool mountPlan(const bfme::vfs::MountPlan& plan);
+	// True when a root ini.big (not a nested archive of the same name) was opened.
+	bool rootIniBigOpened() const;
 
 	BfmeVfsConfig m_config;
 	bool m_configured;
