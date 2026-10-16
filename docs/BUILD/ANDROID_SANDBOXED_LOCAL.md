@@ -219,6 +219,8 @@ for it specifically.
 
 ## Distributing the APK: don't use Git LFS on this fork
 
+> **BFME:** в ветке `bfme` каталога `apk/` нет и APK в git не коммитятся (`.gitignore`: `*.apk`, ADR-0001, E1-02). Сборка: `tools/build-apk.sh` → `out/bfme-zh-<sha>.apk`, в CI — артефакт `bfme-android-apk.yml`. Последний APK апстрима `apk/GeneralsXZH-android-textsize2.apk` удалён обычным коммитом и остаётся в истории (`git show 9f37093ce:apk/GeneralsXZH-android-textsize2.apk`). Текст ниже — инструкции апстрима, для `bfme` не действуют.
+
 Test builds live in `apk/*.apk`, committed as **plain git blobs**, not Git
 LFS. GitHub's regular per-file commit limit is 100MB; stripping (above)
 keeps debug builds around 39MB, comfortably under that, so LFS should never

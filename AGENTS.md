@@ -67,6 +67,8 @@ Before starting work, read:
 ## Build Commands
 
 ### Android — build locally, do NOT use CI
+> **BFME:** в ветке `bfme` каталога `apk/` нет и APK в git не коммитятся (`.gitignore`: `*.apk`, ADR-0001, E1-02). Сборка: `tools/build-apk.sh` → `out/bfme-zh-<sha>.apk`, в CI — артефакт `bfme-android-apk.yml`. Последний APK апстрима `apk/GeneralsXZH-android-textsize2.apk` удалён обычным коммитом и остаётся в истории (`git show 9f37093ce:apk/GeneralsXZH-android-textsize2.apk`). Текст ниже — инструкции апстрима, для `bfme` не действуют.
+
 **The repository owner has a limited Actions budget and has asked repeatedly for
 local builds only.** A push does NOT trigger CI (the `push:` trigger was removed
 on 01/08/2026 precisely because unattended builds were burning the budget), so
