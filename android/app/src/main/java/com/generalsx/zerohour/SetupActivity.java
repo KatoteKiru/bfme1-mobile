@@ -160,6 +160,11 @@ public class SetupActivity extends Activity {
         // that crashes. Any future Material/theme incompatibility falls back
         // to a bare-bones plain-widget UI (same actions, no styling) instead
         // of taking the whole Settings app down with it.
+        // BFME: debug-args. `am start ... --es args "..."` on the launcher: skip the setup UI and
+        // start the game with those arguments. Without imported GameData: error log, normal UI.
+        if (savedInstanceState == null && forwardDebugLaunchArgs()) {
+            return;
+        }
         try {
             buildUi();
         } catch (Throwable t) {
@@ -168,6 +173,27 @@ public class SetupActivity extends Activity {
         // BFME: E1-15 startup metadata (startup-meta.txt + logcat), off the UI thread.
         final android.content.Context appCtx = getApplicationContext();
         new Thread(() -> BfmeDiagnostics.writeStartupMetadata(appCtx), "bfme-startup-meta").start();
+    }
+
+    // BFME: debug-args.
+    private boolean forwardDebugLaunchArgs() {
+        Intent in = getIntent();
+        if (in == null || !in.hasExtra(DebugLaunchArgs.EXTRA_ARGS)) {
+            return false;
+        }
+        if (!BuildConfig.BFME_DEV_ARGS) {
+            android.util.Log.w(DebugLaunchArgs.TAG, "args extra ignored: built with bfmeDevArgs=false");
+            return false;
+        }
+        if (!GameDataReady.isReady(this)) {
+            android.util.Log.e(DebugLaunchArgs.TAG, "args extra: GameData not imported, showing setup UI");
+            return false;
+        }
+        Intent game = new Intent(this, GeneralsZHActivity.class);
+        game.putExtra(DebugLaunchArgs.EXTRA_ARGS, in.getStringExtra(DebugLaunchArgs.EXTRA_ARGS));
+        startActivity(game);
+        finish();
+        return true;
     }
 
     @Override

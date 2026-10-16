@@ -65,6 +65,9 @@ android {
         // BFME: E1-04 hooks for our own OTA and online server; empty = disabled.
         buildConfigField 'String', 'BFME_OTA_URL', "\"${project.findProperty('bfmeOtaUrl') ?: ''}\""
         buildConfigField 'String', 'BFME_ONLINE_URL', "\"${project.findProperty('bfmeOnlineUrl') ?: ''}\""
+        // BFME: debug-args. Engine arguments from the `args` intent extra (docs/debug-launch.md).
+        // On by default for test builds; -PbfmeDevArgs=false (build-apk.sh: BFME_DEV_ARGS=0) turns it off.
+        buildConfigField 'boolean', 'BFME_DEV_ARGS', "${(project.findProperty('bfmeDevArgs') ?: 'true').toString() != 'false'}"
         // API 28 (Android 9): floor that still covers the Redmi Note 8 Pro
         // line while giving bionic glob(3) and stable Vulkan loader behavior.
         // The real graphics gate is the GPU driver, not the OS version — see

@@ -340,6 +340,11 @@ if [[ -n "${GX_ANDROID_VERSION_NAME:-}" ]]; then
     GRADLE_VERSION_ARG="${GRADLE_VERSION_ARG} -PandroidVersionName=${GX_ANDROID_VERSION_NAME}"
 fi
 
+# BFME: debug-args. BFME_DEV_ARGS=0 builds without the `args` intent extra (release for friends).
+if [[ "${BFME_DEV_ARGS:-1}" == "0" ]]; then
+    GRADLE_VERSION_ARG="${GRADLE_VERSION_ARG} -PbfmeDevArgs=false"
+fi
+
 echo "==> ${GRADLE_CMD} assembleDebug ${GRADLE_VERSION_ARG}"
 "${GRADLE_CMD}" assembleDebug ${GRADLE_VERSION_ARG}
 

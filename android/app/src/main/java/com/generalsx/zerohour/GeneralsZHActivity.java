@@ -78,8 +78,19 @@ public class GeneralsZHActivity extends SDLActivity {
         setIntent(intent);
     }
 
+    // BFME: debug-args. Defaults first, then the tokens of the `args` extra (dev builds only).
     @Override
     protected String[] getArguments() {
+        java.util.ArrayList<String> args = new java.util.ArrayList<>(java.util.Arrays.asList(baseArguments()));
+        Intent intent = getIntent();
+        String raw = intent != null ? intent.getStringExtra(DebugLaunchArgs.EXTRA_ARGS) : null;
+        args.addAll(DebugLaunchArgs.resolve(raw, BuildConfig.BFME_DEV_ARGS,
+            (warn, msg) -> { if (warn) Log.w(DebugLaunchArgs.TAG, msg); else Log.i(DebugLaunchArgs.TAG, msg); }));
+        Log.i(DebugLaunchArgs.TAG, "argv " + args);
+        return args.toArray(new String[0]);
+    }
+
+    private String[] baseArguments() {
         java.util.ArrayList<String> args = new java.util.ArrayList<>();
         String safeInsets = computeSafeInsetsArgument();
         if (safeInsets != null) {

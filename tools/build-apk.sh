@@ -19,6 +19,7 @@
 #   BFME_DEBUG_KEYSTORE_B64        запасной путь: keystore в base64, только ручной запуск вне бокса
 #   BFME_REQUIRE_KEYSTORE=1        не генерировать ключ, а падать, если его нет (CI)
 #   GX_ANDROID_VERSION_NAME        versionName; по умолчанию 0.1.0-<короткий SHA HEAD>
+#   BFME_DEV_ARGS=0                без extra `args` (сборка для друзей); по умолчанию 1 (docs/debug-launch.md)
 #   BFME_DOCKER="sudo -n /usr/local/sbin/bfme-ci-docker"   как вызывать docker (раннер CI)
 #   BFME_RELRO_WAIVE="libc++_shared.so ..."   готовые .so, которым прощается конец RELRO не на 16 КБ
 #   BFME_TOOLCHAIN=/opt/bfme-toolchain   префикс нативного тулчейна (--native)
@@ -181,6 +182,7 @@ build_inside() {
   ts "APK: ${REPO}/${OUT}"
   ts "sha256: ${sum}"
   ts "versionName: ${GX_ANDROID_VERSION_NAME}"
+  ts "BFME_DEV_ARGS: ${BFME_DEV_ARGS:-1}"
   verify_apk "$OUT" "$TB"
   ts "ГОТОВО: ${REPO}/${OUT} ($(du -h "$OUT" | cut -f1)) sha256=${sum}"
 }
@@ -276,6 +278,7 @@ case "$MODE" in
       -e BFME_KEY_ALIAS="${BFME_KEY_ALIAS:-}" \
       -e BFME_KEY_PASSWORD="${BFME_KEY_PASSWORD:-}" \
       -e GX_ANDROID_VERSION_NAME="${GX_ANDROID_VERSION_NAME:-}" \
+      -e BFME_DEV_ARGS="${BFME_DEV_ARGS:-1}" \
       -e BFME_ALLOW_4K="${BFME_ALLOW_4K:-0}" -e BFME_REQUIRE_KEYSTORE="${BFME_REQUIRE_KEYSTORE:-0}" \
       -v "$REPO:/src" -v "$CACHE:/cache" -v "$SECRETS:/secrets" -w /src "$IMAGE_TAG" tools/build-apk.sh --inside ;;
 esac
