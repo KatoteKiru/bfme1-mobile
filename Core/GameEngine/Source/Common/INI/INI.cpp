@@ -526,6 +526,13 @@ UnsignedInt INI::loadFileDirectory( AsciiString fileDirName, INILoadType loadTyp
 	fflush(stderr);
 
 	// Expect to open and load at least one file.
+	if (filesRead == 0 && lenientOn())
+	{
+		// BFME: E1-38. A Zero Hour-only directory (Data\INI\ChallengeMode, ...) is absent from BFME data.
+		// Lenient mode logs it and keeps the Zero Hour defaults instead of aborting GameEngine::init.
+		INILenient::note("file", fileDirName.str(), 0, "", fileDirName.str(), "no INI file or directory, skipped");
+		return 0;
+	}
 	if (filesRead == 0)
 	{
 		fprintf(stderr, "[INI] ERROR: No files read from directory '%s'\n", fileDirName.str());

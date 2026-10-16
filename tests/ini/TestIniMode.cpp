@@ -11,6 +11,9 @@
 #include "Common/INI.h"
 #include "Common/INIException.h"
 #include "Common/INILenient.h"
+#include "bfme/vfs/BfmeBIGFileSystem.h"
+#include "../vfs/EngineFixture.h"
+#include "../vfs/SyntheticBig.h"
 #include "Common/AudioEventInfo.h"
 #include "Common/LocalFileSystem.h"
 #include "StdDevice/Common/StdLocalFileSystem.h"
@@ -189,4 +192,43 @@ TEST(bfme_mode_skips_unknown_audio_fields)
 	REQUIRE(audio().m_limit == 3);
 	REQUIRE(INILenient::counters().values == 1);	// Type = DEFAULT
 	REQUIRE(INILenient::counters().fields == 3);	// ReverbEffectLevel, DryLevel, SubmixSlider
+}
+
+// E1-38: a Zero Hour-only INI directory (Data\INI\ChallengeMode) is absent from BFME data. Zero Hour
+// mode still throws INI_CANT_OPEN_FILE; lenient mode logs it and returns 0 files.
+static bool loadDirThrows(bool lenient, UnsignedInt &files)
+{
+	ensureFileSystem();
+	INILenient::reset();
+	INILenient::setEnabled(lenient ? TRUE : FALSE);
+	bool threw = false;
+	files = 99;
+	const std::string present = writeIni("present.ini", "");
+	const std::string dir = present + "-no-such-dir";
+	// loadFileDirectory also asks TheArchiveFileSystem: mount one synthetic BIG without that directory.
+	BfmeVfsConfig config;
+	config.gameRoot = present.substr(0, present.rfind('/'));
+	bfmetest::writeBig(config.gameRoot + "/ini.big", {{"data\\ini\\other.ini", ""}});
+	bfmetest::MountedVfs vfs(config);
+	try {
+		INI ini;
+		files = ini.loadFileDirectory(AsciiString(dir.c_str()), INI_LOAD_OVERWRITE, nullptr);
+	} catch (...) {
+		threw = true;
+	}
+	INILenient::setEnabled(FALSE);
+	return threw;
+}
+
+TEST(zh_mode_throws_on_missing_directory)
+{
+	UnsignedInt files = 0;
+	REQUIRE(loadDirThrows(false, files));
+}
+
+TEST(bfme_mode_skips_missing_directory)
+{
+	UnsignedInt files = 0;
+	REQUIRE(!loadDirThrows(true, files));
+	REQUIRE(files == 0);
 }

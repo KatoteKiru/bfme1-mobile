@@ -166,6 +166,7 @@ add_executable(bfme_ini_mode_tests
     vfs/TestMain.cpp
     vfs/GlobalDataStub.cpp
     ini/IniEngineStubs.cpp
+    vfs/EngineFixture.cpp
     ini/TestIniMode.cpp
 )
 target_link_libraries(bfme_ini_mode_tests PRIVATE bfme_formats_vfs_core liblzhl ${BFME_TEST_ZLIB})
@@ -182,6 +183,7 @@ set(BFME_INI_MODE_TESTS
     bfme_mode_skips_unknown_block bfme_mode_skips_unknown_field bfme_mode_skips_bad_index_list_value
     bfme_mode_closes_block_at_eof
     audio_field_table_has_end_marker bfme_mode_skips_unknown_audio_fields
+    zh_mode_throws_on_missing_directory bfme_mode_skips_missing_directory
 )
 foreach(t IN LISTS BFME_INI_MODE_TESTS)
     add_test(NAME ini.${t} COMMAND bfme_ini_mode_tests ${t})

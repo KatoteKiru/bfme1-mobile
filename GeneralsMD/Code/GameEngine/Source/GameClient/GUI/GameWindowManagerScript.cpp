@@ -72,6 +72,7 @@
 #include "GameClient/GameText.h"
 #include "GameClient/HeaderTemplate.h"
 #include "GXTrace.h"
+#include "Common/INILenient.h"	// BFME: E1-38
 
 
 
@@ -2102,6 +2103,12 @@ static GameWindow *createWindow( char *type,
 			window->winSetWindowId( id );
 
 		}
+		else if( INILenient::isEnabled() )
+		{
+			// BFME: E1-38. A failed gadget takes its parents down with it; name it in the log.
+			fprintf( stderr, "[wnd] BFME: E1-38 no gadget for WINDOWTYPE '%s' (%s)\n",
+				type, instData->m_decoratedNameString.str() );
+		}
 
   }
 
@@ -2389,6 +2396,11 @@ static GameWindow *parseWindow( File *inFile, char *buffer )
 	assert( strcmp( c, "WINDOWTYPE" ) == 0 );
 	c = strtok( nullptr, seps );  // get data to right of = sign
 	strlcpy(type, c, ARRAY_SIZE(type));
+	// BFME: E1-38. BFME ControlBar.wnd declares its command buttons as WINDOWTYPE = COMMANDBUTTON
+	// (STYLE = PUSHBUTTON+MOUSETRACK). Zero Hour has no such gadget: createGadget() returned nullptr,
+	// parseChildWindows() failed and destroyed the whole tree up to ControlBarParent.
+	if( INILenient::isEnabled() && strcmp( type, "COMMANDBUTTON" ) == 0 )
+		strlcpy(type, "PUSHBUTTON", ARRAY_SIZE(type));
 
 	//
 	// based on the window type get a pointer for any specific data
@@ -2769,6 +2781,8 @@ GameWindow *GameWindowManager::winCreateFromScript( AsciiString filenameString,
 	if (inFile == nullptr)
 	{
 		DEBUG_LOG(( "WinCreateFromScript: Cannot access file '%s'.", filename ));
+		if( INILenient::isEnabled() )
+			fprintf( stderr, "[wnd] BFME: E1-38 cannot open '%s'\n", filepath );
 		return nullptr;
 	}
 

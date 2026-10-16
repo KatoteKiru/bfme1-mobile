@@ -1120,6 +1120,13 @@ void ControlBar::init()
 		NameKeyType id;
 		id = TheNameKeyGenerator->nameToKey( "ControlBar.wnd:ControlBarParent" );
 		m_contextParent[ CP_MASTER ] = TheWindowManager->winGetWindowFromId( nullptr, id );
+		// BFME: E1-38. Every lookup below assumes ControlBar.wnd was created. If it was not, say so
+		// and leave the GUI pointers null instead of dereferencing nullptr (SIGSEGV at 0x14 on the Pixel).
+		if( m_contextParent[ CP_MASTER ] == nullptr )
+		{
+			fprintf( stderr, "[ControlBar] BFME: E1-38 ControlBar.wnd:ControlBarParent not found, control bar GUI not set up\n" );
+			return;
+		}
 	m_contextParent[ CP_MASTER ]->winGetPosition(&m_defaultControlBarPosition.x, &m_defaultControlBarPosition.y);
 
 		m_scienceLayout = TheWindowManager->winCreateLayout("GeneralsExpPoints.wnd");
