@@ -16,6 +16,12 @@
 **	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// BFME: E1-32. glibc declares gettid() only when _GNU_SOURCE is set before
+// the first libc header. always.h includes <assert.h> first, so this has to
+// be here rather than next to the call.
+#if defined(__linux__) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
 
 #include "thread.h"
 #include "Except.h"
@@ -31,6 +37,10 @@
 #else
 // GeneralsX @bugfix BenderAI 24/02/2026 Phase 5 - GetCurrentThreadIdAsInt for non-Windows
 #include "thread_compat.h"
+#endif
+
+#if defined(__linux__)
+#include <unistd.h>
 #endif
 
 ThreadClass::ThreadClass(const char *thread_name, ExceptionHandlerType exception_handler) : handle(0), running(false), thread_priority(0)
@@ -160,7 +170,16 @@ void ThreadClass::Switch_Thread()
 unsigned ThreadClass::_Get_Current_Thread_ID()
 {
 	#ifdef _UNIX
-		return 0;
+		#if defined(__linux__)
+			// BFME: E1-32 kernel TID via gettid() (logcat and tombstone).
+			// pthread_self() is 64-bit on LP64 (glibc unsigned long, bionic a
+			// pointer), so it does not fit in unsigned and is a different id.
+			// A user thread never has TID 0, so 0 stays "not recorded yet".
+			// macOS is _UNIX but not __linux__ and still returns 0 (not a target).
+			return static_cast<unsigned>(gettid());
+		#else
+			return 0;
+		#endif
 	#else
 		return GetCurrentThreadId();
 	#endif

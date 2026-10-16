@@ -49,6 +49,7 @@
 #include "ww3d.h"
 #include "assetmgr.h"
 #include "dx8wrapper.h"
+#include "dx8_thread.h"
 #include "dx8caps.h"
 #include "missingtexture.h"
 #include "TARGA.h"
@@ -352,7 +353,11 @@ void TextureLoader::Deinit()
 
 bool TextureLoader::Is_DX8_Thread()
 {
-	return (ThreadClass::_Get_Current_Thread_ID() == DX8Wrapper::_Get_Main_Thread_ID());
+	// BFME: E1-32. 0 means Init has not recorded a tid (headless skips
+	// WW3D::Init). See BfmeIsRecordedDx8Thread.
+	return BfmeIsRecordedDx8Thread(
+		ThreadClass::_Get_Current_Thread_ID(),
+		DX8Wrapper::_Get_Main_Thread_ID());
 }
 
 
@@ -1775,7 +1780,8 @@ void TextureLoadTaskClass::Unlock_Surfaces()
 	{
 		if (LockedSurfacePtr[i])
 		{
-			WWASSERT(ThreadClass::_Get_Current_Thread_ID() == DX8Wrapper::_Get_Main_Thread_ID());
+			// BFME: E1-32. Same rule as Is_DX8_Thread (0 means not recorded).
+			WWASSERT(TextureLoader::Is_DX8_Thread());
 			DX8_ErrorCode(Peek_D3D_Texture()->UnlockRect(i));
 		}
 		LockedSurfacePtr[i] = nullptr;
@@ -2151,7 +2157,8 @@ void CubeTextureLoadTaskClass::Unlock_Surfaces()
 		{
 			if (LockedCubeSurfacePtr[f][i])
 			{
-				WWASSERT(ThreadClass::_Get_Current_Thread_ID() == DX8Wrapper::_Get_Main_Thread_ID());
+				// BFME: E1-32. Same rule as Is_DX8_Thread (0 means not recorded).
+				WWASSERT(TextureLoader::Is_DX8_Thread());
 				DX8_ErrorCode
 				(
 					Peek_D3D_Cube_Texture()->UnlockRect((D3DCUBEMAP_FACES)f,i)
@@ -2465,7 +2472,8 @@ void VolumeTextureLoadTaskClass::Unlock_Surfaces()
 	{
 		if (LockedSurfacePtr[i])
 		{
-			WWASSERT(ThreadClass::_Get_Current_Thread_ID() == DX8Wrapper::_Get_Main_Thread_ID());
+			// BFME: E1-32. Same rule as Is_DX8_Thread (0 means not recorded).
+			WWASSERT(TextureLoader::Is_DX8_Thread());
 			DX8_ErrorCode
 			(
 				Peek_D3D_Volume_Texture()->UnlockBox(i)

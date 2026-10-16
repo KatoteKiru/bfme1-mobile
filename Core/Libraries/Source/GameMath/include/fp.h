@@ -4,8 +4,8 @@
 //
 // The logic thread calls bindLogicThread() once, first thing in GameMain(),
 // before TheGameEngine->init(). Later checks compare std::thread::id.
-// gettid() / GetCurrentThreadId() are for the log line only: ThreadClass::
-// _Get_Current_Thread_ID() is not used, because on _UNIX it returns 0.
+// On macOS ThreadClass returns 0. On Linux and Android it returns gettid.
+// gettid() / GetCurrentThreadId() are for the log line only.
 //
 // Platform replaces fp_platform_stub.cpp with fp_arm64.cpp, fp_x86_64.cpp,
 // and fp_msvc.cpp. Until then reset() is the previous non-VC6 setFPMode()

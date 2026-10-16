@@ -1,8 +1,8 @@
 // BFME: ADR-0003 §2.3. Which thread may touch the logic FP state.
 //
-// Compared with std::thread::id. The OS tid (gettid / GetCurrentThreadId) is
-// written into the log so it matches logcat and a tombstone. Do not call
-// ThreadClass::_Get_Current_Thread_ID(): on _UNIX it returns 0.
+// On macOS ThreadClass returns 0. On Linux and Android it returns gettid.
+// The OS tid (gettid / GetCurrentThreadId) is written into the log so it
+// matches logcat and a tombstone.
 
 #ifndef _WIN32
 #ifndef _GNU_SOURCE

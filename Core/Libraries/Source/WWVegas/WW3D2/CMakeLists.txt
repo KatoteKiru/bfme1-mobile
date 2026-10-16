@@ -211,6 +211,7 @@ set(WW3D2_SRC
     texturefilter.h
     textureloader.cpp
     textureloader.h
+    dx8_thread.h # BFME: E1-32 Is_DX8_Thread when the main tid is not recorded yet
     texturethumbnail.cpp
     texturethumbnail.h
     #vertmaterial.cpp

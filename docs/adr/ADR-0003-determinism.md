@@ -46,12 +46,12 @@
 
 ### 2.3 Плавающая точка в потоке логики (решение Лида п. 7 и уточнение платформы)
 
-Регистры управления FP у каждого потока свои. Поток логики привязывает `fp::bindLogicThread()`. Это первый вызов в `GameMain()` (`GeneralsMD/Code/GameEngine/Source/Common/GameMain.cpp:39`), до `TheGameEngine->init()` (`:46`). Строка 39 — объявление функции; сегодня первая строка тела — `int exitcode = 0` (`:41`). Сравнение — по `std::thread::id`. Повторный `bindLogicThread()` из другого потока фатален в debug. Счётчики не атомарные: их трогает только привязанный поток.
+Регистры управления FP у каждого потока свои. Поток логики привязывает `fp::bindLogicThread()`. Это первый вызов в `GameMain()` (`GeneralsMD/Code/GameEngine/Source/Common/GameMain.cpp:46`), до `TheGameEngine->init()` (`:53`) — дерево `bfme` с `390a6b557`. Объявление функции — `:42`; `int exitcode = 0` — `:48`. Сравнение — по `std::thread::id`. Повторный `bindLogicThread()` из другого потока фатален в debug. Счётчики не атомарные: их трогает только привязанный поток.
 Запасной привязки по первому вызову нет: если `fp::bindLogicThread()` не вызывался, первая проверка (`checkAndReset`, `assertExpected`, `getCRC`, `setFPMode`, `GameLogic::init`) в debug и CI фатальна, в release пишет одну ошибку в лог и привязывается к текущему потоку; молчаливой привязки нет ни в одной сборке.
 
 `GameLogic::init` (`GameLogic.cpp:430`) и `fp::setFPMode()` проверяют, что вызов идёт из привязанного потока. В debug и в CI несовпадение фатально, в release — одна ошибка в лог. Проверка в `setFPMode` нужна потому, что `INI::load` (`Core/GameEngine/Source/Common/INI/INI.cpp:416`) вызывает `setFPMode()` раньше `GameLogic::init`. Если загрузка INI уйдёт в фоновый поток, она выставит FP-режим чужому потоку. Привязка по первому `GameLogic::init()` этот вызов не увидит и молча примет чужой поток.
 
-`gettid()` и `GetCurrentThreadId()` (MSVC) пишутся только в лог, чтобы tid совпадал с logcat и tombstone. Имя потока `"SDLThread"` проверяется только в debug на Android и только предупреждением в лог, без fatal. `ThreadClass::_Get_Current_Thread_ID()` для этой проверки не годится: на `_UNIX` он возвращает 0 (`Core/Libraries/Source/WWVegas/WWLib/thread.cpp:160–165`, возврат на `:163`). Исправление этого места Лид взял себе в рендер.
+`gettid()` и `GetCurrentThreadId()` (MSVC) пишутся только в лог, чтобы tid совпадал с logcat и tombstone. Имя потока `"SDLThread"` проверяется только в debug на Android и только предупреждением в лог, без fatal. Проверка потока логики идёт по `std::thread::id`, не по `ThreadClass::_Get_Current_Thread_ID()`. На Linux и Android эта функция теперь возвращает tid ядра (`gettid()` при `_GNU_SOURCE`; E1-32, `Core/Libraries/Source/WWVegas/WWLib/thread.cpp:179`). На macOS (`_UNIX` без `__linux__`) она по-прежнему возвращает 0 (`thread.cpp:181`).
 
 Вызов в `GameMain` и объявление в `fp.h` делает Геймплей. Реализацию в `GameMath/fp/` делает Платформа.
 
@@ -217,7 +217,7 @@
 
 ## Изменения 02.10.2026 (поток логики — `bindLogicThread`)
 
-`fp::bindLogicThread()` — первый вызов в `GameMain()` (`GameMain.cpp:39`), до `TheGameEngine->init()` (`:46`). `GameLogic::init` и `fp::setFPMode()` сверяют `std::thread::id`: несовпадение фатально в debug и CI, в release — одна ошибка в лог. `INI::load` (`INI.cpp:416`) зовёт `setFPMode()` раньше `GameLogic::init`. Имя `"SDLThread"` — только предупреждение в debug на Android. `ThreadClass::_Get_Current_Thread_ID()` на `_UNIX` возвращает 0 (`thread.cpp:163`). `fp::reset()` — `fesetenv(FE_DFL_ENV)` или `msr fpcr, xzr`, не `fesetround`. Правило «первый вызвавший `GameLogic::init()`» отклонено (§3).
+`fp::bindLogicThread()` — первый вызов в `GameMain()` (`GameMain.cpp:46`), до `TheGameEngine->init()` (`:53`). `GameLogic::init` и `fp::setFPMode()` сверяют `std::thread::id`: несовпадение фатально в debug и CI, в release — одна ошибка в лог. `INI::load` (`INI.cpp:416`) зовёт `setFPMode()` раньше `GameLogic::init`. Имя `"SDLThread"` — только предупреждение в debug на Android. `ThreadClass::_Get_Current_Thread_ID()` на `_UNIX` на тот момент возвращала 0 (`thread.cpp:163` того дерева). `fp::reset()` — `fesetenv(FE_DFL_ENV)` или `msr fpcr, xzr`, не `fesetround`. Правило «первый вызвавший `GameLogic::init()`» отклонено (§3).
 
 ## Изменения 02.10.2026 (`m_pulsePhase` закрыт QA)
 
@@ -229,3 +229,7 @@
 
 1. **Новый §2.7.** `REAL_TO_INT_FLOOR` и `REAL_TO_INT_CEIL` в сборке ZH (`BaseType.h:295–296`, `fast_float_floor` `:261–267`, `fast_float_ceil` `:270–276`) дают −n−1 для отрицательных целых −n и n+1 для положительных целых n. Поведение детерминировано на x86 SSE, x87 PC_24 и ARM64 при `setFPMode`. На нём стоят реплеи и CRC ZH (AIPathfind `worldToCell` и `classify*`, PartitionManager, TerrainLogic flatten и crater), поэтому его не меняем. В новом коде BFME — отдельный хелпер, CI-проверка E1-49 помечает эти макросы как «не исправлять».
 2. **§2.4.** Перевод `REAL_TO_INT_*` на хелперы GameMath отменён. Хелперы `int32_t` остаются для нового кода BFME.
+
+## Изменения 08.10.2026 (tid ядра в `_Get_Current_Thread_ID`)
+
+На Linux и Android `ThreadClass::_Get_Current_Thread_ID()` больше не возвращает 0: это `gettid()` (`thread.cpp`, `_GNU_SOURCE` до первого libc-заголовка). Windows — по-прежнему `GetCurrentThreadId()`. На macOS (`_UNIX` без `__linux__`) функция по-прежнему возвращает 0. Привязка потока логики не переезжает на эту функцию: `fp::` сверяет `std::thread::id` (§2.3). `pthread_self()` не используется: на LP64 он не влезает в `unsigned` и не совпадает с tid в logcat. Пока `DX8Wrapper::_MainThreadID` равен 0, `TextureLoader::Is_DX8_Thread()` возвращает true: headless не вызывает `WW3D::Init` (`W3DDisplay.cpp:1163`), и id не записывается. После `DX8Wrapper::Init` (`dx8wrapper.cpp:718`) функция сравнивает tid. Текущее описание потока логики — §2.3.
