@@ -41,8 +41,8 @@
 #include <cstdio>
 #include "always.h"
 #include "render2d.h"
-#if defined(__ANDROID__)
-// GeneralsX @bugfix Android port 09/05/2026 - d3d8gles_ShouldUseVulkanBackend()
+// BFME: E1-17b Half-pixel bias and the UI timer follow the GLES backend.
+#if defined(SAGE_USE_D3D8GLES)
 #include "d3d8gles.h"
 #endif
 #include "mutex.h"
@@ -232,7 +232,9 @@ void	  Render2DClass::Update_Bias()
 	// only ever been reported on GLES/ANGLE and never on Vulkan. Skip it on
 	// the native GLES backend only; the Vulkan path keeps the original
 	// behavior, and non-Android builds are untouched.
-#if defined(__ANDROID__)
+// BFME: E1-17b D3D half-pixel bias is wrong under GL. Runtime check keeps
+// it on the DXVK path (Android Vulkan and desktop default).
+#if defined(SAGE_USE_D3D8GLES)
 	const bool screenUVBiasApplies = d3d8gles_ShouldUseVulkanBackend();
 #else
 	const bool screenUVBiasApplies = true;
@@ -639,7 +641,8 @@ void	Render2DClass::Add_Outline( const RectClass & rect, float width, const Rect
 
 void Render2DClass::Render()
 {
-#if defined(__ANDROID__)
+// BFME: E1-17b
+#if defined(SAGE_USE_D3D8GLES)
 	struct GxUiTimer {
 		std::chrono::steady_clock::time_point t0;
 		int bucket;
@@ -792,11 +795,12 @@ void Render2DClass::Render()
 	DX8Wrapper::Set_DX8_Texture_Stage_State(0, D3DTSS_ADDRESSU, D3DTADDRESS_CLAMP);
 	DX8Wrapper::Set_DX8_Texture_Stage_State(0, D3DTSS_ADDRESSV, D3DTADDRESS_CLAMP);
 
-#if defined(__ANDROID__)
+// BFME: E1-17b
+#if defined(SAGE_USE_D3D8GLES)
 	const int gxPrevCat = d3d8gles_SetDrawCategory(D3D8GLES_DRAWCAT_2D);
 #endif
 	DX8Wrapper::Draw_Triangles(0,Indices.Count()/3,0,Vertices.Count());
-#if defined(__ANDROID__)
+#if defined(SAGE_USE_D3D8GLES)
 	d3d8gles_SetDrawCategory(gxPrevCat);
 #endif
 

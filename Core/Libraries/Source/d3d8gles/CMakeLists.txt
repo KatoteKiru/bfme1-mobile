@@ -8,10 +8,11 @@
 # translation. Statically linked into libmain.so (unlike DXVK, which is
 # dlopen'd at runtime) -- see DX8Wrapper::Init()'s backend switch.
 #
-# Android-only for now: this is an experimental branch, not wired into any
-# other platform's build.
+# BFME: E1-17b Built when SAGE_USE_D3D8GLES is ON. That defaults to ON on
+# Android and OFF on desktop, so a desktop DXVK build does not compile this
+# tree. A desktop Linux build can turn it on and load Mesa GLES.
 
-if(NOT ANDROID)
+if(NOT SAGE_USE_D3D8GLES)
     return()
 endif()
 
@@ -47,5 +48,24 @@ target_include_directories(d3d8gles PRIVATE
 # library -- so an explicit dispatch table is the only way to route these
 # calls through an app-bundled, differently-named implementation.
 target_link_libraries(d3d8gles PRIVATE d3d8lib sdl3lib)
+
+# BFME: E1-17b This target does not link core_config, so the engine-wide
+# INTERFACE definition never reaches this TU. The picker and the DXT flag
+# live here (gles_pipeline.cpp is included from d3d8gles.cpp).
+target_compile_definitions(d3d8gles PRIVATE SAGE_USE_D3D8GLES)
+if(SAGE_D3D8GLES_FORCE_DXT_CPU)
+    target_compile_definitions(d3d8gles PRIVATE SAGE_D3D8GLES_FORCE_DXT_CPU)
+endif()
+
+# BFME: E1-17b The NDK ships GLES3/gl3.h. A desktop ON build needs the
+# system header (package libgles-dev). Runtime packages are libegl1,
+# libegl-mesa0, and libgles2.
+if(NOT ANDROID)
+    find_path(SAGE_GLES3_INCLUDE_DIR GLES3/gl3.h)
+    if(NOT SAGE_GLES3_INCLUDE_DIR)
+        message(FATAL_ERROR "SAGE_USE_D3D8GLES on desktop needs GLES3/gl3.h (install libgles-dev)")
+    endif()
+    target_include_directories(d3d8gles PRIVATE ${SAGE_GLES3_INCLUDE_DIR})
+endif()
 
 target_compile_features(d3d8gles PRIVATE cxx_std_20)

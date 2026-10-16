@@ -61,8 +61,10 @@
 #include <dlfcn.h>
 #include <adrenotools/driver.h>
 #include <android/api-level.h>
-// GeneralsX @build Android port render-backend picker 07/09/2026 -
-// d3d8gles_ShouldUseVulkanBackend()/d3d8gles_ShouldUseANGLE(), see UseVulkanBackend()/UseANGLE() below.
+#endif
+// BFME: E1-17b The picker is part of the GLES backend. Android still
+// compiles this header (SAGE_USE_D3D8GLES is ON there).
+#if defined(SAGE_USE_D3D8GLES)
 #include "d3d8gles.h"
 #endif
 #include <cstdlib>
@@ -159,7 +161,10 @@ extern Int GameMain();
  */
 static bool UseVulkanBackend()
 {
-#if defined(__ANDROID__)
+// BFME: E1-17b Desktop default inside d3d8gles_ShouldUseVulkanBackend()
+// is still Vulkan, so an OFF build and an ON build with no env var both
+// create a Vulkan window. GENERALSX_RENDER_BACKEND=gles selects GLES.
+#if defined(SAGE_USE_D3D8GLES)
 	return d3d8gles_ShouldUseVulkanBackend();
 #else
 	return true;
@@ -168,7 +173,8 @@ static bool UseVulkanBackend()
 
 static bool UseANGLE()
 {
-#if defined(__ANDROID__)
+// BFME: E1-17b
+#if defined(SAGE_USE_D3D8GLES)
 	return d3d8gles_ShouldUseANGLE();
 #else
 	return false;
@@ -1122,6 +1128,12 @@ int main(int argc, char* argv[])
 			// DXVK on this exact device, instead of ANGLE's own internal
 			// compensation math.
 			setenv("ANGLE_FEATURE_OVERRIDES_DISABLED", "enablePreRotateSurfaces", 1);
+		}
+#elif defined(SAGE_USE_D3D8GLES)
+		// BFME: E1-17b Mesa's GLES 3 entry points are on EGL. SDL reads
+		// this when it picks the video driver, inside SDL_InitSubSystem.
+		if (!useVulkan) {
+			SDL_SetHint("SDL_VIDEO_FORCE_EGL", "1");
 		}
 #endif
 		if (!SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {

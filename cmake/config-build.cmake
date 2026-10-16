@@ -33,6 +33,25 @@ option(SAGE_HIGH_FPS_SIM "Simulate at 60 Hz to match the GeneralsOnline PC clien
 # macOS port option (Phase 5)
 option(SAGE_USE_MOLTENVK "Use MoltenVK for Vulkan on macOS (Phase 5 macOS port)" OFF)
 
+# BFME: E1-17b Native D3D8->GLES3 (d3d8gles). ON for Android, OFF on desktop
+# unless a preset or -D asks for it, so linux64-deploy stays on DXVK.
+# The runtime choice (DXVK vs this backend) is d3d8gles_ShouldUseVulkanBackend().
+if(ANDROID)
+    set(_SAGE_USE_D3D8GLES_DEFAULT ON)
+else()
+    set(_SAGE_USE_D3D8GLES_DEFAULT OFF)
+endif()
+option(SAGE_USE_D3D8GLES "Build the native D3D8 to GLES3 backend (d3d8gles)" ${_SAGE_USE_D3D8GLES_DEFAULT})
+# BFME: E1-17b Setup writes render_backend.cfg before the process starts.
+# Without this library that choice cannot be honored.
+if(ANDROID AND NOT SAGE_USE_D3D8GLES)
+    message(WARNING "SAGE_USE_D3D8GLES is OFF on Android. Setup's GLES choice (render_backend.cfg) will be ignored because d3d8gles is not linked.")
+endif()
+# BFME: E1-17b Mesa llvmpipe advertises S3TC and would skip the CPU decode
+# Mali always takes. OFF leaves the extension check. ON forces the CPU path
+# for the whole build; GENERALSX_D3D8GLES_FORCE_DXT_CPU=1 does it per run.
+option(SAGE_D3D8GLES_FORCE_DXT_CPU "Force d3d8gles to decompress DXT on the CPU" OFF)
+
 # SagePatch — optional QoL features for casual play (screenshot, cursor lock,
 # brightness, camera/scroll INI overrides). Compiles to a separate shared lib
 # that is loaded via DYLD_INSERT_LIBRARIES (macOS) / LD_PRELOAD (Linux) at runtime.
@@ -54,6 +73,8 @@ add_feature_info(Vc6FullDebug RTS_BUILD_OPTION_VC6_FULL_DEBUG "Building VC6 with
 add_feature_info(FFmpegSupport RTS_BUILD_OPTION_FFMPEG "Building with FFmpeg support")
 add_feature_info(SDL3Windowing SAGE_USE_SDL3 "Using SDL3 for windowing (Linux)")
 add_feature_info(OpenALAudio SAGE_USE_OPENAL "Using OpenAL for audio (Linux)")
+add_feature_info(D3D8GLES SAGE_USE_D3D8GLES "Native D3D8 to GLES3 backend")
+add_feature_info(D3D8GLESForceDxtCpu SAGE_D3D8GLES_FORCE_DXT_CPU "Force CPU DXT decompress in d3d8gles")
 add_feature_info(UpdateCheck SAGE_UPDATE_CHECK "In-game update check via GitHub Releases API")
 add_feature_info(SagePatch RTS_BUILD_OPTION_SAGE_PATCH "Build SagePatch QoL extras (macOS)")
 
@@ -140,6 +161,31 @@ endif()
 if(SAGE_USE_OPENAL)
     target_compile_definitions(core_config INTERFACE SAGE_USE_OPENAL)
     message(STATUS "OpenAL audio backend enabled")
+endif()
+
+# BFME: E1-17b The macro rides core_config (same path as SAGE_USE_SDL3),
+# which every engine TU that used to key a GLES fix off __ANDROID__ already
+# links. A directory-wide add_compile_definitions also reached gamespy
+# (FetchContent after this file). d3d8gles does not link core_config; its
+# own CMakeLists defines the macro, and SAGE_D3D8GLES_FORCE_DXT_CPU, on
+# that target alone.
+if(SAGE_USE_D3D8GLES AND (WIN32 OR APPLE))
+    message(FATAL_ERROR "SAGE_USE_D3D8GLES is supported on Android and desktop Linux only (WIN32 uses D3D8.DLL; Apple stays on the dylib path)")
+endif()
+if(SAGE_USE_D3D8GLES AND NOT SAGE_USE_SDL3)
+    message(FATAL_ERROR "SAGE_USE_D3D8GLES requires SAGE_USE_SDL3 (the GLES context is an SDL GL context)")
+endif()
+# BFME: E1-17b Generals/Code/Main/SDL3Main.cpp:305 always passes
+# SDL_WINDOW_VULKAN. Zero Hour switches the window with the backend.
+if(SAGE_USE_D3D8GLES AND RTS_BUILD_GENERALS)
+    message(WARNING "SAGE_USE_D3D8GLES is ON for Generals (RTS_BUILD_GENERALS). Generals/Code/Main/SDL3Main.cpp:305 always creates an SDL_WINDOW_VULKAN window, so GENERALSX_RENDER_BACKEND=gles would load the GLES backend against a Vulkan window. Zero Hour's SDL3Main switches the window with the backend.")
+endif()
+if(SAGE_USE_D3D8GLES)
+    target_compile_definitions(core_config INTERFACE SAGE_USE_D3D8GLES)
+    message(STATUS "D3D8 GLES backend enabled (SAGE_USE_D3D8GLES)")
+endif()
+if(SAGE_USE_D3D8GLES AND SAGE_D3D8GLES_FORCE_DXT_CPU)
+    message(STATUS "D3D8 GLES: DXT CPU decompress forced at compile time")
 endif()
 
 # GeneralsX @feature BenderAI 21/04/2026 Update check compile definition

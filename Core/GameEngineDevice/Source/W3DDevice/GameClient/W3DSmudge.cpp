@@ -41,7 +41,8 @@
 #include "WW3D2/camera.h"
 #include "WW3D2/sortingrenderer.h"
 #include <cstdio>
-#if defined(__ANDROID__)
+// BFME: E1-17b Smudge readback works on DXVK and not on d3d8gles.
+#if defined(SAGE_USE_D3D8GLES)
 // GeneralsX @perf Android port 09/05/2026 Forward-declared rather than pulling
 // in "d3d8gles.h": that header lives in the d3d8gles target's include dir,
 // which this target (gameenginedevice) does not carry, and widening the
@@ -80,10 +81,12 @@ SmudgeManager *TheSmudgeManager=nullptr;
 //
 // So: report the effect as unsupported on the native GLES backend, which is the
 // honest answer. Vulkan/DXVK keeps it (DXVK implements a real backbuffer
-// readback), and non-Android builds are untouched.
+// readback). Builds without SAGE_USE_D3D8GLES are untouched.
 static inline bool GeneralsX_SmudgeUsableOnThisBackend()
 {
-#if defined(__ANDROID__)
+// BFME: E1-17b Runtime check: GLES reports the effect unsupported, DXVK
+// keeps it. Desktop OFF never calls into d3d8gles.
+#if defined(SAGE_USE_D3D8GLES)
 	return d3d8gles_ShouldUseVulkanBackend();
 #else
 	return true;

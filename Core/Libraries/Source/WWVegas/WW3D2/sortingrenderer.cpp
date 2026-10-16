@@ -50,8 +50,9 @@
 #include <wwprofile.h>
 #include <algorithm>
 #include <list>
-#if defined(__ANDROID__)
-// GeneralsX @perf Android port 09/05/2026 - d3d8gles_SetDrawCategory()
+// BFME: E1-17b Perf counter for the GLES backend. No runtime skip: Android
+// already calls this on the Vulkan path too, and the counter is a static.
+#if defined(SAGE_USE_D3D8GLES)
 #include "d3d8gles.h"
 #endif
 
@@ -606,7 +607,8 @@ void SortingRendererClass::Flush_Sorting_Pool()
 
 void SortingRendererClass::Flush()
 {
-#if defined(__ANDROID__)
+// BFME: E1-17b
+#if defined(SAGE_USE_D3D8GLES)
 	const int gxPrevCat = d3d8gles_SetDrawCategory(D3D8GLES_DRAWCAT_SORTED);
 	struct GxCatRestore { int prev; ~GxCatRestore() { d3d8gles_SetDrawCategory(prev); } } gxCatRestore{gxPrevCat};
 #endif

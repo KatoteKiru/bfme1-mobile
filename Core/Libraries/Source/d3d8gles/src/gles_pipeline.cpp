@@ -32,9 +32,24 @@
 
 #include <SDL3/SDL.h>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
+
+// BFME: E1-17b Mesa advertises S3TC, so the extension string alone would
+// skip the CPU decode Mali always takes. Returns false unless the cmake
+// option or GENERALSX_D3D8GLES_FORCE_DXT_CPU is set, which is the Android
+// default.
+static bool BfmeForceDxtCpuDecompress()
+{
+#if defined(SAGE_D3D8GLES_FORCE_DXT_CPU)
+	return true;
+#else
+	const char *v = getenv("GENERALSX_D3D8GLES_FORCE_DXT_CPU");
+	return v != nullptr && v[0] != '\0' && strcmp(v, "0") != 0;
+#endif
+}
 
 #if defined(__ANDROID__)
 #include <android/native_window.h>
@@ -418,6 +433,7 @@ bool WebGLPipeline::initContext(int w, int h, SDL_Window *window)
 		// d3d8gles.h's comment on why three separate copies of this check
 		// caused a real bug.
 		const bool useANGLE = d3d8gles_ShouldUseANGLE();
+#if defined(__ANDROID__)
 		const char *libName = useANGLE ? "libGLESv2_angle.so" : "libGLESv3.so";
 		if (!d3d8gles_LoadGLESDispatch(libName)) {
 			if (useANGLE) {
@@ -429,6 +445,16 @@ bool WebGLPipeline::initContext(int w, int h, SDL_Window *window)
 				return false;
 			}
 		}
+#else
+		// BFME: E1-17b Mesa exports GLES 3 entry points from libGLESv2.so.2.
+		// ANGLE's libGLESv2_angle.so is an Android jniLibs binary.
+		(void)useANGLE;
+		const char *libName = "libGLESv2.so.2";
+		if (!d3d8gles_LoadGLESDispatch(libName)) {
+			fprintf(stderr, "[d3d8gles] FATAL: could not resolve any GLES implementation (tried %s)\n", libName);
+			return false;
+		}
+#endif
 		fprintf(stderr, "[d3d8gles] GLES backend: %s\n", libName);
 	}
 
@@ -436,6 +462,12 @@ bool WebGLPipeline::initContext(int w, int h, SDL_Window *window)
 	m_hasS3TC = extensions != nullptr &&
 		(strstr(extensions, "GL_EXT_texture_compression_s3tc") != nullptr ||
 		 strstr(extensions, "GL_EXT_texture_compression_dxt1") != nullptr);
+	// BFME: E1-17b Applied after the extension check so an unforced run
+	// (the Android default) keeps the same s3tc bit.
+	if (BfmeForceDxtCpuDecompress()) {
+		m_hasS3TC = false;
+		fprintf(stderr, "[d3d8gles] DXT CPU decompress forced; ignoring advertised S3TC\n");
+	}
 
 	m_fbWidth = w;
 	m_fbHeight = h;

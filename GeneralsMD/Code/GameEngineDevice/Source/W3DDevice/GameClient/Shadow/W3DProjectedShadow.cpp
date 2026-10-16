@@ -56,7 +56,8 @@
 #include "GameClient/Drawable.h"
 #include "W3DDevice/GameClient/Module/W3DModelDraw.h"
 #include "W3DDevice/GameClient/W3DShadow.h"
-#if defined(__ANDROID__)
+// BFME: E1-17b Draw-category hook for the GLES backend, not for Android.
+#if defined(SAGE_USE_D3D8GLES)
 // GeneralsX @perf Android port 09/05/2026 - draw-category hook. Forward-declared
 // rather than including d3d8gles.h: that header is not on the gameenginedevice
 // target's include path, and everything links into the same libmain.so.
@@ -1326,7 +1327,8 @@ void W3DProjectedShadowManager::prepareShadows()
 
 Int W3DProjectedShadowManager::renderShadows(RenderInfoClass & rinfo)
 {
-#if defined(__ANDROID__)
+// BFME: E1-17b
+#if defined(SAGE_USE_D3D8GLES)
 	const int gxPrevCat = d3d8gles_SetDrawCategory(D3D8GLES_DRAWCAT_SHADOWS);
 	struct GxCatRestore { int prev; ~GxCatRestore() { d3d8gles_SetDrawCategory(prev); } } gxCatRestore{gxPrevCat};
 #endif

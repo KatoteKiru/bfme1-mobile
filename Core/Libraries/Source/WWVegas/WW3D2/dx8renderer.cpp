@@ -60,8 +60,9 @@
 #include "camera.h"
 #include "stripoptimizer.h"
 #include "meshgeometry.h"
-#if defined(__ANDROID__)
-// GeneralsX @perf Android port 09/05/2026 - d3d8gles_SetDrawCategory()
+// BFME: E1-17b Perf counter. Called on whichever runtime backend is active,
+// matching the Android build (the counter does not change drawing).
+#if defined(SAGE_USE_D3D8GLES)
 #include "d3d8gles.h"
 #endif
 
@@ -1292,7 +1293,8 @@ void DX8SkinFVFCategoryContainer::Log(bool only_visible)
 
 void DX8SkinFVFCategoryContainer::Render()
 {
-#if defined(__ANDROID__)
+// BFME: E1-17b
+#if defined(SAGE_USE_D3D8GLES)
 	const int gxPrevCat = d3d8gles_SetDrawCategory(D3D8GLES_DRAWCAT_SKIN);
 	struct GxCatRestore { int prev; ~GxCatRestore() { d3d8gles_SetDrawCategory(prev); } } gxCatRestore{gxPrevCat};
 #endif
@@ -1688,7 +1690,8 @@ unsigned DX8TextureCategoryClass::Add_Mesh(
 
 void DX8TextureCategoryClass::Render()
 {
-#if defined(__ANDROID__)
+// BFME: E1-17b
+#if defined(SAGE_USE_D3D8GLES)
 	const int gxPrevCat = d3d8gles_SetDrawCategory(D3D8GLES_DRAWCAT_MODELS);
 	struct GxCatRestore { int prev; ~GxCatRestore() { d3d8gles_SetDrawCategory(prev); } } gxCatRestore{gxPrevCat};
 #endif

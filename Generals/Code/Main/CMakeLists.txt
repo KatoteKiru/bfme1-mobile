@@ -38,6 +38,13 @@ if(SAGE_USE_SDL3)
     target_link_libraries(g_generals PRIVATE sdl3lib)
 endif()
 
+# BFME: E1-17b Same static GLES backend as Zero Hour. The base game's
+# SDL entry does not open a GLES window; the symbols are still referenced
+# from shared WW3D2/device sources when the option is ON.
+if(SAGE_USE_D3D8GLES)
+    target_link_libraries(g_generals PRIVATE d3d8gles)
+endif()
+
 # TODO Originally referred to build host and user, replace with git info perhaps?
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/GeneratedVersion.h
 "#pragma once

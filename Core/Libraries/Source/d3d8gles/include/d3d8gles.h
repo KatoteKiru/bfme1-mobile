@@ -52,6 +52,16 @@ extern "C" void d3d8gles_resize(int w, int h);
 // (which already links sdl3lib) so both callers -- one of which, WW3D2, does
 // NOT itself link sdl3lib -- can share one implementation instead of each
 // re-reading render_backend.cfg/the env vars themselves.
+//
+// BFME: E1-17b The functions exist when SAGE_USE_D3D8GLES is compiled in
+// (ON for Android, OFF by default on desktop). Android still reads
+// <internal storage>/render_backend.cfg, then GENERALSX_RENDER_BACKEND.
+// Desktop has no cfg file. An unset env keeps DXVK. Tokens are compared
+// without case: vulkan or dxvk -> DXVK; gles -> this backend; gles_angle
+// -> this backend and one stderr line that ANGLE is unavailable (Mesa is
+// used); any other value logs once and stays on DXVK. CPU DXT decode is
+// forced by the cmake option SAGE_D3D8GLES_FORCE_DXT_CPU or by
+// GENERALSX_D3D8GLES_FORCE_DXT_CPU=1.
 extern "C" bool d3d8gles_ShouldUseVulkanBackend();
 
 // GeneralsX @perf Android port 09/05/2026 Draw-call breakdown by subsystem.

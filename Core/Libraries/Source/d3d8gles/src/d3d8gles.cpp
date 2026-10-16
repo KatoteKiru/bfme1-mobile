@@ -45,9 +45,15 @@
 #if defined(__ANDROID__)
 #include <SDL3/SDL.h>
 #endif
+#if defined(SAGE_USE_D3D8GLES) && !defined(__ANDROID__)
+#include "d3d8gles_desktop_backend.h"
+#endif
 
 #include "gles_pipeline.h"
 
+// BFME: E1-17b The picker is part of the GLES backend, not of Android.
+// The cfg-file reader below stays __ANDROID__ (app-internal storage).
+#if defined(SAGE_USE_D3D8GLES)
 #if defined(__ANDROID__)
 // GeneralsX @build Android port render-backend picker 07/09/2026 - see
 // d3d8gles.h's comment on d3d8gles_ShouldUseVulkanBackend()/
@@ -125,7 +131,37 @@ extern "C" bool d3d8gles_ShouldUseANGLE()
 	const char *v = getenv("GENERALSX_GLES_ANGLE");
 	return v != nullptr && strcmp(v, "0") != 0;
 }
-#endif // __ANDROID__
+#else
+// BFME: E1-17b Desktop has no render_backend.cfg in app-internal storage.
+// Unset GENERALSX_RENDER_BACKEND keeps DXVK, so compiling the backend in
+// does not change a desktop run. Tokens are ASCII case-insensitive:
+// vulkan/dxvk -> DXVK, gles -> GLES, gles_angle -> GLES (Mesa; ANGLE is
+// an Android jniLibs library). Any other value logs once and stays on DXVK.
+// The notice is printed once: this function is also called from draw paths.
+extern "C" bool d3d8gles_ShouldUseVulkanBackend()
+{
+	static bool s_ready = false;
+	static bool s_useVulkan = true;
+	if (!s_ready) {
+		s_ready = true;
+		const char *backend = getenv("GENERALSX_RENDER_BACKEND");
+		const BfmeDesktopBackendChoice choice = BfmeChooseDesktopBackend(backend);
+		char notice[512];
+		const char *line = BfmeDesktopBackendNoticeLine(choice, backend, notice, sizeof(notice));
+		if (line != nullptr) {
+			fprintf(stderr, "%s\n", line);
+		}
+		s_useVulkan = (choice.backend == BFME_DESKTOP_DXVK);
+	}
+	return s_useVulkan;
+}
+
+extern "C" bool d3d8gles_ShouldUseANGLE()
+{
+	return false;
+}
+#endif // !__ANDROID__
+#endif // SAGE_USE_D3D8GLES
 
 // ---------------------------------------------------------------------------
 // Helpers

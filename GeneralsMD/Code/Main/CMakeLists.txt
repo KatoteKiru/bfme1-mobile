@@ -60,12 +60,10 @@ if(ANDROID)
     target_link_libraries(z_generals PRIVATE adrenotools)
 endif()
 
-# GeneralsX @build Android port GLES experiment - statically linked
-# alternative D3D8 backend (native GLES3 via SDL3, see
-# Core/Libraries/Source/d3d8gles/), selected at runtime instead of DXVK's
-# dlopen'd D3D8->Vulkan translation -- see DX8Wrapper::Init()'s backend
-# switch in dx8wrapper.cpp.
-if(ANDROID)
+# BFME: E1-17b Link d3d8gles whenever it is built, not only on Android.
+# The runtime switch in DX8Wrapper::Init() still picks DXVK unless the
+# backend config says GLES. Android presets set SAGE_USE_D3D8GLES=ON.
+if(SAGE_USE_D3D8GLES)
     target_link_libraries(z_generals PRIVATE d3d8gles)
 endif()
 

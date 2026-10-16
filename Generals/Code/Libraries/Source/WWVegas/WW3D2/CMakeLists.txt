@@ -258,3 +258,10 @@ target_link_libraries(g_ww3d2 PRIVATE
     gi_always
     d3d8lib
 )
+
+# BFME: E1-17b Core WW3D2 sources (dx8wrapper.cpp and the draw-category
+# hooks) reference d3d8gles when SAGE_USE_D3D8GLES is ON. Desktop default
+# is OFF, so this link is absent from an unmodified Generals build.
+if(SAGE_USE_D3D8GLES)
+    target_link_libraries(g_ww3d2 PRIVATE d3d8gles)
+endif()

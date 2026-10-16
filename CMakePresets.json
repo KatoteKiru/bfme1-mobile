@@ -216,6 +216,8 @@
                 "SAGE_USE_SDL3": "ON",
                 "SAGE_USE_OPENAL": "ON",
                 "SAGE_USE_GLM": "ON",
+                "SAGE_USE_D3D8GLES": "OFF",
+                "SAGE_D3D8GLES_FORCE_DXT_CPU": "OFF",
                 "SAGE_UPDATE_CHECK": "ON",
                 "RTS_CRASHDUMP_ENABLE": "OFF",
                 "RTS_BUILD_OPTION_FFMPEG": "ON"
@@ -312,6 +314,8 @@
                 "SAGE_USE_OPENAL": "ON",
                 "SAGE_USE_GLM": "ON",
                 "SAGE_USE_MOLTENVK": "OFF",
+                "SAGE_USE_D3D8GLES": "ON",
+                "SAGE_D3D8GLES_FORCE_DXT_CPU": "OFF",
                 "SAGE_DXVK_USE_LOCAL_FORK": "ON",
                 "SAGE_UPDATE_CHECK": "OFF",
                 "RTS_CRASHDUMP_ENABLE": "OFF",

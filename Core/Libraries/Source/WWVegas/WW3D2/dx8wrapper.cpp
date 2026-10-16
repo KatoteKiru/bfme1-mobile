@@ -54,8 +54,9 @@
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
 #endif
-#if defined(__ANDROID__)
-// GeneralsX @build Android port GLES experiment - declares Direct3DCreate8_GLES
+// BFME: E1-17b Direct3DCreate8_GLES is compiled in with SAGE_USE_D3D8GLES,
+// including a desktop Linux build.
+#if defined(SAGE_USE_D3D8GLES)
 #include "d3d8gles.h"
 #endif
 // GeneralsX @build BenderAI 10/02/2026 - Need LoadLibrary/GetProcAddress/FreeLibrary for dynamic loading
@@ -395,7 +396,9 @@ void DX8Wrapper::Pillarbox_End()
 	// window space and texture storage are both top-origin there, matching
 	// D3D already -- which is exactly why the same unmodified quad code has
 	// never shown this on DXVK.
-#if defined(__ANDROID__)
+// BFME: E1-17b GL bottom-left texture storage. The runtime check keeps
+// the DXVK path on the D3D convention, on Android and on desktop.
+#if defined(SAGE_USE_D3D8GLES)
 	const bool flipForGLTextureStorage = !d3d8gles_ShouldUseVulkanBackend();
 #else
 	const bool flipForGLTextureStorage = false;
@@ -747,7 +750,9 @@ bool DX8Wrapper::Init(void * hwnd, bool lite)
 		// GeneralsX @build BenderAI 10/02/2026 - Platform-specific DLL/SO/DYLIB loading (Phase 5: macOS)
 #ifdef _WIN32
 		D3D8Lib = LoadLibrary("D3D8.DLL");
-#elif defined(__ANDROID__)
+#elif defined(SAGE_USE_D3D8GLES) && !defined(__APPLE__)
+		// BFME: E1-17b Same switch on desktop. Unset env keeps DXVK
+		// (d3d8gles_ShouldUseVulkanBackend defaults true off Android).
 		// GeneralsX @build Android port render-backend picker 07/09/2026 -
 		// runtime backend switch (see d3d8gles_ShouldUseVulkanBackend() in
 		// d3d8gles.h/d3d8gles.cpp for the single source of truth this and
@@ -765,7 +770,11 @@ bool DX8Wrapper::Init(void * hwnd, bool lite)
 				D3D8Lib = nullptr;
 				Direct3DCreate8Ptr = &Direct3DCreate8_GLES;
 			} else {
+#if defined(__ANDROID__)
 				fprintf(stderr, "DEBUG: DX8Wrapper::Init() - Loading libdxvk_d3d8.so (Android, Vulkan opt-in)...\n");
+#else
+				fprintf(stderr, "DEBUG: DX8Wrapper::Init() - Loading libdxvk_d3d8.so (SAGE_USE_D3D8GLES, Vulkan)...\n");
+#endif
 				D3D8Lib = LoadLibrary("libdxvk_d3d8.so");
 				fprintf(stderr, "DEBUG: DX8Wrapper::Init() - LoadLibrary result: %p\n", (void*)D3D8Lib);
 				if (D3D8Lib == nullptr) {
@@ -811,7 +820,9 @@ bool DX8Wrapper::Init(void * hwnd, bool lite)
 		// D3D8Lib null (nothing was dlopen'd), which the generic checks below
 		// would misread as a load failure. Every other platform still needs
 		// this shared dlopen-style resolution.
-#if !defined(__ANDROID__)
+// BFME: E1-17b The block above already resolved Direct3DCreate8Ptr
+// whenever the GLES backend is compiled in. Desktop OFF still dlopens DXVK.
+#if !defined(SAGE_USE_D3D8GLES) || defined(__APPLE__)
 		if (D3D8Lib == nullptr) {
 			fprintf(stderr, "ERROR: DX8Wrapper::Init() - Failed to load D3D8 library\n");
 			return false;	// Return false at this point if init failed

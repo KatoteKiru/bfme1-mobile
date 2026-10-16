@@ -42,8 +42,9 @@
 #include "dx8wrapper.h"
 #include "GXTrace.h"
 #include <vector> // BFME: E1-05 std::vector в RTL-коде нужен на всех платформах, не только на Android
-#if defined(__ANDROID__)
-// GeneralsX @perf Android port 09/05/2026 - draw-category / UI-timing hooks
+// BFME: E1-17b UI timing hooks for the GLES backend. Not gated on the
+// runtime backend: Android already records them while Vulkan is selected.
+#if defined(SAGE_USE_D3D8GLES)
 #include "d3d8gles.h"
 #include <chrono>
 #include <vector>
@@ -817,7 +818,8 @@ Render2DSentenceClass::Release_Pending_Surfaces ()
 void
 Render2DSentenceClass::Build_Textures ()
 {
-#if defined(__ANDROID__)
+// BFME: E1-17b
+#if defined(SAGE_USE_D3D8GLES)
 	struct GxUiTimer {
 		std::chrono::steady_clock::time_point t0;
 		int bucket;
@@ -1927,7 +1929,8 @@ Vector2	Render2DSentenceClass::Build_Sentence_Not_Centered (const WCHAR *text, i
 void
 Render2DSentenceClass::Build_Sentence (const WCHAR *text, int *hkX, int *hkY)
 {
-#if defined(__ANDROID__)
+// BFME: E1-17b
+#if defined(SAGE_USE_D3D8GLES)
 	struct GxUiTimer {
 		std::chrono::steady_clock::time_point t0;
 		int bucket;
