@@ -5,6 +5,7 @@
     "patch-2.22v5.5.4": {
       "game": "bfme1",
       "displayVersion": "Patch 2.22v7.0.5",
+      "profileKeyNote": "Historical key. The data version is Patch 2.22v7.0.5 (displayVersion), from lotr.str key Version:Format2 in _patch222.big. Do not rename: Android selects the profile by defaultProfile.",
       "files": [
         {
           "path": "_patch222.big",
