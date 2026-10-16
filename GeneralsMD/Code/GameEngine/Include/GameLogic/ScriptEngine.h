@@ -371,6 +371,7 @@ protected:
 	Int allocateCounter( const AsciiString& name);
 	Int allocateFlag( const AsciiString& name);
 	void executeScripts( Script *pScriptHead );
+	void executeGroupChain( ScriptGroup *pGroup ); // BFME: E1-52
 	void executeScript( Script *pScript );
 	Script *findScript(const AsciiString& name);
 	ScriptGroup *findGroup(const AsciiString& name);

@@ -45,6 +45,7 @@
 
 #include "GameLogic/PolygonTrigger.h"
 #include "GameLogic/SidesList.h"
+#include "GameLogic/BfmeMapChunks.h" // BFME: E1-52
 
 #include "W3DDevice/GameClient/WorldHeightMap.h"
 #include "W3DDevice/GameClient/TileData.h"
@@ -588,6 +589,10 @@ WorldHeightMap::WorldHeightMap(ChunkInputStream *pStrm, Bool logicalDataOnly):
 		PolygonTrigger::deleteTriggers(); // just in case.
 		TheSidesList->emptySides();
 		file.registerParser("SidesList", AsciiString::TheEmptyString,	SidesList::ParseSidesDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("SidesList") );
+		// BFME: E1-52 these sit beside SidesList on a BFME1 map. Zero Hour maps do not have them.
+		file.registerParser("Teams", AsciiString::TheEmptyString, BfmeParseTeamsDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("Teams"));
+		file.registerParser("PlayerScriptsList", AsciiString::TheEmptyString, BfmeParsePlayerScriptsListDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("PlayerScriptsList"));
+		file.registerParser("BuildLists", AsciiString::TheEmptyString, BfmeParseBuildListsDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("BuildLists"));
 	}	else {
 		file.registerParser( "HeightMapData", AsciiString::TheEmptyString, ParseHeightMapDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("HeightMapData") );
 		file.registerParser( "BlendTileData", AsciiString::TheEmptyString, ParseBlendTileDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("BlendTileData") );

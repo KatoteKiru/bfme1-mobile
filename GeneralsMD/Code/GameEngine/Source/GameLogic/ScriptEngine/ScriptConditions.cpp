@@ -2723,6 +2723,9 @@ Bool ScriptConditions::evaluatePlayerLostObjectType(Parameter *pPlayerParm, Para
 //-------------------------------------------------------------------------------------------------
 Bool ScriptConditions::evaluateCondition( Condition *pCondition )
 {
+	// BFME: E1-52 BFME-only conditions fail the AND. They are not evaluated.
+	if (pCondition->isBfmeUnsupported())
+		return false;
 	switch (pCondition->getConditionType()) {
 		default:
 			DEBUG_CRASH(("Unknown ScriptCondition type %d", pCondition->getConditionType()));

@@ -39,6 +39,45 @@
 #include <cstdio>
 #include <cstring>
 
+// BFME: E1-52
+namespace {
+char s_bfmeChunkErrorName[96];
+UnsignedInt s_bfmeChunkErrorOffset = 0;
+Bool s_bfmeChunkErrorSet = false;
+
+void bfmeNoteChunkError(const AsciiString &label, UnsignedInt offset)
+{
+	if (s_bfmeChunkErrorSet)
+		return;
+	s_bfmeChunkErrorSet = true;
+	const char *s = label.str();
+	if (s == nullptr)
+		s = "";
+	size_t i = 0;
+	for (; i + 1 < sizeof(s_bfmeChunkErrorName) && s[i] != '\0'; ++i)
+		s_bfmeChunkErrorName[i] = s[i];
+	s_bfmeChunkErrorName[i] = '\0';
+	s_bfmeChunkErrorOffset = offset;
+}
+}
+
+void BfmeResetChunkErrorSite()
+{
+	s_bfmeChunkErrorName[0] = '\0';
+	s_bfmeChunkErrorOffset = 0;
+	s_bfmeChunkErrorSet = false;
+}
+
+const char *BfmeLastChunkErrorName()
+{
+	return s_bfmeChunkErrorName;
+}
+
+UnsignedInt BfmeLastChunkErrorOffset()
+{
+	return s_bfmeChunkErrorOffset;
+}
+
 // If verbose, lots of debug logging.
 #define not_VERBOSE
 
@@ -760,6 +799,9 @@ Bool DataChunkInput::parse( void *userData )
 						const Int dataSize = (Int)getChunkDataSize();
 						logChunkLine("[chunk] %s v%u is newer than known v%u (size %d)",
 							label.str(), (unsigned)ver, (unsigned)parser->maxVersion, dataSize);
+						// BFME: E1-52 this throw is the innermost site. Note it before the
+						// parent parse() catch records the outer chunk instead.
+						bfmeNoteChunkError(label, m_file->tell());
 						throw ERROR_CORRUPT_FILE_FORMAT;
 					}
 
@@ -769,11 +811,17 @@ Bool DataChunkInput::parse( void *userData )
 					info.version = ver;
 					info.dataSize = getChunkDataSize();
 
-					if (parser->parser( *this, &info, userData ) == false)
-					{
-						if (knownSkipped > 0)
-							logChunkLine("[chunk] skipped %d known", knownSkipped);
-						return false;
+					// BFME: E1-52 remember the chunk and file offset, then keep the old control flow.
+					try {
+						if (parser->parser( *this, &info, userData ) == false) {
+							bfmeNoteChunkError(label, m_file->tell());
+							if (knownSkipped > 0)
+								logChunkLine("[chunk] skipped %d known", knownSkipped);
+							return false;
+						}
+					} catch (...) {
+						bfmeNoteChunkError(label, m_file->tell());
+						throw;
 					}
 					handled = true;
 					break;

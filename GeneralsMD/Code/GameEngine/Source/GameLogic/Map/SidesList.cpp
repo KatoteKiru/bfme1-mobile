@@ -63,6 +63,9 @@ static const Int K_SIDES_DATA_VERSION_1 = 1;
 static const Int K_SIDES_DATA_VERSION_2 = 2;	// includes Team list.
 static const Int K_SIDES_DATA_VERSION_3 = 3;	// includes Team list.
 // BFME: K_SIDES_DATA_VERSION_6 is the shared ceiling constant in MapReaderWriterInfo.h.
+// v5 has no nested teams when the chunk ends on the last side. v1–v4, and a
+// v5 chunk that still holds a team count, keep the Zero Hour tail.
+static const Int K_SIDES_DATA_VERSION_5 = 5;
 
 /* ********* SidesInfo class ****************************/
 /**
@@ -359,6 +362,78 @@ static void bfmeRequireCount(Int count, Int minBytes, Int dataLeft)
 static Int s_bfmeChunkSides = 0;
 static Int s_bfmeChunkBuilds = 0;
 
+// BFME: filled as ParseSidesDataChunk walks. Printed only when that walk throws,
+// so a gamedata rerun can show the version and the build count at the fault
+// without a retail file on the machine that built the test.
+static const Int K_BFME_TRACE_SIDES = 64;
+struct BfmeSideMark
+{
+	UnsignedInt offset;
+	Int builds;
+};
+static Int s_traceVersion = -1;
+static Int s_traceSideCount = -1;
+static Int s_traceSideIndex = -1;
+static Int s_traceMarks = 0;
+static BfmeSideMark s_traceMark[K_BFME_TRACE_SIDES];
+static char s_tracePhase[32] = "";
+
+static void bfmeTraceReset(Int version)
+{
+	s_traceVersion = version;
+	s_traceSideCount = -1;
+	s_traceSideIndex = -1;
+	s_traceMarks = 0;
+	s_tracePhase[0] = '\0';
+}
+
+static void bfmeTracePhase(const char *phase)
+{
+	size_t i = 0;
+	if (phase != nullptr) {
+		for (; i + 1 < sizeof(s_tracePhase) && phase[i] != '\0'; ++i)
+			s_tracePhase[i] = phase[i];
+	}
+	s_tracePhase[i] = '\0';
+}
+
+static void bfmeTraceSide(DataChunkInput &file, Int index)
+{
+	s_traceSideIndex = index;
+	if (s_traceMarks >= K_BFME_TRACE_SIDES)
+		return;
+	s_traceMark[s_traceMarks].offset = file.tell();
+	s_traceMark[s_traceMarks].builds = -1;
+	++s_traceMarks;
+}
+
+static void bfmeTraceBuilds(Int builds)
+{
+	if (s_traceSideIndex < 0 || s_traceSideIndex >= s_traceMarks)
+		return;
+	s_traceMark[s_traceSideIndex].builds = builds;
+}
+
+static void bfmeTracePrint(DataChunkInput &file)
+{
+	fprintf(stderr, "[bfme] E1-52 SidesList trace: version %d sides %d phase %s sideIndex %d\n",
+		s_traceVersion, s_traceSideCount, s_tracePhase, s_traceSideIndex);
+	for (Int i = 0; i < s_traceMarks; ++i) {
+		fprintf(stderr, "[bfme] E1-52 SidesList side %d offset %u builds %d\n",
+			i, s_traceMark[i].offset, s_traceMark[i].builds);
+	}
+	if (s_traceSideCount > s_traceMarks)
+		fprintf(stderr, "[bfme] E1-52 SidesList side trace truncated at %d\n", s_traceMarks);
+	unsigned char raw[32];
+	const Int got = file.peekFileBytes(raw, 32);
+	fprintf(stderr, "[bfme] E1-52 SidesList hex");
+	for (Int i = 0; i < got; ++i)
+		fprintf(stderr, " %02x", raw[i]);
+	if (got <= 0)
+		fprintf(stderr, " (none)");
+	fprintf(stderr, "\n");
+}
+
 Int SidesList::lastChunkSideCount()
 {
 	return s_bfmeChunkSides;
@@ -384,7 +459,7 @@ Bool SidesList::ParseSidesDataChunk(DataChunkInput &file, DataChunkInfo *info, v
 		return false;
 
 	// BFME: v7+ is not a known layout. Reject before clear() so a bad chunk
-	// does not wipe a list that was already loaded. v1–v5 stay Zero Hour.
+	// does not wipe a list that was already loaded.
 	if (info->version > K_SIDES_DATA_VERSION_6)
 	{
 		DEBUG_LOG(("SidesList: unsupported version v%d (supported v1-v6)", info->version));
@@ -395,12 +470,19 @@ Bool SidesList::ParseSidesDataChunk(DataChunkInput &file, DataChunkInfo *info, v
 	TheSidesList->clear();
 	s_bfmeChunkSides = 0;
 	s_bfmeChunkBuilds = 0;
+	bfmeTraceReset(info->version);
+	// BFME: the throw sites below (count past the remainder, short string) log
+	// nothing. The trace is the version and the per-side build counts.
+	try {
 	// BFME: v6 stores one byte in front of the side count. On Fords of Isen the
 	// first bytes are 01 0a 00 00 00 (byte 1, count 10). readInt() of 01 0a 00 00
 	// is 2561, and the following dict starts one byte late.
+	bfmeTracePhase("leading-byte");
 	if (info->version >= K_SIDES_DATA_VERSION_6)
 		file.readByte();
+	bfmeTracePhase("side-count");
 	Int count = file.readInt();
+	s_traceSideCount = count;
 	bfmeRequireCount(count, K_BFME_MIN_SIDE_BYTES, bfmeBytesLeft(file));
 	s_bfmeChunkSides = count;
 	Int i, j;
@@ -411,6 +493,8 @@ Bool SidesList::ParseSidesDataChunk(DataChunkInput &file, DataChunkInfo *info, v
 	{
 		// BFME: keep reading past MAX_PLAYER_COUNT. Stopping here left the rest
 		// of the chunk (198 bytes on map sps evil belfalas) unparsed.
+		bfmeTracePhase("side-dict");
+		bfmeTraceSide(file, i);
 		Dict d = file.readDict();
 		const Bool keep = i < MAX_PLAYER_COUNT;
 		if (keep)
@@ -419,11 +503,14 @@ Bool SidesList::ParseSidesDataChunk(DataChunkInput &file, DataChunkInfo *info, v
 				bfmeAdoptPlayerName(d);
 			TheSidesList->addSide(&d);
 		}
+		bfmeTracePhase("build-count");
 		const Int builds = file.readInt();
+		bfmeTraceBuilds(builds);
 		bfmeRequireCount(builds, minBuild, bfmeBytesLeft(file));
 		s_bfmeChunkBuilds += builds;
 		// addToBuildList(entry, j) walks j nodes. A long list, or a count that
 		// used to be a shifted int, made that walk quadratic and the test hung.
+		bfmeTracePhase("build-entry");
 		BuildListInfo* tail = nullptr;
 		for (j=0; j<builds; j++)
 		{
@@ -451,15 +538,24 @@ Bool SidesList::ParseSidesDataChunk(DataChunkInput &file, DataChunkInfo *info, v
 	// is not run. Fords side 0 already has an empty playerName (the neutral
 	// marker) and "Neutral" in playerDisplayName. validateSides would not add
 	// a side for that, but it would invent default teams before the Teams
-	// chunk is read. v1-v5 keep the old tail.
-	if (info->version < K_SIDES_DATA_VERSION_6)
+	// chunk is read. v1–v4 keep the Zero Hour tail. v5 keeps it only when a
+	// team count still fits: camps/others/ai_debug are v5 and end on the last
+	// side (dataLeft 0). The bytes at the error offset are the next chunk
+	// header (u32 id, u16 version, u32 size), not a team list. readInt of a
+	// team count throws before consuming them. sides_v5_zh_layout still has
+	// the count inside the chunk, so that tail is unchanged.
+	const Bool roomForTeamCount = bfmeBytesLeft(file) >= (Int)sizeof(Int);
+	const Bool readZhTail = info->version < K_SIDES_DATA_VERSION_5 || roomForTeamCount;
+	if (info->version < K_SIDES_DATA_VERSION_6 && readZhTail)
 	{
 		if (info->version >= K_SIDES_DATA_VERSION_2)
 		{
+			bfmeTracePhase("team-count");
 			count = file.readInt();
 			// BFME: same bound as the side count. An empty team dict is 2 bytes.
 			bfmeRequireCount(count, 2, bfmeBytesLeft(file));
 			TheSidesList->emptyTeams();
+			bfmeTracePhase("team-dict");
 			for (i=0; i<count; i++)
 			{
 				Dict d =  file.readDict();
@@ -467,6 +563,7 @@ Bool SidesList::ParseSidesDataChunk(DataChunkInput &file, DataChunkInfo *info, v
 			}
 		}
 
+		bfmeTracePhase("scripts");
 		// BFME: scan maximum. Versions above it error; v5 still reaches the current script reader.
 		file.registerParser( "PlayerScriptsList", info->label, ScriptList::ParseScriptsDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("PlayerScriptsList") );
 		if (!file.parse(nullptr)) {
@@ -490,6 +587,10 @@ Bool SidesList::ParseSidesDataChunk(DataChunkInput &file, DataChunkInfo *info, v
 
 	DEBUG_ASSERTCRASH(file.atEndOfChunk(), ("Incorrect data file length."));
 	return true;
+	} catch (...) {
+		bfmeTracePrint(file);
+		throw;
+	}
 }
 
 

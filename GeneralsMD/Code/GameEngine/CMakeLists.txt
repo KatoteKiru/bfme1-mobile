@@ -847,6 +847,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/AI/TurretAI.cpp
     Source/GameLogic/Map/PolygonTrigger.cpp
     Source/GameLogic/Map/SidesList.cpp
+    Source/GameLogic/Map/BfmeMapChunks.cpp # BFME: E1-52
     Source/GameLogic/Map/TerrainLogic.cpp
     Source/GameLogic/Object/Armor.cpp
     Source/GameLogic/Object/Behavior/AutoHealBehavior.cpp

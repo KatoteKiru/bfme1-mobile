@@ -6536,6 +6536,9 @@ void ScriptActions::doNamedSetTrainHeld( const AsciiString &locoName, const Bool
 //-------------------------------------------------------------------------------------------------
 void ScriptActions::executeAction( ScriptAction *pAction )
 {
+	// BFME: E1-52 BFME-only actions are parsed and counted, then not run.
+	if (pAction->isBfmeUnsupported())
+		return;
 	switch (pAction->getActionType()) {
 		default:
 			DEBUG_CRASH(("Unknown ScriptAction type %d", pAction->getActionType())); return;

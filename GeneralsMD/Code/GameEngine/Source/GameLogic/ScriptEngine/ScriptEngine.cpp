@@ -5590,16 +5590,8 @@ void ScriptEngine::update()
 		ScriptList *pSL = TheSidesList->getSideInfo(i)->getScriptList();
 		if (!pSL) continue;
 		executeScripts(pSL->getScript());
-		ScriptGroup *pGroup;
-		for (pGroup = pSL->getScriptGroup(); pGroup; pGroup=pGroup->getNext()) {
-			if (!pGroup->isActive()) {
-				continue; // Don't execute inactive groups.
-			}
-			if (pGroup->isSubroutine()) {
-				continue; // Don't execute subroutine groups.
-			}
-			executeScripts(pGroup->getScript());
-		}
+		// BFME: E1-52 the previous loop is executeGroupChain. Zero Hour groups have no children.
+		executeGroupChain(pSL->getScriptGroup());
 		m_currentPlayer = nullptr;
 	}
 
@@ -6063,6 +6055,7 @@ void ScriptEngine::runScript(const AsciiString& scriptName, Team *pThisTeam)
 		if (pGroup->isSubroutine()) {
 			if (pGroup->isActive()) {
 				executeScripts(pGroup->getScript());
+				executeGroupChain(pGroup->getFirstChildGroup()); // BFME: E1-52
 			}
 		}	else {
 				AppendDebugMessage("***Attempting to call script that is not a subroutine:***", false);
@@ -6110,6 +6103,7 @@ void ScriptEngine::runObjectScript(const AsciiString& scriptName, Object *pThisO
 		if (pGroup->isSubroutine()) {
 			if (pGroup->isActive()) {
 				executeScripts(pGroup->getScript());
+				executeGroupChain(pGroup->getFirstChildGroup()); // BFME: E1-52
 			}
 		}	else {
 				AppendDebugMessage("***Attempting to call script that is not a subroutine:***", false);
@@ -6321,25 +6315,60 @@ Int ScriptEngine::allocateFlag( const AsciiString& name)
 //-------------------------------------------------------------------------------------------------
 /** Locates a group by name. */
 //-------------------------------------------------------------------------------------------------
+// BFME: E1-52 Zero Hour groups have a null child list, so the extra walk does not change them.
+static ScriptGroup *bfmeFindGroupInChain(ScriptGroup *pGroup, const AsciiString& name)
+{
+	for (; pGroup; pGroup = pGroup->getNext()) {
+		if (pGroup->getName() == name)
+			return pGroup;
+		if (ScriptGroup *child = bfmeFindGroupInChain(pGroup->getFirstChildGroup(), name))
+			return child;
+	}
+	return nullptr;
+}
+
 ScriptGroup  *ScriptEngine::findGroup(const AsciiString& name)
 {
 	Int i;
 	for (i=0; i<TheSidesList->getNumSides(); i++) {
 		ScriptList *pSL = TheSidesList->getSideInfo(i)->getScriptList();
 		if (pSL==nullptr) continue;
-		ScriptGroup *pGroup;
-		for (pGroup = pSL->getScriptGroup(); pGroup; pGroup=pGroup->getNext()) {
-			if (pGroup->getName() == name) {
-				return pGroup;
-			}
-		}
+		if (ScriptGroup *pGroup = bfmeFindGroupInChain(pSL->getScriptGroup(), name))
+			return pGroup;
 	}
 	return nullptr; // Shouldn't ever happen.
+}
+
+// BFME: E1-52
+void ScriptEngine::executeGroupChain(ScriptGroup *pGroup)
+{
+	for (; pGroup; pGroup = pGroup->getNext()) {
+		if (!pGroup->isActive())
+			continue;
+		if (pGroup->isSubroutine())
+			continue;
+		executeScripts(pGroup->getScript());
+		executeGroupChain(pGroup->getFirstChildGroup());
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
 /** Locates a script by name. */
 //-------------------------------------------------------------------------------------------------
+// BFME: E1-52 scripts inside nested groups. A null child list (Zero Hour) returns null immediately.
+static Script *bfmeFindScriptInGroups(ScriptGroup *pGroup, const AsciiString& name)
+{
+	for (; pGroup; pGroup = pGroup->getNext()) {
+		for (Script *pScr = pGroup->getScript(); pScr; pScr = pScr->getNext()) {
+			if (name == pScr->getName())
+				return pScr;
+		}
+		if (Script *nested = bfmeFindScriptInGroups(pGroup->getFirstChildGroup(), name))
+			return nested;
+	}
+	return nullptr;
+}
+
 Script  *ScriptEngine::findScript(const AsciiString& name)
 {
 	Int i;
@@ -6352,14 +6381,8 @@ Script  *ScriptEngine::findScript(const AsciiString& name)
 				return pScr;
 			}
 		}
-		ScriptGroup *pGroup;
-		for (pGroup = pSL->getScriptGroup(); pGroup; pGroup=pGroup->getNext()) {
-			for (pScr = pGroup->getScript(); pScr; pScr=pScr->getNext()) {
-				if ((name==pScr->getName())) {
-					return pScr;
-				}
-			}
-		}
+		if (Script *nested = bfmeFindScriptInGroups(pSL->getScriptGroup(), name))
+			return nested;
 	}
 	return nullptr; // Shouldn't ever happen.
 }
@@ -6896,6 +6919,7 @@ void ScriptEngine::callSubroutine( ScriptAction *pAction )
 		if (pGroup->isSubroutine()) {
 			if (pGroup->isActive()) {
 				executeScripts(pGroup->getScript());
+				executeGroupChain(pGroup->getFirstChildGroup()); // BFME: E1-52
 			}
 		}	else {
 				AppendDebugMessage("***Attempting to call script that is not a subroutine:***", false);

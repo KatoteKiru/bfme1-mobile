@@ -14,6 +14,7 @@
 #include "Common/ThingFactory.h"
 #include "GameLogic/PolygonTrigger.h"
 #include "GameLogic/SidesList.h"
+#include "GameLogic/BfmeMapChunks.h"
 
 #include <cstdlib>
 
@@ -25,6 +26,11 @@ void SidesList::emptySides() {}
 
 Bool PolygonTrigger::ParsePolygonTriggersDataChunk(DataChunkInput&, DataChunkInfo*, void*) { std::abort(); }
 Bool SidesList::ParseSidesDataChunk(DataChunkInput&, DataChunkInfo*, void*) { std::abort(); }
+
+// BFME: E1-52 registered by the loading constructor. Synthetic blend maps have none of these chunks.
+Bool BfmeParseTeamsDataChunk(DataChunkInput&, DataChunkInfo*, void*) { std::abort(); }
+Bool BfmeParsePlayerScriptsListDataChunk(DataChunkInput&, DataChunkInfo*, void*) { std::abort(); }
+Bool BfmeParseBuildListsDataChunk(DataChunkInput&, DataChunkInfo*, void*) { std::abort(); }
 
 // reached only from the WorldInfo / ObjectsList parsers and DataChunkInput::readDict
 NameKeyGenerator* TheNameKeyGenerator = nullptr;

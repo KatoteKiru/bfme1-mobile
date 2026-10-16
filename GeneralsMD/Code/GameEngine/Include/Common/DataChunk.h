@@ -222,6 +222,18 @@ public:
 	void closeDataChunk();										// close chunk and move to start of next chunk
 
 	Bool atEndOfFile() { return (m_file->eof()) ? true : false; }					// return true if at end of file
+	// BFME: file position. A SidesList failure records each side's offset in the same
+	// units as BfmeLastChunkErrorOffset.
+	UnsignedInt tell() { return m_file->tell(); }
+	// BFME: copy up to len bytes at the current position, then seek back. dataLeft
+	// stays put, so the error offset recorded after a rethrow is unchanged.
+	Int peekFileBytes(void *ptr, Int len)
+	{
+		const UnsignedInt pos = m_file->tell();
+		const Int got = m_file->read(ptr, len);
+		m_file->absoluteSeek(pos);
+		return got;
+	}
 	Bool atEndOfChunk();											// return true if all data has been read from this chunk
 
 	void reset();															// reset to just-opened state
@@ -243,3 +255,9 @@ public:
 
 	NameKeyType readNameKey();
 };
+
+// BFME: E1-52 innermost chunk whose parser threw or returned false, and the file
+// position at that moment. The first site wins; a later parent parse does not replace it.
+void BfmeResetChunkErrorSite();
+const char *BfmeLastChunkErrorName();
+UnsignedInt BfmeLastChunkErrorOffset();

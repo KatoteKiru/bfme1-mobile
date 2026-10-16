@@ -117,6 +117,7 @@ protected:
 	Bool				m_isGroupActive;
 	Bool				m_isGroupSubroutine;
 	ScriptGroup	*m_nextGroup;
+	ScriptGroup	*m_firstChildGroup; ///< BFME: E1-52 nested groups (ScriptGroup v3). Null on Zero Hour.
 	Bool				m_hasWarnings; ///< Runtime flag used by the editor only.
 
 public:
@@ -141,12 +142,16 @@ public:
 	Bool hasWarnings() const { return m_hasWarnings;}
 	ScriptGroup *getNext() const {return m_nextGroup;};
 	Script *getScript() {return m_firstScript;};
+	ScriptGroup *getFirstChildGroup() const { return m_firstChildGroup; } // BFME: E1-52
+	static Int getBfmeMaxNesting(); // BFME: E1-52 deepest chain this process has entered; root is 1
+	static void resetBfmeMaxNesting(); // BFME: E1-52
 
 	void addScript(Script *pScr, Int ndx);
 	void deleteScript(Script *pScr);
 
 	static void WriteGroupDataChunk(DataChunkOutput &chunkWriter, ScriptGroup *pGroup);
 	static Bool ParseGroupDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData);
+	static Bool ParseNestedGroupDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData); // BFME: E1-52
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -562,6 +567,7 @@ protected:
 	Parameter *				m_parms[MAX_PARMS];
 	ScriptAction *		m_nextAction;
 	Bool							m_hasWarnings; ///< Runtime flag used by the editor only.
+	Bool							m_bfmeUnsupported; ///< BFME: E1-52 parsed, not executed.
 
 public:
 	void setActionType(ScriptActionType type);
@@ -580,6 +586,9 @@ public:
 		return nullptr;
 	}
 	Bool hasWarnings() const { return m_hasWarnings;}
+	Bool isBfmeUnsupported() const { return m_bfmeUnsupported; } // BFME: E1-52
+	static Int getBfmeSkippedCount(); // BFME: E1-52
+	static void resetBfmeSkippedCount(); // BFME: E1-52
 	Int getNumParameters() {return m_numParms;}
 	Int getUiStrings(AsciiString strings[MAX_PARMS]);
 
@@ -991,6 +1000,7 @@ private:
 	Condition *m_nextAndCondition;
 
 	Int				m_hasWarnings; ///< Runtime flag used by the editor only.
+	Bool			m_bfmeUnsupported; ///< BFME: E1-52 parsed, not executed.
 	Int				m_customData;  ///< Custom data for cacheing.
 	UnsignedInt m_customFrame; ///< Custom frame count for cacheing.
 
@@ -1014,6 +1024,9 @@ public:
 	Int getNumParameters() {return m_numParms;}
 	Int getUiStrings(AsciiString strings[MAX_PARMS]);
 	Bool hasWarnings() const { return m_hasWarnings;}
+	Bool isBfmeUnsupported() const { return m_bfmeUnsupported; } // BFME: E1-52
+	static Int getBfmeSkippedCount(); // BFME: E1-52
+	static void resetBfmeSkippedCount(); // BFME: E1-52
 	Int getCustomData() const {return m_customData;}
 	void setCustomData(Int val) { m_customData = val;}
 

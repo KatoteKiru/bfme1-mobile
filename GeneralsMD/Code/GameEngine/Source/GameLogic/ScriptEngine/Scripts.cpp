@@ -52,6 +52,7 @@
 #include "Common/BorderColors.h"
 #include "Common/DataChunk.h"
 #include "Common/GameState.h"
+#include "Common/GlobalData.h" // BFME: E1-52 map name on the script-list over-cap line
 #include "Common/KindOf.h"
 #include "Common/Radar.h"
 #include "Common/ThingTemplate.h"
@@ -146,6 +147,124 @@ enum { K_SCRIPT_LIST_DATA_VERSION_1 = 1,
 			K_SCRIPTS_DATA_VERSION_1,
 			end_of_the_enumeration
 };
+
+// BFME: E1-52 ScriptGroup v3 adds nested groups. v1 has no subroutine byte; v2 and v3 do.
+enum { K_SCRIPT_GROUP_DATA_VERSION_3 = 3 };
+
+// BFME: E1-52 counts of BFME-only actions and conditions. They are stored and not executed.
+static Int s_bfmeSkippedActions = 0;
+static Int s_bfmeSkippedConditions = 0;
+
+static void bfmeNoteUnknownKindOf(const AsciiString &name)
+{
+	// BFME: E1-52 one line per name. The parameter's int was already read and is kept.
+	enum { MAX_SEEN = 64 };
+	static AsciiString seen[MAX_SEEN];
+	static Int seenCount = 0;
+	static Bool capped = false;
+	for (Int i = 0; i < seenCount; ++i) {
+		if (seen[i] == name)
+			return;
+	}
+	if (seenCount >= MAX_SEEN) {
+		if (!capped) {
+			capped = true;
+			fprintf(stderr, "[bfme] E1-52 further unknown KindOf names are not logged\n");
+		}
+		return;
+	}
+	seen[seenCount++] = name;
+	fprintf(stderr, "[bfme] E1-52 KindOf '%s' is not in the Zero Hour table; kept the stored int\n", name.str());
+}
+
+static void bfmeRejectNewerChunk(const char *chunk, unsigned version, unsigned maxKnown)
+{
+	if (version > maxKnown) {
+		fprintf(stderr, "[bfme] E1-52 %s version %u is newer than %u\n", chunk, version, maxKnown);
+		throw ERROR_CORRUPT_FILE_FORMAT;
+	}
+}
+
+static void bfmeNoteSkippedNode(const char *kind, NameKeyType key, Int &counter)
+{
+	// BFME: E1-52 one line per kind+key. keyToName walks every bucket, so resolve the
+	// name only when this pair is new. A full map scan hits this once per BFME node.
+	++counter;
+	enum { MAX_SEEN = 256 };
+	static NameKeyType seenKey[MAX_SEEN];
+	static char seenKind[MAX_SEEN];
+	static Int seen = 0;
+	const char tag = (kind != nullptr && kind[0] != '\0') ? kind[0] : '?';
+	for (Int i = 0; i < seen; ++i) {
+		if (seenKey[i] == key && seenKind[i] == tag)
+			return;
+	}
+	if (seen >= MAX_SEEN)
+		return;
+	seenKey[seen] = key;
+	seenKind[seen] = tag;
+	++seen;
+	const char *name = "";
+	AsciiString resolved;
+	if (TheNameKeyGenerator != nullptr) {
+		resolved = TheNameKeyGenerator->keyToName(key);
+		name = resolved.str();
+	}
+	fprintf(stderr, "[bfme] E1-52 skip %s '%s' (not executed)\n", kind, name);
+}
+
+static void bfmeReadParameters(DataChunkInput &file, Int &numParms, Parameter *parms[MAX_PARMS],
+	Bool &unsupported, const char *kind)
+{
+	const Int n = file.readInt();
+	if (n < 0 || (UnsignedInt)n > file.getChunkDataSizeLeft() / sizeof(Int)) {
+		fprintf(stderr, "[bfme] E1-52 %s parameter count %d does not fit in %u bytes\n",
+			kind, n, file.getChunkDataSizeLeft());
+		throw ERROR_CORRUPT_FILE_FORMAT;
+	}
+	if (n > MAX_PARMS) {
+		fprintf(stderr, "[bfme] E1-52 %s has %d parameters (max %d); not executed\n", kind, n, MAX_PARMS);
+		for (Int i = 0; i < n; ++i)
+			deleteInstance(Parameter::ReadParameter(file));
+		numParms = 0;
+		unsupported = true;
+		return;
+	}
+	numParms = n;
+	for (Int i = 0; i < n; ++i)
+		parms[i] = Parameter::ReadParameter(file);
+}
+
+static Int s_scriptGroupDepth = 0;
+static Int s_scriptGroupDepthMax = 0;
+static Int s_bfmeDroppedScriptLists = 0;
+
+// BFME: E1-52 not a format limit. map evil helms deep nests past 5. Parsing stops
+// when the chunk has no header left. This only stops a corrupt chunk from blowing the stack.
+enum { BFME_SCRIPT_GROUP_STACK_LIMIT = 64 };
+
+struct BfmeScriptGroupDepthGuard
+{
+	BfmeScriptGroupDepthGuard()
+	{
+		++s_scriptGroupDepth;
+		if (s_scriptGroupDepth > s_scriptGroupDepthMax)
+			s_scriptGroupDepthMax = s_scriptGroupDepth;
+	}
+	~BfmeScriptGroupDepthGuard() { --s_scriptGroupDepth; }
+};
+
+static void bfmeCheckScriptGroupStack()
+{
+	if (s_scriptGroupDepth >= BFME_SCRIPT_GROUP_STACK_LIMIT) {
+		fprintf(stderr, "[bfme] E1-52 ScriptGroup nesting %d exceeds the stack limit %d\n",
+			s_scriptGroupDepth + 1, int(BFME_SCRIPT_GROUP_STACK_LIMIT));
+		throw ERROR_CORRUPT_FILE_FORMAT;
+	}
+}
+
+Int ScriptGroup::getBfmeMaxNesting() { return s_scriptGroupDepthMax; }
+void ScriptGroup::resetBfmeMaxNesting() { s_scriptGroupDepthMax = 0; }
 
 static Condition::ConditionType ParameterChangesVer2[] =
 {
@@ -524,9 +643,12 @@ void ScriptList::deleteGroup(ScriptGroup *pGrp)
 */
 Bool ScriptList::ParseScriptsDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
+	// BFME: E1-52 K_SCRIPTS_DATA_VERSION_1 is 5, the version Zero Hour writes. Higher versions stop here.
+	bfmeRejectNewerChunk("PlayerScriptsList", info->version, K_SCRIPTS_DATA_VERSION_1);
 	Int i;
 	// BFME: ceiling is the maps.big / _patch222maps.big scan maximum, not the layout this parser writes.
 	file.registerParser( "ScriptList", info->label, ScriptList::ParseScriptListDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("ScriptList") );
+	s_bfmeDroppedScriptLists = 0; // BFME: E1-52
 	DEBUG_ASSERTCRASH(s_numInReadList==0, ("Leftover scripts floating around."));
 	for (i=0; i<s_numInReadList; i++) {
 		deleteInstance(s_readLists[i]);
@@ -542,6 +664,17 @@ Bool ScriptList::ParseScriptsDataChunk(DataChunkInput &file, DataChunkInfo *info
 		s_numInReadList = readInfo.numLists;
 		for (i=0; i<s_numInReadList; i++) {
 			s_readLists[i] = readInfo.readLists[i];
+		}
+		// BFME: E1-52 same shape as SidesList v6: map name from TheGlobalData, then counts.
+		if (s_bfmeDroppedScriptLists > 0) {
+			const char *mapName = "?";
+			if (TheGlobalData != nullptr && TheGlobalData->m_mapName.isEmpty() == false)
+				mapName = TheGlobalData->m_mapName.str();
+			const Int total = readInfo.numLists + s_bfmeDroppedScriptLists;
+			DEBUG_LOG(("PlayerScriptsList: map '%s' has %d script lists, stored %d, dropped %d",
+				mapName, total, readInfo.numLists, s_bfmeDroppedScriptLists));
+			fprintf(stderr, "PlayerScriptsList: map '%s' has %d script lists, stored %d, dropped %d\n",
+				mapName, total, readInfo.numLists, s_bfmeDroppedScriptLists);
 		}
 		return true;
 	}
@@ -611,9 +744,28 @@ void ScriptList::WriteScriptListDataChunk(DataChunkOutput &chunkWriter)
 */
 Bool ScriptList::ParseScriptListDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
+	// BFME: E1-52 Zero Hour writes ScriptList v1. A higher version is not read as v1.
+	bfmeRejectNewerChunk("ScriptList", info->version, K_SCRIPT_LIST_DATA_VERSION_1);
 	TScriptListReadInfo *pInfo = (TScriptListReadInfo*)userData;
 	DEBUG_ASSERTCRASH(pInfo->numLists < MAX_PLAYER_COUNT, ("Too many."));
-	if (pInfo->numLists >= MAX_PLAYER_COUNT) return false;
+	// BFME: E1-52 a 17th–19th side still has a ScriptList. readLists[] stays 16 long.
+	// Read the extra list and delete it so PlayerScriptsList reaches a zero remainder.
+	if (pInfo->numLists >= MAX_PLAYER_COUNT) {
+		ScriptList *extra = newInstance(ScriptList);
+		file.registerParser( "Script", info->label, Script::ParseScriptFromListDataChunk );
+		file.registerParser( "ScriptGroup", info->label, ScriptGroup::ParseGroupDataChunk );
+		Bool ok = false;
+		try {
+			ok = file.parse(extra);
+		} catch (...) {
+			deleteInstance(extra);
+			throw;
+		}
+		deleteInstance(extra);
+		if (ok)
+			++s_bfmeDroppedScriptLists;
+		return ok;
+	}
 	pInfo->readLists[pInfo->numLists] = newInstance(ScriptList);
 	Int cur = pInfo->numLists;
 	pInfo->numLists++;
@@ -637,7 +789,8 @@ m_firstScript(nullptr),
 m_hasWarnings(false),
 m_isGroupActive(true),
 m_isGroupSubroutine(false),
-m_nextGroup(nullptr)
+m_nextGroup(nullptr),
+m_firstChildGroup(nullptr) // BFME: E1-52
 {
 	m_groupName.format("Script Group %d", ScriptList::getNextID());
 }
@@ -651,6 +804,18 @@ ScriptGroup::~ScriptGroup()
 	// Delete the first script.  m_firstScript deletes the entire list.
 	deleteInstance(m_firstScript);
 	m_firstScript = nullptr;
+
+	// BFME: E1-52 children are a separate chain from m_nextGroup (siblings of this group).
+	if (m_firstChildGroup) {
+		ScriptGroup *cur = m_firstChildGroup;
+		m_firstChildGroup = nullptr;
+		while (cur) {
+			ScriptGroup *next = cur->getNext();
+			cur->setNextGroup(nullptr);
+			deleteInstance(cur);
+			cur = next;
+		}
+	}
 
 	if (m_nextGroup) {
 		// Delete all the subsequent groups in our list.
@@ -761,6 +926,22 @@ ScriptGroup *ScriptGroup::duplicate() const
 	pNew->m_isGroupSubroutine = this->m_isGroupSubroutine;
 	pNew->m_nextGroup = nullptr;
 
+	// BFME: E1-52 nested groups belong to this node, not to the sibling list.
+	{
+		ScriptGroup *src = this->m_firstChildGroup;
+		ScriptGroup *dst = nullptr;
+		while (src)
+		{
+			ScriptGroup *tmp = src->duplicate();
+			if (dst)
+				dst->setNextGroup(tmp);
+			else
+				pNew->m_firstChildGroup = tmp;
+			src = src->getNext();
+			dst = tmp;
+		}
+	}
+
 	return pNew;
 }
 
@@ -796,6 +977,22 @@ ScriptGroup *ScriptGroup::duplicateAndQualify(const AsciiString& qualifier,
 	pNew->m_isGroupActive = this->m_isGroupActive;
 	pNew->m_isGroupSubroutine = this->m_isGroupSubroutine;
 	pNew->m_nextGroup = nullptr;
+
+	// BFME: E1-52
+	{
+		ScriptGroup *src = this->m_firstChildGroup;
+		ScriptGroup *dst = nullptr;
+		while (src)
+		{
+			ScriptGroup *tmp = src->duplicateAndQualify(qualifier, playerTemplateName, newPlayerName);
+			if (dst)
+				dst->setNextGroup(tmp);
+			else
+				pNew->m_firstChildGroup = tmp;
+			src = src->getNext();
+			dst = tmp;
+		}
+	}
 
 	return pNew;
 }
@@ -876,20 +1073,58 @@ void ScriptGroup::WriteGroupDataChunk(DataChunkOutput &chunkWriter, ScriptGroup 
 *	Input: DataChunkInput
 *
 */
+static Bool bfmeParseScriptGroupBody(DataChunkInput &file, DataChunkInfo *info, ScriptGroup *pGroup)
+{
+	file.registerParser( "Script", info->label, Script::ParseScriptFromGroupDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("Script") );
+	// BFME: E1-52 nested ScriptGroup children exist only in v3. v1 and v2 keep the old registration.
+	if (info->version >= K_SCRIPT_GROUP_DATA_VERSION_3) {
+		file.registerParser( "ScriptGroup", info->label, ScriptGroup::ParseNestedGroupDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("ScriptGroup") );
+	}
+	return file.parse(pGroup);
+}
+
 Bool ScriptGroup::ParseGroupDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
+	// BFME: E1-52
+	bfmeRejectNewerChunk("ScriptGroup", info->version, K_SCRIPT_GROUP_DATA_VERSION_3);
+	bfmeCheckScriptGroupStack();
+	BfmeScriptGroupDepthGuard depthGuard;
 	ScriptList *pList = (ScriptList *)userData;
 	ScriptGroup *pGroup = newInstance(ScriptGroup);
 
 	pGroup->m_groupName = file.readAsciiString();
 	pGroup->m_isGroupActive = file.readByte();
-	if (info->version == K_SCRIPT_GROUP_DATA_VERSION_2) {
-		pGroup->m_isGroupSubroutine= file.readByte();
+	// BFME: E1-52 v2 and v3 store the subroutine flag. v1 (Zero Hour) does not, so == 2 dropped v3.
+	if (info->version >= K_SCRIPT_GROUP_DATA_VERSION_2) {
+		pGroup->m_isGroupSubroutine = file.readByte();
 	}
 	pList->addGroup(pGroup, AT_END);
-	file.registerParser( "Script", info->label, Script::ParseScriptFromGroupDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("Script") ); // BFME:
-	return file.parse(pGroup);
+	return bfmeParseScriptGroupBody(file, info, pGroup);
+}
 
+// BFME: E1-52 userData during file.parse(group) is the parent group, not the ScriptList.
+Bool ScriptGroup::ParseNestedGroupDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData)
+{
+	bfmeRejectNewerChunk("ScriptGroup", info->version, K_SCRIPT_GROUP_DATA_VERSION_3);
+	bfmeCheckScriptGroupStack();
+	BfmeScriptGroupDepthGuard depthGuard;
+	ScriptGroup *parent = (ScriptGroup *)userData;
+	ScriptGroup *pGroup = newInstance(ScriptGroup);
+	pGroup->m_groupName = file.readAsciiString();
+	pGroup->m_isGroupActive = file.readByte();
+	// BFME: E1-52 same header as the top-level group. v1 has no subroutine byte.
+	if (info->version >= K_SCRIPT_GROUP_DATA_VERSION_2) {
+		pGroup->m_isGroupSubroutine = file.readByte();
+	}
+	if (parent->m_firstChildGroup == nullptr) {
+		parent->m_firstChildGroup = pGroup;
+	} else {
+		ScriptGroup *tail = parent->m_firstChildGroup;
+		while (tail->getNext())
+			tail = tail->getNext();
+		tail->setNextGroup(pGroup);
+	}
+	return bfmeParseScriptGroupBody(file, info, pGroup);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1233,6 +1468,8 @@ void Script::WriteScriptDataChunk(DataChunkOutput &chunkWriter, Script *pScript)
 */
 Script *Script::ParseScript(DataChunkInput &file, unsigned short version)
 {
+	// BFME: E1-52 Zero Hour writes Script v1 and v2. v3+ (later games) is not this layout.
+	bfmeRejectNewerChunk("Script", version, K_SCRIPT_DATA_VERSION_2);
 	Script *pScript = newInstance(Script);
 
 	pScript->m_scriptName = file.readAsciiString();
@@ -1435,6 +1672,8 @@ void OrCondition::WriteOrConditionDataChunk(DataChunkOutput &chunkWriter, OrCond
 */
 Bool OrCondition::ParseOrConditionDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
+	// BFME: E1-52 Zero Hour writes OrCondition v1.
+	bfmeRejectNewerChunk("OrCondition", info->version, K_SCRIPT_OR_CONDITION_DATA_VERSION_1);
 	Script *pScript = (Script *)userData;
 	OrCondition *pOrCondition = newInstance(OrCondition);
 	OrCondition *pFirst = pScript->getOrCondition();
@@ -1483,6 +1722,7 @@ Condition *OrCondition::findPreviousCondition( Condition *curCond )
 Condition::Condition():
 m_conditionType(CONDITION_FALSE),
 m_hasWarnings(false),
+m_bfmeUnsupported(false), // BFME: E1-52
 m_customData(0),
 m_customFrame(0),
 m_numParms(0),
@@ -1498,6 +1738,7 @@ m_nextAndCondition(nullptr)
 Condition::Condition(enum ConditionType type):
 m_conditionType(type),
 m_hasWarnings(false),
+m_bfmeUnsupported(false), // BFME: E1-52
 m_customData(0),
 m_customFrame(0),
 m_numParms(0),
@@ -1528,6 +1769,7 @@ void Condition::setConditionType(enum ConditionType type)
 Condition *Condition::duplicate() const
 {
 	Condition *pNew = newInstance(Condition)(m_conditionType);
+	pNew->m_bfmeUnsupported = m_bfmeUnsupported; // BFME: E1-52
 	Int i;
 	for (i=0; i<m_numParms && i<pNew->m_numParms; i++) {
 		*pNew->m_parms[i] = *m_parms[i];
@@ -1537,6 +1779,7 @@ Condition *Condition::duplicate() const
 	while (pLink) {
 		pCur->m_nextAndCondition = newInstance(Condition)(pLink->getConditionType());
 		pCur = pCur->m_nextAndCondition;
+		pCur->m_bfmeUnsupported = pLink->m_bfmeUnsupported; // BFME: E1-52
 		for (i=0; i<pLink->m_numParms; i++) {
 			*pCur->m_parms[i] = *pLink->m_parms[i];
 		}
@@ -1549,6 +1792,7 @@ Condition *Condition::duplicateAndQualify(const AsciiString& qualifier,
 			const AsciiString& playerTemplateName, const AsciiString& newPlayerName) const
 {
 	Condition *pNew = newInstance(Condition)(m_conditionType);
+	pNew->m_bfmeUnsupported = m_bfmeUnsupported; // BFME: E1-52
 	Int i;
 	for (i=0; i<m_numParms && i<pNew->m_numParms; i++) {
 		*pNew->m_parms[i] = *m_parms[i];
@@ -1559,6 +1803,7 @@ Condition *Condition::duplicateAndQualify(const AsciiString& qualifier,
 	while (pLink) {
 		pCur->m_nextAndCondition = newInstance(Condition)(pLink->getConditionType());
 		pCur = pCur->m_nextAndCondition;
+		pCur->m_bfmeUnsupported = pLink->m_bfmeUnsupported; // BFME: E1-52
 		for (i=0; i<pLink->m_numParms; i++) {
 			*pCur->m_parms[i] = *pLink->m_parms[i];
 			pCur->m_parms[i]->qualify(qualifier, playerTemplateName, newPlayerName);
@@ -1654,12 +1899,26 @@ void Condition::WriteConditionDataChunk(DataChunkOutput &chunkWriter, Condition	
 *	Input: DataChunkInput
 *
 */
+Int Condition::getBfmeSkippedCount()
+{
+	return s_bfmeSkippedConditions;
+}
+
+void Condition::resetBfmeSkippedCount()
+{
+	s_bfmeSkippedConditions = 0;
+}
+
 Bool Condition::ParseConditionDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
+	// BFME: E1-52 Zero Hour writes Condition v1 through v4.
+	bfmeRejectNewerChunk("Condition", info->version, K_SCRIPT_CONDITION_VERSION_4);
 	Condition	*pCondition = newInstance(Condition);
 	OrCondition *pOr = (OrCondition *)userData;
 	pCondition->m_conditionType = (enum ConditionType)file.readInt();
 	const ConditionTemplate* ct = TheScriptEngine->getConditionTemplate(pCondition->m_conditionType);
+	Bool unsupported = false;
+	Bool nameMiss = false;
 	if (info->version >= K_SCRIPT_CONDITION_VERSION_4) {
 		NameKeyType key = file.readNameKey();
 		Bool match = false;
@@ -1680,18 +1939,18 @@ Bool Condition::ParseConditionDataChunk(DataChunkInput &file, DataChunkInfo *inf
 			}
 		}
 		if (!match) {
-			// Invalid script [3/20/2003]
+			// BFME: E1-52 name is not a Zero Hour condition. Keep the parameters, do not execute.
 			DEBUG_CRASH(("Invalid script condition.  Making it false. jba."));
+			bfmeNoteSkippedNode("condition", key, s_bfmeSkippedConditions);
 			pCondition->m_conditionType = CONDITION_FALSE;
-			pCondition->m_numParms = 0;
+			unsupported = true;
+			nameMiss = true;
 		}
 	}
-	pCondition->m_numParms =file.readInt();
-	Int i;
-	for (i=0; i<pCondition->m_numParms; i++)
-	{
-		pCondition->m_parms[i] = Parameter::ReadParameter(file);
-	}
+	bfmeReadParameters(file, pCondition->m_numParms, pCondition->m_parms, unsupported, "condition");
+	if (unsupported && !nameMiss)
+		++s_bfmeSkippedConditions;
+	pCondition->m_bfmeUnsupported = unsupported;
 
 	if (file.getChunkVersion() < K_SCRIPT_CONDITION_VERSION_2) {
 		for (int j = 0; ParameterChangesVer2[j] != -1; ++j) {
@@ -1719,7 +1978,9 @@ Bool Condition::ParseConditionDataChunk(DataChunkInput &file, DataChunkInfo *inf
 	conT->m_numTimesUsed++;
 	conT->m_firstMapUsed = TheGlobalData->m_mapName;
 #endif
-	if (ct->getNumParameters() != pCondition->getNumParameters()) {
+	// BFME: E1-52 a BFME-only condition has no Zero Hour template; the check below would
+	// compare it with whichever template the scan stopped on and drop the parameters.
+	if (!pCondition->m_bfmeUnsupported && ct->getNumParameters() != pCondition->getNumParameters()) {
 		// Invalid script [3/20/2003]
 		DEBUG_CRASH(("Invalid script condition.  Making it false. jba."));
 		pCondition->m_conditionType = ConditionType::CONDITION_FALSE;
@@ -2224,13 +2485,28 @@ Parameter *Parameter::ReadParameter(DataChunkInput &file)
 			if (!found)
       {
 				DEBUG_CRASH(("Unable to find Kindof '%s', please call JKM (x36872).", pParm->m_string.str()));
-				throw ERROR_BUG;
+				// BFME: E1-52 ERROR_BUG (0xDEAD0001) aborted every map whose KindOf string
+				// is absent from the Zero Hour bit table. The mapchunks stub table is empty,
+				// so any non-empty KindOf string took this path. Keep m_int from the file.
+				bfmeNoteUnknownKindOf(pParm->m_string);
 			}
 		}
     else
     {
 			// Seems weird, but this is so WB will load them into the proper format.
-			pParm->m_string = kindofNames[pParm->m_int];
+			// BFME: E1-52 walk the table. A null sentinel or an index past it must not
+			// be dereferenced (the mapchunks stub list is only the sentinel).
+			const char *bit = nullptr;
+			if (pParm->m_int >= 0) {
+				for (int i = 0; kindofNames[i] != nullptr; ++i) {
+					if (i == pParm->m_int) {
+						bit = kindofNames[i];
+						break;
+					}
+				}
+			}
+			if (bit != nullptr)
+				pParm->m_string = bit;
 		}
 	}
 
@@ -2243,6 +2519,7 @@ Parameter *Parameter::ReadParameter(DataChunkInput &file)
 ScriptAction::ScriptAction():
 m_actionType(NO_OP),
 m_hasWarnings(false),
+m_bfmeUnsupported(false), // BFME: E1-52
 m_numParms(0),
 m_nextAction(nullptr)
 {
@@ -2250,6 +2527,7 @@ m_nextAction(nullptr)
 
 ScriptAction::ScriptAction(enum ScriptActionType type):
 m_actionType(type),
+m_bfmeUnsupported(false), // BFME: E1-52
 m_numParms(0)
 {
 	Int i;
@@ -2277,6 +2555,7 @@ void ScriptAction::setActionType(enum ScriptActionType type)
 ScriptAction *ScriptAction::duplicate() const
 {
 	ScriptAction *pNew = newInstance(ScriptAction)(m_actionType);
+	pNew->m_bfmeUnsupported = m_bfmeUnsupported; // BFME: E1-52
 	Int i;
 	for (i=0; i<m_numParms; i++) {
 		if (pNew->m_parms[i]) {
@@ -2288,6 +2567,7 @@ ScriptAction *ScriptAction::duplicate() const
 	while (pLink) {
 		pCur->m_nextAction = newInstance(ScriptAction)(pLink->m_actionType);
 		pCur = pCur->m_nextAction;
+		pCur->m_bfmeUnsupported = pLink->m_bfmeUnsupported; // BFME: E1-52
 		for (i=0; i<pLink->m_numParms; i++) {
 			if (pCur->m_parms[i] && pLink->m_parms[i]) {
 				*pCur->m_parms[i] = *pLink->m_parms[i];
@@ -2302,6 +2582,7 @@ ScriptAction *ScriptAction::duplicateAndQualify(const AsciiString& qualifier,
 			const AsciiString& playerTemplateName, const AsciiString& newPlayerName) const
 {
 	ScriptAction *pNew = newInstance(ScriptAction)(m_actionType);
+	pNew->m_bfmeUnsupported = m_bfmeUnsupported; // BFME: E1-52
 	Int i;
 	for (i=0; i<m_numParms; i++) {
 		if (pNew->m_parms[i]) {
@@ -2314,6 +2595,7 @@ ScriptAction *ScriptAction::duplicateAndQualify(const AsciiString& qualifier,
 	while (pLink) {
 		pCur->m_nextAction = newInstance(ScriptAction)(pLink->m_actionType);
 		pCur = pCur->m_nextAction;
+		pCur->m_bfmeUnsupported = pLink->m_bfmeUnsupported; // BFME: E1-52
 		for (i=0; i<pLink->m_numParms; i++) {
 			if (pCur->m_parms[i] && pLink->m_parms[i]) {
 				*pCur->m_parms[i] = *pLink->m_parms[i];
@@ -2411,13 +2693,27 @@ void ScriptAction::WriteActionDataChunk(DataChunkOutput &chunkWriter, ScriptActi
 *	Input: DataChunkInput
 *
 */
+Int ScriptAction::getBfmeSkippedCount()
+{
+	return s_bfmeSkippedActions;
+}
+
+void ScriptAction::resetBfmeSkippedCount()
+{
+	s_bfmeSkippedActions = 0;
+}
+
 ScriptAction *ScriptAction::ParseAction(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
+	// BFME: E1-52 Zero Hour writes ScriptAction v1 and v2.
+	bfmeRejectNewerChunk("ScriptAction", info->version, K_SCRIPT_ACTION_VERSION_2);
 	ScriptAction	*pScriptAction = newInstance(ScriptAction);
 
 	pScriptAction->m_actionType = (enum ScriptActionType)file.readInt();
 
 	const ActionTemplate* at = TheScriptEngine->getActionTemplate(pScriptAction->m_actionType);
+	Bool unsupported = false;
+	Bool nameMiss = false;
 	if (info->version >= K_SCRIPT_ACTION_VERSION_2) {
 		NameKeyType key = file.readNameKey();
 		Bool match = false;
@@ -2437,10 +2733,12 @@ ScriptAction *ScriptAction::ParseAction(DataChunkInput &file, DataChunkInfo *inf
 				}
 			}
 			if (!match) {
-				// Invalid script [3/20/2003]
+				// BFME: E1-52 name is not a Zero Hour action. Keep the parameters, do not execute.
 				DEBUG_CRASH(("Invalid script action.  Making it noop. jba."));
+				bfmeNoteSkippedNode("action", key, s_bfmeSkippedActions);
 				pScriptAction->m_actionType = ScriptAction::NO_OP;
-				pScriptAction->m_numParms = 0;
+				unsupported = true;
+				nameMiss = true;
 			}
 		}
 	}
@@ -2455,12 +2753,10 @@ ScriptAction *ScriptAction::ParseAction(DataChunkInput &file, DataChunkInfo *inf
 	at2->m_numTimesUsed++;
 	at2->m_firstMapUsed = TheGlobalData->m_mapName;
 #endif
-	pScriptAction->m_numParms =file.readInt();
-	Int i;
-	for (i=0; i<pScriptAction->m_numParms; i++)
-	{
-		pScriptAction->m_parms[i] = Parameter::ReadParameter(file);
-	}
+	bfmeReadParameters(file, pScriptAction->m_numParms, pScriptAction->m_parms, unsupported, "action");
+	if (unsupported && !nameMiss)
+		++s_bfmeSkippedActions;
+	pScriptAction->m_bfmeUnsupported = unsupported;
 
 	// heal old files.
 	switch (pScriptAction->getActionType())
@@ -2570,7 +2866,8 @@ ScriptAction *ScriptAction::ParseAction(DataChunkInput &file, DataChunkInfo *inf
 			break;
 	}
 
-	if (at->getNumParameters() != pScriptAction->getNumParameters()) {
+	// BFME: E1-52 skip the template-size check for a BFME-only action (no matching template).
+	if (!pScriptAction->m_bfmeUnsupported && at->getNumParameters() != pScriptAction->getNumParameters()) {
 		// Invalid script [3/20/2003]
 		DEBUG_CRASH(("Invalid script action.  Making it noop. jba."));
 		pScriptAction->m_actionType = ScriptAction::NO_OP;
