@@ -834,24 +834,46 @@ int main(int argc, char* argv[])
 		// createArchiveFileSystem() then picks BfmeBIGFileSystem and INILenient is enabled.
 		// Unconditional (not gated on import-state.json) so adb-pushed or hand-copied data works
 		// too. The external-files fallback is not a GameData dir and is skipped.
-		// User data (Options.ini, saves) moves out of /storage/emulated/<u>/Generals (EACCES
-		// without MANAGE_EXTERNAL_STORAGE) into <parent of GameData>/UserData/BFME, which is the
-		// app-specific external dir; GlobalData.cpp creates it via GENERALSX_USERDATA_DIR.
 		if (didChdir) {
 			char cwd[1024];
-			if (getcwd(cwd, sizeof(cwd)) != nullptr
-			    && (externalPath == nullptr || strcmp(cwd, externalPath) != 0)) {
+			if (getcwd(cwd, sizeof(cwd)) == nullptr) {
+				int err = errno;
+				fprintf(stderr, "WARNING: BFME: E1-33a getcwd() failed (errno=%d: %s), BFME_GAMEDATA not set\n", err, strerror(err));
+				__android_log_print(ANDROID_LOG_WARN, "BFME", "E1-33a getcwd() failed (errno=%d: %s)", err, strerror(err));
+			} else if (externalPath == nullptr || strcmp(cwd, externalPath) != 0) {
 				setenv("BFME_GAMEDATA", cwd, 1);
 				fprintf(stderr, "INFO: BFME: E1-33a BFME_GAMEDATA=%s\n", cwd);
 				__android_log_print(ANDROID_LOG_INFO, "BFME", "E1-33a BFME_GAMEDATA=%s", cwd);
-				std::filesystem::path userDir = std::filesystem::path(cwd).parent_path() / "UserData" / "BFME";
-				std::error_code udEc;
-				std::filesystem::create_directories(userDir, udEc);
-				setenv("GENERALSX_USERDATA_DIR", userDir.c_str(), 1);
-				fprintf(stderr, "INFO: BFME: E1-33a GENERALSX_USERDATA_DIR=%s (mkdir ec=%d)\n", userDir.c_str(), udEc.value());
-				__android_log_print(ANDROID_LOG_INFO, "BFME", "E1-33a GENERALSX_USERDATA_DIR=%s", userDir.c_str());
 			} else {
 				fprintf(stderr, "WARNING: BFME: E1-33a no GameData dir, BFME_GAMEDATA not set\n");
+			}
+		}
+
+		// BFME: E1-33a. User data (Options.ini, saves) always goes to the app-specific external
+		// dir <SDL_GetAndroidExternalStoragePath()>/UserData/BFME, wherever gamedata_path.txt
+		// points: a GameData folder in shared storage would put UserData there too (EACCES).
+		// GENERALSX_USERDATA_DIR is set only when the directory exists. On a NULL path or failed
+		// mkdir it is unset (it still holds the /storage/emulated/<u>/Generals/... value set above,
+		// the EACCES path), so GlobalData.cpp falls back to "./" (cwd = GameData).
+		if (externalPath == nullptr) {
+			fprintf(stderr, "WARNING: BFME: E1-33a external storage path is NULL, GENERALSX_USERDATA_DIR unset\n");
+			__android_log_print(ANDROID_LOG_WARN, "BFME", "E1-33a external storage path is NULL, GENERALSX_USERDATA_DIR unset");
+			unsetenv("GENERALSX_USERDATA_DIR");  // BFME: E1-33a drop the old /storage/emulated/<u>/Generals value
+		} else {
+			std::filesystem::path userDir = std::filesystem::path(externalPath) / "UserData" / "BFME";
+			std::error_code udEc;
+			std::filesystem::create_directories(userDir, udEc);
+			std::error_code exEc;
+			if (!udEc && std::filesystem::is_directory(userDir, exEc)) {
+				setenv("GENERALSX_USERDATA_DIR", userDir.c_str(), 1);
+				fprintf(stderr, "INFO: BFME: E1-33a GENERALSX_USERDATA_DIR=%s\n", userDir.c_str());
+				__android_log_print(ANDROID_LOG_INFO, "BFME", "E1-33a GENERALSX_USERDATA_DIR=%s", userDir.c_str());
+			} else {
+				fprintf(stderr, "WARNING: BFME: E1-33a create_directories(%s) failed (ec=%d: %s; is_directory ec=%d: %s), GENERALSX_USERDATA_DIR unset\n",
+				        userDir.c_str(), udEc.value(), udEc.message().c_str(), exEc.value(), exEc.message().c_str());
+				__android_log_print(ANDROID_LOG_WARN, "BFME", "E1-33a create_directories(%s) failed (ec=%d: %s; is_directory ec=%d: %s)",
+				        userDir.c_str(), udEc.value(), udEc.message().c_str(), exEc.value(), exEc.message().c_str());
+				unsetenv("GENERALSX_USERDATA_DIR");  // BFME: E1-33a drop the old /storage/emulated/<u>/Generals value
 			}
 		}
 
