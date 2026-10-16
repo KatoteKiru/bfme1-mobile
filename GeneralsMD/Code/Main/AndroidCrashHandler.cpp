@@ -50,6 +50,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdint.h>
+#include <atomic>
+#include <mutex>
 #include <dlfcn.h>
 // GeneralsX @bugfix Android port 19/09/2026 ANDROID_CI_BUILD_NUMBER, so the
 // crash log names the CI run whose artifact its offsets belong to. See the
@@ -192,7 +194,7 @@ bool findLibraryForAddress(uintptr_t pc, char *outName, size_t outNameLen, uintp
 // a secondary user, or guest mode. Android multi-user UIDs are always
 // userId*100000 + appId (a stable, documented convention), so derive the
 // real user id from getuid() instead of assuming user 0.
-char s_crashLogPath[256];
+// BFME: crash-path. The path buffers now live in CrashPathSet below (double-buffered).
 
 // GeneralsX @bugfix Android port 19/09/2026 __DATE__/__TIME__ cannot be
 // trusted to identify a build. ccache replays a cached object file complete
@@ -286,43 +288,148 @@ void detectNativeTestProcess() {
 	s_isNativeTestProcess = len >= sl && strcmp(cmd + len - sl, suffix) == 0;
 }
 
-void computeCrashLogPath() {
-	detectNativeTestProcess(); // BFME: E1-15
-	// GeneralsX @feature Android port 27/09/2026 An empty path is the handler's own "do not
-	// write" state (appendCrashLog, rotatePrevCrashLog); the launcher's switch sets it.
-	if (GXLoggingDisabled()) {
-		s_crashLogPath[0] = '\0';
+// BFME: crash-path. All paths are built here, outside the signal handler, into static buffers:
+//  - fallback at load time (ELF constructor, before Java can run): package from /proc/self/cmdline
+//    without the ":process" suffix -> /data/user/<u>/<pkg>/files and
+//    /storage/emulated/<u>/Android/data/<pkg>/files (no hardcoded package name);
+//  - Java then calls BfmeCrashPaths.nativeSetDirs(getFilesDir(), getExternalFilesDir(null)) as
+//    soon as libmain.so is loaded (GeneralsZHActivity, NativeTestActivity) and the paths follow
+//    the real directories.
+// The handler writes the same bytes to the internal log and to the external mirror, so
+// `adb shell cat /sdcard/Android/data/<pkg>/files/crash.log` works without run-as.
+// :nativetest -> crash-selftest.log, never rotated; main process -> crash.log rotated to
+// crash-prev.log once per process (both copies).
+//
+// BFME: crash-path. Double buffering (JNI vs signal race): applyCrashDirs() never writes into the
+// strings a signal handler may be reading. It fills the inactive CrashPathSet and then publishes
+// pointers into it with memory_order_release; the handler loads them with memory_order_acquire and
+// so sees either the old complete strings or the new complete ones, never a half-written path.
+// Writers (ELF constructor, JNI nativeSetDirs) are serialised by s_crashDirsMutex (not touched by
+// the handler). Residual: a handler that is still inside open() on set A while two further
+// nativeSetDirs calls rewrite A; nativeSetDirs runs once per activity start, so this needs two
+// directory changes during one crash write and is accepted.
+struct CrashPathSet {
+	char log[512];
+	char mirror[512];
+	char internalDir[384];
+	char externalDir[384];
+};
+CrashPathSet s_pathSets[2];
+static_assert(std::atomic<const char *>::is_always_lock_free, "crash handler needs lock-free pointer loads");
+static_assert(std::atomic<const CrashPathSet *>::is_always_lock_free, "crash handler needs lock-free pointer loads");
+std::atomic<const char *> s_crashLogPath{""};
+std::atomic<const char *> s_crashLogMirror{""};
+std::atomic<const CrashPathSet *> s_activeSet{nullptr};
+std::mutex s_crashDirsMutex;
+
+const char *crashLogPathNow() { return s_crashLogPath.load(std::memory_order_acquire); }
+const char *crashLogMirrorNow() { return s_crashLogMirror.load(std::memory_order_acquire); }
+bool s_rotatedInternal = false;
+bool s_rotatedExternal = false;
+
+const char *crashLogLeaf() {
+	return s_isNativeTestProcess ? "crash-selftest.log" : "crash.log";
+}
+
+bool joinPath(char *out, size_t outLen, const char *dir, const char *leaf) {
+	if (dir == nullptr || dir[0] == '\0') {
+		out[0] = '\0';
+		return false;
+	}
+	int n = snprintf(out, outLen, "%s/%s", dir, leaf);
+	if (n <= 0 || (size_t)n >= outLen) {
+		out[0] = '\0';
+		return false;
+	}
+	return true;
+}
+
+// Package name = argv[0] up to ':' (":nativetest"), letters/digits/'_'/'.' only.
+bool packageFromCmdline(char *out, size_t outLen) {
+	out[0] = '\0';
+	char cmd[256];
+	int fd = open("/proc/self/cmdline", O_RDONLY | O_CLOEXEC);
+	if (fd < 0) {
+		return false;
+	}
+	ssize_t n = read(fd, cmd, sizeof(cmd) - 1);
+	close(fd);
+	if (n <= 0) {
+		return false;
+	}
+	cmd[n] = '\0';
+	size_t len = 0;
+	while (cmd[len] != '\0' && cmd[len] != ':') {
+		char c = cmd[len];
+		bool ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '.';
+		if (!ok || len + 1 >= outLen) {
+			return false;
+		}
+		out[len] = c;
+		++len;
+	}
+	out[len] = '\0';
+	return len > 0 && strchr(out, '.') != nullptr;
+}
+
+void rotateOne(const char *dir, bool &done) {
+	if (done || s_isNativeTestProcess || dir[0] == '\0') {
 		return;
 	}
-	// GeneralsX @bugfix Android port 08/10/2026 applicationId, not the Java package.
-	// BFME: E1-04 crash log path follows the Gradle applicationId.
-	if (!gxAndroidFilesPath(s_crashLogPath, sizeof(s_crashLogPath),
-	                        s_isNativeTestProcess ? "crash-selftest.log" : "crash.log")) { // BFME: E1-15
-		s_crashLogPath[0] = '\0';
+	char cur[512], prev[512];
+	if (joinPath(cur, sizeof(cur), dir, "crash.log") && joinPath(prev, sizeof(prev), dir, "crash-prev.log")) {
+		rename(cur, prev);
+		done = true;
 	}
 }
 
-// GeneralsX @bugfix Android port 30/07/2026 crash.log is append-only by
-// design -- a crash mid-write must never truncate what's already on disk --
-// but that also means it never shrinks on its own. A tester who reinstalls
-// across dozens of test builds without ever tapping "Clear Logs" ends up
-// with every launch stamp and every crash block from every prior session
-// concatenated into one growing file, with the build-compiled stamp being
-// the only (and, per the ccache note above, not fully reliable) way to tell
-// them apart. Rotate it the same way SDL3Main.cpp already rotates
-// generals-stderr.log: move whatever is there into crash-prev.log before
-// this session writes its own first byte, so crash.log holds at most this
-// session's own content, and the previous session's record is still one
-// tap away in Settings -> View Logs instead of accumulating forever.
-void rotatePrevCrashLog() {
-	if (s_crashLogPath[0] == '\0' || s_isNativeTestProcess) { // BFME: E1-15 never in :nativetest
-		return;
+bool copyDir(char *out, size_t outLen, const char *dir) {
+	int n = snprintf(out, outLen, "%s", dir ? dir : "");
+	if (n < 0 || (size_t)n >= outLen) {
+		out[0] = '\0'; // truncated: no path rather than a wrong one (same as joinPath)
+		return false;
 	}
-	char prevPath[256];
-	if (!gxAndroidFilesPath(prevPath, sizeof(prevPath), "crash-prev.log")) {
-		return;
+	return true;
+}
+
+// internalDir == nullptr keeps the current internal directory.
+void applyCrashDirs(const char *internalDir, const char *externalDir) {
+	std::lock_guard<std::mutex> lock(s_crashDirsMutex);
+	const CrashPathSet *active = s_activeSet.load(std::memory_order_relaxed);
+	CrashPathSet *next = (active == &s_pathSets[0]) ? &s_pathSets[1] : &s_pathSets[0];
+	if (internalDir != nullptr) {
+		copyDir(next->internalDir, sizeof(next->internalDir), internalDir);
+	} else if (next != active) {
+		copyDir(next->internalDir, sizeof(next->internalDir), active ? active->internalDir : "");
 	}
-	rename(s_crashLogPath, prevPath);
+	copyDir(next->externalDir, sizeof(next->externalDir), externalDir);
+	next->log[0] = '\0';
+	next->mirror[0] = '\0';
+	if (!GXLoggingDisabled()) {
+		// Rotate before the first byte of this session goes to each location.
+		rotateOne(next->internalDir, s_rotatedInternal);
+		rotateOne(next->externalDir, s_rotatedExternal);
+		joinPath(next->log, sizeof(next->log), next->internalDir, crashLogLeaf());
+		joinPath(next->mirror, sizeof(next->mirror), next->externalDir, crashLogLeaf());
+		if (strcmp(next->log, next->mirror) == 0) {
+			next->mirror[0] = '\0';
+		}
+	}
+	s_activeSet.store(next, std::memory_order_release);
+	s_crashLogPath.store(next->log, std::memory_order_release);
+	s_crashLogMirror.store(next->mirror, std::memory_order_release);
+}
+
+void computeCrashLogPath() {
+	detectNativeTestProcess(); // BFME: E1-15
+	char pkg[160], in[384], ext[384];
+	in[0] = ext[0] = '\0';
+	if (packageFromCmdline(pkg, sizeof(pkg))) {
+		const int userId = (int)(getuid() / 100000);
+		snprintf(in, sizeof(in), "/data/user/%d/%s/files", userId, pkg);
+		snprintf(ext, sizeof(ext), "/storage/emulated/%d/Android/data/%s/files", userId, pkg);
+	}
+	applyCrashDirs(in, ext);
 }
 
 struct sigaction s_prevHandlers[NSIG];
@@ -333,11 +440,11 @@ bool s_haveHandlerFor[NSIG] = {};
 // path is the one pragmatic exception here — bionic's implementation does
 // not lock or allocate for a plain format string like this one, and every
 // widely-shipped Android crash handler makes the same trade-off).
-void appendCrashLog(const char *message, size_t length) {
-	if (s_crashLogPath[0] == '\0') {
+void appendToFile(const char *path, const char *message, size_t length) {
+	if (path[0] == '\0') {
 		return;
 	}
-	int fd = open(s_crashLogPath, O_WRONLY | O_CREAT | O_APPEND, 0644);
+	int fd = open(path, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
 	if (fd < 0) {
 		return;
 	}
@@ -350,6 +457,12 @@ void appendCrashLog(const char *message, size_t length) {
 		written += n;
 	}
 	close(fd);
+}
+
+// BFME: crash-path. Internal log first, then the same bytes to the external mirror.
+void appendCrashLog(const char *message, size_t length) {
+	appendToFile(crashLogPathNow(), message, length);
+	appendToFile(crashLogMirrorNow(), message, length);
 }
 
 // GeneralsX @bugfix Android port 11/07/2026 Two real-device crashes in a row
@@ -438,8 +551,8 @@ void androidCrashHandler(int sig, siginfo_t *info, void *ucontext) {
 	const void *faultAddr = (info != nullptr) ? info->si_addr : nullptr;
 	int len = snprintf(buf, sizeof(buf),
 		"\n=== NATIVE CRASH === signal=%d (%s) fault_addr=%p pid=%d tid=%d ===\n"
-		"If you're reading this: open BFME1 Mobile -> Send report,\n" // BFME: branding
-		"and share this file's contents.\n",
+		"If you're reading this: open the BFME1 app -> \"Send report\" («Отправить отчёт»)\n" // BFME: crash-path
+		"and send the zip.\n",
 		sig, strsignal(sig), faultAddr, (int)getpid(), (int)gettid());
 	if (len > 0) {
 		appendCrashLog(buf, (size_t)len < sizeof(buf) ? (size_t)len : sizeof(buf) - 1);
@@ -518,7 +631,7 @@ __attribute__((constructor))
 void installAndroidCrashHandler() {
 	computeCrashLogPath();
 	computeBuildId();
-	rotatePrevCrashLog();
+	// BFME: crash-path. Rotation now happens in computeCrashLogPath() -> applyCrashDirs().
 
 	stack_t ss;
 	ss.ss_sp = s_altStack;
@@ -695,8 +808,20 @@ Java_com_generalsx_zerohour_NativeTestActivity_nativeInfo(JNIEnv *env, jclass)
 		__DATE__, __TIME__, (int)ANDROID_CI_BUILD_NUMBER,
 		s_buildIdHex[0] ? s_buildIdHex : "unknown",
 		s_haveHandlerFor[SIGSEGV] ? "installed" : "not installed",
-		s_crashLogPath[0] ? s_crashLogPath : "disabled");
+		crashLogPathNow()[0] ? crashLogPathNow() : "disabled");
 	return env->NewStringUTF(buf);
+}
+
+// BFME: crash-path. Real directories from Java (Context.getFilesDir/getExternalFilesDir).
+extern "C" JNIEXPORT void JNICALL
+Java_com_generalsx_zerohour_BfmeCrashPaths_nativeSetDirs(JNIEnv *env, jclass, jstring filesDir, jstring externalDir)
+{
+	const char *in = filesDir ? env->GetStringUTFChars(filesDir, nullptr) : nullptr;
+	const char *ext = externalDir ? env->GetStringUTFChars(externalDir, nullptr) : nullptr;
+	applyCrashDirs(in, ext ? ext : ""); // filesDir == null: keep the current internal dir (no self-overlapping snprintf)
+	if (in) env->ReleaseStringUTFChars(filesDir, in);
+	if (ext) env->ReleaseStringUTFChars(externalDir, ext);
+	fprintf(stderr, "[BFME crash-path] crash log '%s', mirror '%s'\n", crashLogPathNow(), crashLogMirrorNow()[0] ? crashLogMirrorNow() : "none");
 }
 
 extern "C" JNIEXPORT void JNICALL

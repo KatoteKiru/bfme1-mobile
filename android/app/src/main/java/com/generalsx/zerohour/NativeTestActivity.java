@@ -62,6 +62,7 @@ public class NativeTestActivity extends Activity {
         m.put("android", Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")");
         try {
             System.loadLibrary("main");
+            BfmeCrashPaths.install(this); // BFME: crash-path
             m.put("libmain", "loaded");
             m.put("native", nativeInfo());
         } catch (Throwable t) {

@@ -299,6 +299,7 @@ public class GeneralsZHActivity extends SDLActivity {
         OnlineProvider.forBuild().refreshSessionAsync(this);
 
         super.onCreate(savedInstanceState);
+        BfmeCrashPaths.install(this); // BFME: crash-path (libmain.so is loaded by now)
     }
 
     // GeneralsX @bugfix Android port 02/08/2026 A tester reported the camera

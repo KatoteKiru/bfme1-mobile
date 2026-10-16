@@ -219,12 +219,9 @@ public class LogViewerActivity extends Activity {
     }
 
     private void clearLogs() {
-        new File(getFilesDir(), "crash.log").delete();
-        new File(getFilesDir(), "crash-prev.log").delete();
-        File extDir = getExternalFilesDir(null);
-        if (extDir != null) {
-            new File(extDir, "generals-stderr.log").delete();
-            new File(extDir, "generals-stderr-prev.log").delete();
+        // BFME: crash-path. Internal + external crash logs (incl. mirrors and selftest), stderr logs.
+        for (File f : BfmeCrashPaths.filesToClear(getFilesDir(), getExternalFilesDir(null))) {
+            f.delete();
         }
         loadLogs();
         Toast.makeText(this, R.string.logviewer_toast_cleared, Toast.LENGTH_SHORT).show();

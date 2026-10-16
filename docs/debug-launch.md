@@ -30,3 +30,18 @@ BFME_DOCKER="sudo docker" BFME_CACHE=/workspace/bfme-mobile/cache tools/android-
 ```
 
 `:app:testDebugUnitTest` компилирует основной код, а он зависит от Java-обвязки SDL3 (`org.libsdl.app`), которую обычно кладёт в `android/app/src/main/java-sdl/` (в `.gitignore`) `package-android-zh.sh`. Скрипт кладёт её сам: из `build/android-vulkan/_deps/sdl3-src`, если нативная сборка уже была, иначе из закреплённого архива SDL3 (версия и SHA-256 из `cmake/sdl3.cmake`, проверяются), и накладывает `android/patches/*.patch`. Если обвязка уже лежит на месте, она не трогается. Затем Gradle запускается в образе сборки с фиктивным путём к keystore (тесты ничего не подписывают). В конце печатается сумма по `test-results/*.xml`.
+
+## Журнал краша без run-as (BFME: crash-path)
+Native-обработчик пишет один и тот же текст в два места:
+- внутреннее: `files/crash.log` (`crash-prev.log` — прошлый запуск);
+- копия во внешнем каталоге приложения: `Android/data/io.github.katotekiru.me1mobile/files/crash.log` (и `crash-prev.log`).
+
+Crash-selftest (процесс `:nativetest`) пишет `crash-selftest.log` в оба места, без ротации. Пути передаёт Java (`getFilesDir()`, `getExternalFilesDir(null)`) сразу после загрузки `libmain.so`. До этого (и если Java не успела) путь строится из имени пакета в `/proc/self/cmdline`.
+
+```sh
+adb shell cat /sdcard/Android/data/io.github.katotekiru.me1mobile/files/crash.log
+adb shell cat /sdcard/Android/data/io.github.katotekiru.me1mobile/files/crash-prev.log
+adb shell cat /sdcard/Android/data/io.github.katotekiru.me1mobile/files/crash-selftest.log
+# внутренняя копия, только для debuggable-сборок:
+adb shell run-as io.github.katotekiru.me1mobile cat files/crash.log
+```

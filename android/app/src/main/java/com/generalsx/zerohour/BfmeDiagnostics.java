@@ -120,9 +120,9 @@ final class BfmeDiagnostics {
         List<ReportFormat.Entry> l = new ArrayList<>();
         File in = c.getFilesDir();
         File ext = c.getExternalFilesDir(null);
-        l.add(new ReportFormat.Entry("crash.log", new File(in, "crash.log")));
-        l.add(new ReportFormat.Entry("crash-prev.log", new File(in, "crash-prev.log")));
-        l.add(new ReportFormat.Entry("crash-selftest.log", new File(in, "crash-selftest.log")));
+        l.add(new ReportFormat.Entry("crash.log", BfmeCrashPaths.pick(in, ext, "crash.log"))); // BFME: crash-path
+        l.add(new ReportFormat.Entry("crash-prev.log", BfmeCrashPaths.pick(in, ext, "crash-prev.log"))); // BFME: crash-path
+        l.add(new ReportFormat.Entry("crash-selftest.log", BfmeCrashPaths.pick(in, ext, "crash-selftest.log"))); // BFME: crash-path
         if (ext != null) {
             l.add(new ReportFormat.Entry("generals-stderr.log", new File(ext, "generals-stderr.log")));
             l.add(new ReportFormat.Entry("generals-stderr-prev.log", new File(ext, "generals-stderr-prev.log")));
