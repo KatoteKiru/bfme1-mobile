@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BFME: E1-15 report / crash-selftest / native smoke strings. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="bfme_report_button">Send report</string>
+    <string name="bfme_report_title">Send report</string>
+    <string name="bfme_report_intro">Diagnostic files to include (logs only, never game files):</string>
+    <string name="bfme_report_absent">%1$s (absent)</string>
+    <string name="bfme_report_logcat">Logcat of the app (logcat -d)</string>
+    <string name="bfme_report_send">Send</string>
+    <string name="bfme_report_save">Save to file</string>
+    <string name="bfme_report_building">Building zip…</string>
+    <string name="bfme_report_ready">Ready: %1$s (%2$d files, %3$d KB)</string>
+    <string name="bfme_report_failed">Report failed: %1$s</string>
+    <string name="bfme_report_saved">Report saved</string>
+    <string name="bfme_report_row_note">Zip of crash.log, engine log, startup info, import state, logcat</string>
+    <string name="bfme_selftest_title">Test crash report</string>
+    <string name="bfme_selftest_note">Crashes on purpose in native code to check crash.log (crash-selftest)</string>
+    <string name="bfme_smoke_title">Native smoke</string>
+    <string name="bfme_smoke_note">Loads libmain and EGL without game data, logs device and GPU</string>
+    <string name="bfme_smoke_running">Running…</string>
+    <string name="bfme_smoke_done">Done. Press Back to exit.\n\n%1$s</string>
+    <string name="bfme_crash_offer_title">Previous run crashed</string>
+    <string name="bfme_crash_offer_message">The previous run ended with an error. Send a report?</string>
+    <string name="bfme_crash_offer_later">Not now</string>
+    <string name="bfme_selftest_confirm">The test process will crash on purpose (SIGSEGV) and write crash-selftest.log. The game crash.log is not touched. Continue?</string>
+    <string name="bfme_selftest_confirm_ok">Crash</string>
+</resources>

@@ -263,7 +263,31 @@ void computeBuildId() {
 	}
 }
 
+// BFME: E1-15. The launcher's NativeTestActivity (native smoke / crash-selftest) loads libmain.so
+// in the ":nativetest" process. It must not rotate the game's crash.log (a real crash followed by
+// a smoke run would be lost) and writes to crash-selftest.log instead. Read once at install time
+// with open/read only.
+bool s_isNativeTestProcess = false;
+
+void detectNativeTestProcess() {
+	char cmd[256];
+	int fd = open("/proc/self/cmdline", O_RDONLY | O_CLOEXEC);
+	if (fd < 0) {
+		return;
+	}
+	ssize_t n = read(fd, cmd, sizeof(cmd) - 1);
+	close(fd);
+	if (n <= 0) {
+		return;
+	}
+	cmd[n] = '\0'; // argv[0] ends at the first NUL
+	static const char suffix[] = ":nativetest";
+	size_t len = strlen(cmd), sl = sizeof(suffix) - 1;
+	s_isNativeTestProcess = len >= sl && strcmp(cmd + len - sl, suffix) == 0;
+}
+
 void computeCrashLogPath() {
+	detectNativeTestProcess(); // BFME: E1-15
 	// GeneralsX @feature Android port 27/09/2026 An empty path is the handler's own "do not
 	// write" state (appendCrashLog, rotatePrevCrashLog); the launcher's switch sets it.
 	if (GXLoggingDisabled()) {
@@ -272,7 +296,8 @@ void computeCrashLogPath() {
 	}
 	// GeneralsX @bugfix Android port 08/10/2026 applicationId, not the Java package.
 	// BFME: E1-04 crash log path follows the Gradle applicationId.
-	if (!gxAndroidFilesPath(s_crashLogPath, sizeof(s_crashLogPath), "crash.log")) {
+	if (!gxAndroidFilesPath(s_crashLogPath, sizeof(s_crashLogPath),
+	                        s_isNativeTestProcess ? "crash-selftest.log" : "crash.log")) { // BFME: E1-15
 		s_crashLogPath[0] = '\0';
 	}
 }
@@ -290,7 +315,7 @@ void computeCrashLogPath() {
 // session's own content, and the previous session's record is still one
 // tap away in Settings -> View Logs instead of accumulating forever.
 void rotatePrevCrashLog() {
-	if (s_crashLogPath[0] == '\0') {
+	if (s_crashLogPath[0] == '\0' || s_isNativeTestProcess) { // BFME: E1-15 never in :nativetest
 		return;
 	}
 	char prevPath[256];
@@ -657,5 +682,29 @@ extern "C" void __cxa_throw(void* thrown_exception, std::type_info* tinfo, void 
 }
 
 #endif // __ANDROID__
+
+// BFME: E1-15. Hooks for the launcher's NativeTestActivity (separate ":nativetest" process).
+// nativeInfo proves libmain.so loaded and JNI binds (native smoke, checklist 1.16);
+// nativeCrash raises SIGSEGV so the handler above writes crash.log (crash-selftest, 1.15).
+#include <jni.h>
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_generalsx_zerohour_NativeTestActivity_nativeInfo(JNIEnv *env, jclass)
+{
+	char buf[256];
+	snprintf(buf, sizeof(buf), "libmain compiled %s %s, CI run %d, build id %s, crash handler %s, log %s",
+		__DATE__, __TIME__, (int)ANDROID_CI_BUILD_NUMBER,
+		s_buildIdHex[0] ? s_buildIdHex : "unknown",
+		s_haveHandlerFor[SIGSEGV] ? "installed" : "not installed",
+		s_crashLogPath[0] ? s_crashLogPath : "disabled");
+	return env->NewStringUTF(buf);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_generalsx_zerohour_NativeTestActivity_nativeCrash(JNIEnv *, jclass)
+{
+	static const char msg[] = "\n=== BFME crash-selftest: raising SIGSEGV ===\n";
+	appendCrashLog(msg, sizeof(msg) - 1);
+	raise(SIGSEGV);
+}
 
 #endif // __ANDROID__

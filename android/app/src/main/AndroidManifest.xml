@@ -177,6 +177,21 @@
             android:theme="@style/Theme.GeneralsZHSettings"
             android:configChanges="orientation|screenSize|keyboardHidden" />
 
+        <!-- BFME: E1-15 «Отправить отчёт» and the native smoke / crash-selftest screen. The
+             latter runs in its own process so a deliberate SIGSEGV never kills the launcher. -->
+        <activity
+            android:name=".ReportActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GeneralsZHSettings"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
+        <activity
+            android:name=".NativeTestActivity"
+            android:exported="false"
+            android:process=":nativetest"
+            android:theme="@style/Theme.GeneralsZHSettings"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
         <!-- BFME: E1-04 the online account activity is not registered. Compiling
              it in would put its class name in the packaged manifest. -->
 

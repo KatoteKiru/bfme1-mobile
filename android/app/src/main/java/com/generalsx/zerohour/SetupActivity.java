@@ -165,6 +165,9 @@ public class SetupActivity extends Activity {
         } catch (Throwable t) {
             buildFallbackUi(t);
         }
+        // BFME: E1-15 startup metadata (startup-meta.txt + logcat), off the UI thread.
+        final android.content.Context appCtx = getApplicationContext();
+        new Thread(() -> BfmeDiagnostics.writeStartupMetadata(appCtx), "bfme-startup-meta").start();
     }
 
     @Override
@@ -205,6 +208,7 @@ public class SetupActivity extends Activity {
 
         addPlainButton(root, getString(R.string.setup_button_select_game_folder), this::onSelectGameFolder);
         addPlainButton(root, getString(R.string.setup_button_view_logs), this::onViewLogs);
+        addPlainButton(root, getString(R.string.bfme_report_button), () -> onSendReport("manual")); // BFME: E1-15
         addPlainButton(root, getString(R.string.setup_button_launch_game), this::onLaunchGame);
         addPlainButton(root, getString(R.string.setup_button_clear_game_folder), this::onClearGameFolder);
     }
@@ -236,6 +240,48 @@ public class SetupActivity extends Activity {
         // BFME: E1-04 no Updates card and no fork auto-check on resume.
         loadDxvkConfigIntoEditor();
         refreshDiagnosticsSwitches();
+        maybeOfferCrashReport(); // BFME: E1-15
+    }
+
+    // BFME: E1-15 checklist 1.15: a crash record newer than the last one offered -> ask once.
+    private boolean crashOfferShowing = false;
+
+    private void maybeOfferCrashReport() {
+        if (crashOfferShowing || !BfmeDiagnostics.shouldOfferCrashReport(this)) {
+            return;
+        }
+        crashOfferShowing = true;
+        BfmeDiagnostics.markCrashOffered(this);
+        new android.app.AlertDialog.Builder(this)
+            .setTitle(R.string.bfme_crash_offer_title)
+            .setMessage(R.string.bfme_crash_offer_message)
+            .setPositiveButton(R.string.bfme_report_send, (d, w) -> onSendReport("crash"))
+            .setNeutralButton(R.string.bfme_report_save, (d, w) -> startActivity(new Intent(this, ReportActivity.class)
+                .putExtra(ReportActivity.EXTRA_REASON, "crash").putExtra(ReportActivity.EXTRA_SAVE, true)))
+            .setNegativeButton(R.string.bfme_crash_offer_later, null)
+            .setOnDismissListener(d -> crashOfferShowing = false)
+            .show();
+    }
+
+    private void onSendReport(String reason) {
+        startActivity(new Intent(this, ReportActivity.class).putExtra(ReportActivity.EXTRA_REASON, reason));
+    }
+
+    private void onNativeTest(String mode) {
+        if (NativeTestActivity.MODE_CRASH.equals(mode)) {
+            new android.app.AlertDialog.Builder(this)
+                .setTitle(R.string.bfme_selftest_title)
+                .setMessage(R.string.bfme_selftest_confirm)
+                .setPositiveButton(R.string.bfme_selftest_confirm_ok, (d, w) -> startNativeTest(mode))
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+            return;
+        }
+        startNativeTest(mode);
+    }
+
+    private void startNativeTest(String mode) {
+        startActivity(new Intent(this, NativeTestActivity.class).putExtra(NativeTestActivity.EXTRA_MODE, mode));
     }
 
     // GeneralsX @feature Android port launcher-ui-2026 08/09/2026 The launcher
@@ -418,6 +464,9 @@ public class SetupActivity extends Activity {
         // The one thing this app exists to do, as the first thing on it.
         UiKit.button(page, UiKit.BTN_PRIMARY, R.drawable.ic_gzh_play,
             getString(R.string.setup_button_launch_game), this::onLaunchGame);
+        // BFME: E1-15 checklist 1.14.
+        UiKit.button(page, UiKit.BTN_TONAL, R.drawable.ic_gzh_doc,
+            getString(R.string.bfme_report_button), () -> onSendReport("manual"));
 
         LinearLayout folder = UiKit.card(page);
         UiKit.sectionHeader(folder, R.drawable.ic_gzh_folder,
@@ -563,6 +612,16 @@ public class SetupActivity extends Activity {
             getString(R.string.setup_button_view_logs),
             getString(R.string.setup_status_logs_note),
             this::onViewLogs);
+        UiKit.divider(card);
+        // BFME: E1-15 report, crash-selftest (1.15) and native smoke (1.16).
+        UiKit.listRow(card, R.drawable.ic_gzh_doc, getString(R.string.bfme_report_button),
+            getString(R.string.bfme_report_row_note), () -> onSendReport("manual"));
+        UiKit.divider(card);
+        UiKit.listRow(card, R.drawable.ic_gzh_wrench, getString(R.string.bfme_selftest_title),
+            getString(R.string.bfme_selftest_note), () -> onNativeTest(NativeTestActivity.MODE_CRASH));
+        UiKit.divider(card);
+        UiKit.listRow(card, R.drawable.ic_gzh_wrench, getString(R.string.bfme_smoke_title),
+            getString(R.string.bfme_smoke_note), () -> onNativeTest(NativeTestActivity.MODE_SMOKE));
         UiKit.divider(card);
         // GeneralsX @feature Android port 13/09/2026 Sits with the logs
         // rather than with the GeneralsOnline account screen on purpose: by
