@@ -292,9 +292,26 @@ __forceinline float fast_float_ceil(float f)
 #define REAL_TO_INT_CEIL(x)				(fast_float2long_round(ceilf(x)))
 #define REAL_TO_INT_FLOOR(x)			(fast_float2long_round(floorf(x)))
 #else
-#define REAL_TO_INT_CEIL(x)				(fast_float2long_round(fast_float_ceil(x)))
-#define REAL_TO_INT_FLOOR(x)			(fast_float2long_round(fast_float_floor(x)))
+#define REAL_TO_INT_CEIL(x)				(fast_float2long_round(fast_float_ceil(x))) // BFME: не исправлять
+#define REAL_TO_INT_FLOOR(x)			(fast_float2long_round(fast_float_floor(x))) // BFME: не исправлять
 #endif
+// BFME: не исправлять. ADR-0003 §2.7 (bfme 9bd874f3e). Без RTS_GENERALS
+// REAL_TO_INT_FLOOR(x) — это fast_float2long_round(fast_float_floor(x))
+// (:296), REAL_TO_INT_CEIL(x) — fast_float2long_round(fast_float_ceil(x))
+// (:295). Ветка Generals на floorf/ceilf — :292–293. fast_float_floor
+// (:261–267) для отрицательного аргумента вычитает 0,99999994 (0x3F7FFFFF)
+// и обрезает, fast_float_ceil (:270–276) для неотрицательного прибавляет
+// столько же и обрезает. Сумма округляется к ближайшему, поэтому для
+// отрицательного целого −n при n ≥ 1 REAL_TO_INT_FLOOR даёт −n−1, а
+// REAL_TO_INT_CEIL для положительного целого n даёт n+1. Для нецелых, 0 и
+// −0 результат совпадает с floor/ceil. Проверено 08.10.2026 перебором
+// n = 1…2^24 на x86_64 SSE: отклонение на 1 при 1 ≤ n < 2^24, при n = 2^24
+// сумма округляется к чётному и результат точный. Поведение детерминировано
+// (x86 SSE, x87 с PC_24 и ARM64 при setFPMode). Менять нельзя: на этом стоят
+// реплеи и CRC ZH (AIPathfind worldToCell и classify*, PartitionManager,
+// TerrainLogic::flattenTerrain и createCraterInTerrain). В новом коде BFME,
+// где нужен точный floor или ceil, — GameMath::floorToInt32 / ceilToInt32
+// (§2.4), а не REAL_TO_INT_*. Это известная особенность, а не ошибка.
 
 #define FAST_REAL_TRUNC(x)        fast_float_trunc(x)
 #define FAST_REAL_CEIL(x)         fast_float_ceil(x)

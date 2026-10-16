@@ -1,0 +1,41 @@
+# E1-49: crc/xfer, the long ban, REAL_TO_INT «не исправлять», and the GameMath
+# host tests. No APK. FPCR R1 is a runtime fp:: hook (ADR-0003 §2.3), not a
+# step here. Runner labels match E1-06 and bfme-android-apk.yml.
+name: E1-49 determinism checks
+
+on:
+  push:
+    branches: [bfme]
+  pull_request:
+    branches: [bfme]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bfme-e1-49-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, linux, bfme]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 (= v4.4.0)
+        with:
+          submodules: false
+          fetch-depth: 1
+          lfs: false
+
+      - name: crc, integer ban, REAL_TO_INT, GameMath tests
+        run: tools/ci/check-e1-49.sh
+
+      - name: warn when the arm64 cross check did not run
+        if: always()
+        run: |
+          log="${GITHUB_WORKSPACE}/build/tests-gamemath/ctest-e1-49.log"
+          if [ -f "$log" ] && grep -E -q 'Skipped|^SKIP:' "$log"; then
+            echo "::warning::bit-exact x86_64 vs arm64 was SKIPPED. SAGE_USE_DETERMINISTIC_MATH stays OFF. A skip is not a pass."
+            echo "WARNING: bit-exact x86_64 vs arm64 was SKIPPED. SAGE_USE_DETERMINISTIC_MATH stays OFF. A skip is not a pass."
+          fi

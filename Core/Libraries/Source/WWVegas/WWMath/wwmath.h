@@ -83,6 +83,14 @@ extern float _FastAsinTable[ARC_TABLE_SIZE];
 extern float _FastSinTable[SIN_TABLE_SIZE];
 extern float _FastInvSinTable[SIN_TABLE_SIZE];
 
+// BFME: E1-49. musl GameMath, only when SAGE_USE_DETERMINISTIC_MATH defines
+// USE_DETERMINISTIC_MATH. The include stays outside class WWMath: GameMath.h
+// opens a namespace, and a namespace inside the class does not compile
+// (expected unqualified-id before 'namespace').
+#ifdef USE_DETERMINISTIC_MATH
+#include "GameMath.h"
+#endif
+
 /*
 ** Some simple math functions which work on the built-in types.
 ** Include the various other header files in the WWMATH library
@@ -133,26 +141,16 @@ static WWINLINE float Acos(float val);
 static WWINLINE float Fast_Asin(float val);
 static WWINLINE float Asin(float val);
 
-
-// GeneralsX @feature fbraz 03/05/2026 Phase 4 conditional dispatch for deterministic math
-// When USE_DETERMINISTIC_MATH is defined, these wrappers route to GameMath (fdlibm).
-// Otherwise they use platform-native CRT or x87 (fast but platform-specific).
-// Upstream reference: Okladnoj, PR #2670
+// BFME: E1-49. When USE_DETERMINISTIC_MATH is set, these wrappers call musl
+// GameMath (double, then narrow to float). Otherwise they stay on the
+// platform libm. Upstream reference: Okladnoj, PR #2670
 // https://github.com/TheSuperHackers/GeneralsGameCode/pull/2670
-
-// Include GameMath headers when deterministic math is enabled
-// Note: GameMath integration is pending. This header will be populated when
-// GameMath submodule or library is available. For now, wrappers fallback to CRT.
-#ifdef USE_DETERMINISTIC_MATH
-// TODO: Uncomment when GameMath library is integrated as submodule
-// #include "GameMath/deterministic_math.h"
-#endif
 
 static WWINLINE float		Atan(float x) 
 { 
 #ifdef USE_DETERMINISTIC_MATH
-	// TODO: return GameMath::Atan(x);
-	return static_cast<float>(atan(x)); 
+	// BFME: E1-49.
+	return static_cast<float>(GameMath::Atan(static_cast<double>(x)));
 #else
 	return static_cast<float>(atan(x)); 
 #endif
@@ -161,8 +159,8 @@ static WWINLINE float		Atan(float x)
 static WWINLINE float		Atan2(float y, float x) 
 { 
 #ifdef USE_DETERMINISTIC_MATH
-	// TODO: return GameMath::Atan2(y, x);
-	return static_cast<float>(atan2(y, x)); 
+	// BFME: E1-49.
+	return static_cast<float>(GameMath::Atan2(static_cast<double>(y), static_cast<double>(x)));
 #else
 	return static_cast<float>(atan2(y, x)); 
 #endif
@@ -173,8 +171,8 @@ static WWINLINE float		Atan2(float y, float x)
 static WWINLINE float SinTrig(float x) 
 { 
 #ifdef USE_DETERMINISTIC_MATH
-	// TODO: return GameMath::Sin(x);
-	return Sin(x); 
+	// BFME: E1-49. Double musl sin, then narrow, same shape as Trig.cpp.
+	return static_cast<float>(GameMath::Sin(static_cast<double>(x)));
 #else
 	return Sin(x); 
 #endif
@@ -183,8 +181,8 @@ static WWINLINE float SinTrig(float x)
 static WWINLINE float CosTrig(float x) 
 { 
 #ifdef USE_DETERMINISTIC_MATH
-	// TODO: return GameMath::Cos(x);
-	return Cos(x); 
+	// BFME: E1-49.
+	return static_cast<float>(GameMath::Cos(static_cast<double>(x)));
 #else
 	return Cos(x); 
 #endif
@@ -195,8 +193,8 @@ static WWINLINE float CosTrig(float x)
 static WWINLINE float TanTrig(float x) 
 { 
 #ifdef USE_DETERMINISTIC_MATH
-	// TODO: return GameMath::Tan(x);
-	return (float)tan((double)x); 
+	// BFME: E1-49.
+	return static_cast<float>(GameMath::Tan(static_cast<double>(x)));
 #else
 	return (float)tan((double)x); 
 #endif
@@ -205,8 +203,8 @@ static WWINLINE float TanTrig(float x)
 static WWINLINE float ACosTrig(float x) 
 { 
 #ifdef USE_DETERMINISTIC_MATH
-	// TODO: return GameMath::Acos(x);
-	return Acos(x); 
+	// BFME: E1-49.
+	return static_cast<float>(GameMath::Acos(static_cast<double>(x)));
 #else
 	return Acos(x); 
 #endif
@@ -215,8 +213,8 @@ static WWINLINE float ACosTrig(float x)
 static WWINLINE float ASinTrig(float x) 
 { 
 #ifdef USE_DETERMINISTIC_MATH
-	// TODO: return GameMath::Asin(x);
-	return Asin(x); 
+	// BFME: E1-49.
+	return static_cast<float>(GameMath::Asin(static_cast<double>(x)));
 #else
 	return Asin(x); 
 #endif
@@ -227,8 +225,8 @@ static WWINLINE float ASinTrig(float x)
 static WWINLINE double SqrtOrigin(double x) 
 { 
 #ifdef USE_DETERMINISTIC_MATH
-	// TODO: return GameMath::Sqrt(x);
-	return sqrt(x); 
+	// BFME: E1-49. sqrt stays on the platform libm (ADR-0003 §2.2).
+	return sqrt(x);
 #else
 	return sqrt(x); 
 #endif

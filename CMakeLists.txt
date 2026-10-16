@@ -129,11 +129,11 @@ include(cmake/openal.cmake)
 # curl.cmake is self-guarded with if(SAGE_UPDATE_CHECK), so always safe to include.
 include(cmake/curl.cmake)
 
-# GeneralsX @feature fbraz 03/05/2026 Phase 4: Deterministic math library integration
-# gamemath.cmake integrates fdlibm-based GameMath for cross-platform replay validation.
+# BFME: E1-49. musl GameMath. The option stays OFF. When it is ON,
+# cmake/gamemath.cmake include()s gamemath_lib.cmake. It does not
+# add_subdirectory(Source/GameMath): that CMakeLists.txt is the fp gate.
 # Upstream reference: Okladnoj, PR #2670
 # https://github.com/TheSuperHackers/GeneralsGameCode/pull/2670
-# Self-guarded with if(SAGE_USE_DETERMINISTIC_MATH), so always safe to include.
 include(cmake/gamemath.cmake)
 
 if (IS_VS6_BUILD)

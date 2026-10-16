@@ -34,6 +34,14 @@ target_link_libraries(corei_always INTERFACE
     corei_libraries_include
     resources
 )
+# BFME: E1-49. GameMath/include and the musl library only when the flag is ON.
+# With the flag OFF this file adds no -I and no link for GameMath.
+# floorToInt32 is Lib/GameMathInt.h, already visible through Libraries/Include.
+if(SAGE_USE_DETERMINISTIC_MATH)
+    target_include_directories(corei_libraries_include INTERFACE "Libraries/Source/GameMath/include")
+    target_link_libraries(corei_always INTERFACE GameMath)
+    target_link_libraries(corei_always_no_pch INTERFACE GameMath)
+endif()
 target_link_libraries(corei_always_no_pch INTERFACE
     core_config
     core_utility_no_pch

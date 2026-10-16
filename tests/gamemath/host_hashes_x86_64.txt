@@ -1,0 +1,22 @@
+# x86_64 host reference for gamemath_bitexact --self-check.
+# Measured with gcc, RelWithDebInfo, -ffp-contract=off, no -mfma.
+# arm64 has not been compared. A qemu SKIP is not this comparison.
+# On this host, rebuilding the same binary with -ffp-contract=fast -mfma
+# changed 12 of these 15 hashes (sinf, cosf and tanf stayed).
+# count is t.d.size() of the [-4pi, 4pi] sample.
+count 1000022
+sin 8503844ec425207b
+cos 05cd3236419daadb
+tan 8b0e89e2349c4e6a
+asin 5a5e48fe2e99e1d6
+acos 631f86b42bac6bfa
+atan 31a5bd1b096bc256
+atan2 0baace3b7f3c233c
+pow 8a4ba39d1ade61c4
+sinf 6d138aa4e385e7de
+cosf 634ca5b7a37d31d0
+tanf ca3d1811f23a60d4
+asinf f6039a2c7b448158
+acosf 891e851b6a15e5f4
+atanf d2c35973af170fc0
+atan2f 27af87f7b6090995
