@@ -902,7 +902,8 @@ WebGLPipeline::ProgramInfo *WebGLPipeline::getProgram(WebGLDevice *dev, unsigned
 	vs += "uniform vec4 uViewportPos;\n"; // x, y, w, h
 	vs += "uniform float uYFlip;\n"; // +1 backbuffer, -1 render-to-texture
 	vs += "uniform mat4 uTexMat0, uTexMat1;\n";
-	vs += "out vec4 vCol;\nout vec4 vSpec;\nout vec2 vUV0;\nout vec2 vUV1;\nout float vFogDepth;\n";
+	// BFME: E1-51 атлас 4096 — fp16 (mediump) на Mali даёт шаг ~1/2048, субтексельные швы; highp во фрагменте гарантирован в GLES 3.0.
+	vs += "out vec4 vCol;\nout vec4 vSpec;\nout highp vec2 vUV0;\nout highp vec2 vUV1;\nout float vFogDepth;\n";
 	if (lighting) {
 		vs += "uniform vec4 uMatDiffuse, uMatAmbient, uMatEmissive, uGlobalAmbient;\n";
 		vs += "uniform int uNumLights;\n";
@@ -1004,7 +1005,8 @@ WebGLPipeline::ProgramInfo *WebGLPipeline::getProgram(WebGLDevice *dev, unsigned
 	fs += "uniform sampler2D uTex0;\nuniform sampler2D uTex1;\n";
 	fs += "uniform vec4 uTFactor;\nuniform float uAlphaRef;\n";
 	fs += "uniform vec4 uFogColor;\nuniform vec2 uFogParams;\n"; // start, end
-	fs += "in vec4 vCol;\nin vec4 vSpec;\nin vec2 vUV0;\nin vec2 vUV1;\nin float vFogDepth;\n";
+	// BFME: E1-51 атлас 4096 — fp16 (mediump) на Mali даёт шаг ~1/2048, субтексельные швы; highp во фрагменте гарантирован в GLES 3.0.
+	fs += "in vec4 vCol;\nin vec4 vSpec;\nin highp vec2 vUV0;\nin highp vec2 vUV1;\nin float vFogDepth;\n";
 	fs += "out vec4 fragColor;\n";
 	fs += "void main() {\n";
 	fs += "  vec4 cur = vCol;\n";
