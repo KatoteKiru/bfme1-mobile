@@ -53,6 +53,11 @@ function(bfme_heights_engine target root)
         ${BFME_E125_TESTS_DIR}/src/EngineStubs.cpp
         ${ARGN}
     )
+    # BFME: E1-51 the baseline tree (8ef2349) has no TerrainAtlas.cpp. This tree does.
+    if(EXISTS "${R}/Core/GameEngineDevice/Source/W3DDevice/GameClient/TerrainAtlas.cpp")
+        target_sources(${target} PRIVATE
+            ${R}/Core/GameEngineDevice/Source/W3DDevice/GameClient/TerrainAtlas.cpp)
+    endif()
     # Same game/platform defines as the linux64-deploy and android-vulkan presets (ZH build, null
     # GameMemory, release asserts), and the float/aliasing semantics of cmake/compilers.cmake.
     target_compile_definitions(${target} PUBLIC

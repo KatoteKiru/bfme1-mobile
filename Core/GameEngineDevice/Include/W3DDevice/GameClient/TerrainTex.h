@@ -49,12 +49,13 @@ public:
 		/// Create texture for a height map.
 		TerrainTextureClass(int height);
 
-		/// Create texture for a height map.
-		TerrainTextureClass(int height, int width);
+		/// Create texture for a height map. Default mip count is the full chain (flat textures).
+		/// The terrain atlas passes MIP_LEVELS_3 so trilinear filtering stops at the 4px border.
+		TerrainTextureClass(int height, int width, MipCountType mipLevelCount = MIP_LEVELS_ALL);
 
 		// just use default destructor. ~TerrainTextureClass();
 public:
-	int update(WorldHeightMap *htMap); ///< Sets the pixels, and returns the actual height of the texture.
+	int update(WorldHeightMap *htMap, int page = 0); ///< BFME: E1-51 page selects one atlas page. Sets the pixels, returns the height.
 	Bool updateFlat(WorldHeightMap *htMap, Int xCell, Int yCell, Int cellWidth, Int pixelsPerCell); ///< Sets the pixels.
 	void setLOD(Int LOD);
 };
@@ -87,9 +88,12 @@ public:
 		/// Create texture for a height map.
 		AlphaEdgeTextureClass(int height, MipCountType mipLevelCount = MIP_LEVELS_3 );
 
+		/// BFME: E1-51 page width (2048 or 4096). The one-argument ctor stays TEXTURE_WIDTH.
+		AlphaEdgeTextureClass(int height, int width, MipCountType mipLevelCount = MIP_LEVELS_3 );
+
 		// just use default destructor. ~TerrainTextureClass();
 public:
-	int update(WorldHeightMap *htMap); ///< Sets the pixels, and returns the actual height of the texture.
+	int update(WorldHeightMap *htMap, int page = 0); ///< BFME: E1-51 page selects one atlas page.
 
 };
 

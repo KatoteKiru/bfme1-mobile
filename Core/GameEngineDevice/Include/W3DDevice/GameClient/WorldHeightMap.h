@@ -33,6 +33,7 @@
 #include "WWLib/refcount.h"
 #include "WWMath/vector3.h"
 #include "W3DDevice/GameClient/TileData.h"
+#include "W3DDevice/GameClient/TerrainAtlas.h"	// BFME: E1-51
 #include "Common/MapObject.h"
 
 #include "Common/STLTypedefs.h"
@@ -74,6 +75,7 @@ typedef struct {
 	Int isBlendEdgeTile; ///< True if the texture contains blend edges.
 	AsciiString name;
 	ICoord2D positionInTexture;
+	Int atlasPage;	///< BFME: E1-51 page of the terrain atlas, -1 if the class was not placed
 } TXTextureClass;
 
 typedef enum {POS_X, POS_Y, NEG_X, NEG_Y} TVDirection;
@@ -242,6 +244,16 @@ protected:
 	AlphaEdgeTextureClass *m_alphaEdgeTex;
 	Int	m_alphaEdgeHeight; /// Height of m_alphaEdgeTex allocated.
 
+	// BFME: E1-51 atlas pages. Page 0 is m_terrainTex / m_alphaEdgeTex. A map that fits is one
+	// 4096x2048 texture; otherwise these are the extra 2048² pages (page 0 is the first of them).
+	// Draw-time sampling of page > 0 is E1-32.
+	TerrainAtlasStats m_atlasStats;
+	TerrainAtlasStats m_edgeAtlasStats;
+	TerrainTextureClass **m_atlasExtraPages;
+	Int m_atlasExtraCount;
+	AlphaEdgeTextureClass **m_edgeExtraPages;
+	Int m_edgeExtraCount;
+
 	/// Drawing info - re the part of the map that is being drawn.
 	Int m_drawOriginX;
 	Int m_drawOriginY;
@@ -260,11 +272,20 @@ protected:
 	void freeTileTables();	// BFME: E1-25
 	void freeMapArrays();	// BFME: E1-25 review #10, all arrays (destructor and constructor failure path)
 	/// UV mapping data for a cell to map into the terrain texture.
-	void getUVForNdx(Int ndx, float *minU, float *minV, float *maxU, float*maxV);
+	void getUVForNdx(Int ndx, float *minU, float *minV, float *maxU, float*maxV, Int *page = nullptr);
 	Bool getUVForTileIndex(Int ndx, Short tileNdx, float U[4], float V[4]);
 	Int getTextureClassFromNdx(Int tileNdx);
 	void readTexClass(TXTextureClass *texClass, TileData **tileData);
 	Int updateTileTexturePositions(Int *edgeHeight); ///< Places each tile in the texture.
+	// BFME: E1-51 CPU blit of one atlas page into a locked surface (or a test buffer).
+	// pitchBytes is the row stride. Returns tiles written. *rejected counts rects that do not fit.
+	Int blitBaseAtlasPage(UnsignedByte *bits, Int pitchBytes, Int texW, Int texH, Int page, Int *rejected);
+	Int blitEdgeAtlasPage(UnsignedByte *bits, Int pitchBytes, Int texW, Int texH, Int page, Int *rejected);
+	void releaseAtlasPages();
+	Int baseAtlasWidth() const;
+	Int baseAtlasHeight(Int page) const;
+	Int edgeAtlasWidth() const;
+	Int edgeAtlasHeight(Int page) const;
 	void initCliffFlagsFromHeights();
 	void setCellCliffFlagFromHeights(Int xIndex, Int yIndex);
 
@@ -331,7 +352,12 @@ public:  // height map info.
 			return(0);
 	};
 
-	void getUVForBlend(Int edgeClass, Region2D *range);
+	void getUVForBlend(Int edgeClass, Region2D *range, Int *page = nullptr);
+	// BFME: E1-51 class rectangle of the cliff at cell ndx, in that page's UV.
+	// origin = positionInTexture / (atlasW, atlasH), size = width*64 / (atlasW, atlasH).
+	// Cliff u/v from getUVForTileIndex are local class units (1 = one class edge), not wrapped.
+	// The shader samples origin + fract(local) * size.
+	Bool getCliffClassInfo(Int ndx, Int *page, Coord2D *origin, Coord2D *size) const;
 
 	DrawArea createDrawArea(Int xOrg, Int yOrg);
 	Bool setDrawArea(const DrawArea& drawArea);
@@ -345,6 +371,8 @@ public:  // height map info.
 
 public:  // tile and texture info.
 	void setTextureLOD(Int lod);	///< set maximum lod level sent to the hardware.
+	const TerrainAtlasStats &getTerrainAtlasStats() const { return m_atlasStats; }	// BFME: E1-51
+	const TerrainAtlasStats &getEdgeTerrainAtlasStats() const { return m_edgeAtlasStats; }
 	TextureClass *getTerrainTexture();  //< generates if needed and returns the terrain texture
 	TextureClass *getAlphaTerrainTexture(); //< generates if needed and returns alpha terrain texture
 	TextureClass *getEdgeTerrainTexture(); //< generates if needed and returns blend edge texture

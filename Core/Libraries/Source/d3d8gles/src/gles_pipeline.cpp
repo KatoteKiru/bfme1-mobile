@@ -458,6 +458,15 @@ bool WebGLPipeline::initContext(int w, int h, SDL_Window *window)
 		fprintf(stderr, "[d3d8gles] GLES backend: %s\n", libName);
 	}
 
+	// BFME: E1-51 the terrain atlas is 4096, or pages of 2048 when the device is smaller.
+	// Query only after MakeCurrent and d3d8gles_LoadGLESDispatch (above).
+	{
+		GLint maxTex = 0;
+		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTex);
+		if (maxTex >= 64) d3d8gles_MaxTextureEdge = (int)maxTex;
+		fprintf(stderr, "[d3d8gles] GL_MAX_TEXTURE_SIZE %d\n", (int)maxTex);
+	}
+
 	const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
 	m_hasS3TC = extensions != nullptr &&
 		(strstr(extensions, "GL_EXT_texture_compression_s3tc") != nullptr ||
@@ -1494,8 +1503,18 @@ void WebGLPipeline::uploadTexture(WebGLTexture *tex)
 		}
 	}
 	if (!isDXT && levels > 1) {
+		// BFME: E1-51 the terrain atlas is created with 3 levels (MIP_LEVELS_3). The 4px
+		// tile border is one texel at level 2 and gone after that, so a full chain with
+		// trilinear filtering mixes neighbouring tiles. Set MAX_LEVEL before
+		// glGenerateMipmap so the driver does not allocate the rest of the chain.
+		// A texture that asked for every level (CreateTexture levels == 0) keeps the
+		// previous MAX_LEVEL 1000.
+		const int maxLevel = tex->m_explicitMips ? (levels - 1) : 1000;
+		if (tex->m_explicitMips) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, maxLevel);
+		}
 		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1000);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, maxLevel);
 	} else {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, uploaded > 0 ? uploaded - 1 : 0);
 	}

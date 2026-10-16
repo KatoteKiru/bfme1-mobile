@@ -53,6 +53,9 @@
 
 #include "Common/file.h"
 
+#include <cstdio>
+#include <cstring>
+#include <vector>
 
 #define K_OBSOLETE_HEIGHT_MAP_VERSION 8
 
@@ -414,6 +417,7 @@ WorldHeightMap::~WorldHeightMap()
 	for (i=0; i<NUM_ALPHA_TILES; i++) {
 		REF_PTR_RELEASE(m_alphaTiles[i]);
 	}
+	releaseAtlasPages();	// BFME: E1-51
 	REF_PTR_RELEASE(m_terrainTex);
 	REF_PTR_RELEASE(m_alphaTerrainTex);
 	REF_PTR_RELEASE(m_alphaEdgeTex);
@@ -501,6 +505,12 @@ WorldHeightMap::WorldHeightMap():
 	memset(&m_blendStats, 0, sizeof(m_blendStats));	// BFME: E1-25
 	m_blendStats.version = -1;
 	memset(&m_objectsZStats, 0, sizeof(m_objectsZStats));
+	m_atlasExtraPages = nullptr;	// BFME: E1-51
+	m_atlasExtraCount = 0;
+	m_edgeExtraPages = nullptr;
+	m_edgeExtraCount = 0;
+	memset(&m_atlasStats, 0, sizeof(m_atlasStats));
+	memset(&m_edgeAtlasStats, 0, sizeof(m_edgeAtlasStats));
 
 	TheSidesList->validateSides();
 	setupAlphaTiles();
@@ -546,6 +556,12 @@ WorldHeightMap::WorldHeightMap(ChunkInputStream *pStrm, Bool logicalDataOnly):
 	memset(&m_blendStats, 0, sizeof(m_blendStats));	// BFME: E1-25
 	m_blendStats.version = -1;
 	memset(&m_objectsZStats, 0, sizeof(m_objectsZStats));
+	m_atlasExtraPages = nullptr;	// BFME: E1-51 set before any throw: the destructor does not run then
+	m_atlasExtraCount = 0;
+	m_edgeExtraPages = nullptr;
+	m_edgeExtraCount = 0;
+	memset(&m_atlasStats, 0, sizeof(m_atlasStats));
+	memset(&m_edgeAtlasStats, 0, sizeof(m_edgeAtlasStats));
 	// BFME: E1-25 review #10 the chunk parsers throw on corrupt data (and MSGNEW on out of memory) after
 	// some arrays are allocated, and ~WorldHeightMap does not run when the constructor throws: this guard
 	// frees them while the exception leaves the constructor. Dismissed at the end of the constructor.
@@ -1313,6 +1329,7 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 	Int tileCapacity = m_numBitmapTiles;
 	for (i=0; i<m_numTextureClasses; i++) {
 		m_textureClasses[i].globalTextureClass = -1;
+		m_textureClasses[i].atlasPage = -1;	// BFME: E1-51
 		m_textureClasses[i].firstTile = file.readInt();
 		m_textureClasses[i].numTiles = file.readInt();
 		m_textureClasses[i].width = file.readInt();
@@ -1345,6 +1362,7 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 		tileCapacity = MAX(tileCapacity, m_numEdgeTiles);
 		for (i=0; i<m_numEdgeTextureClasses; i++) {
 			m_edgeTextureClasses[i].globalTextureClass = -1;
+			m_edgeTextureClasses[i].atlasPage = -1;	// BFME: E1-51
 			m_edgeTextureClasses[i].firstTile = file.readInt();
 			m_edgeTextureClasses[i].numTiles = file.readInt();
 			m_edgeTextureClasses[i].width = file.readInt();
@@ -1751,160 +1769,292 @@ Bool WorldHeightMap::readTiles(InputStream *pStr, TileData **tiles, Int numRows)
 
 
 
+// BFME: E1-51 tile locations before a pack, so a class that does not fit cannot keep a stale rect.
+static void clearTileLocations(TileData **tiles, Int capacity)
+{
+	if (tiles == nullptr) return;
+	for (Int i = 0; i < capacity; i++) {
+		if (tiles[i] == nullptr) continue;
+		tiles[i]->m_tileLocationInTexture.x = 0;
+		tiles[i]->m_tileLocationInTexture.y = 0;
+		tiles[i]->m_atlasPage = -1;
+	}
+}
+
+// BFME: E1-51 copy a placed class onto its tiles. baseNdx is checked before any table access:
+// a class header that survived the parser can still be widened by a caller, and width*width must
+// not walk off m_sourceTiles / m_edgeTiles.
+static void applyAtlasClasses(TXTextureClass *texClasses, Int classCount, TileData **tiles, Int tileCapacity,
+	const TerrainAtlasClassOut *placed, TerrainAtlasStats *stats, Int *detailed, const char *kind)
+{
+	if (texClasses == nullptr || placed == nullptr || stats == nullptr) return;
+	const char *kindName = kind != nullptr ? kind : "?";
+	for (Int c = 0; c < classCount; c++) {
+		TXTextureClass &tc = texClasses[c];
+		tc.atlasPage = placed[c].page;
+		if (placed[c].page < 0) {
+			tc.positionInTexture.x = 0;
+			tc.positionInTexture.y = 0;
+			continue;
+		}
+		tc.positionInTexture.x = placed[c].x;
+		tc.positionInTexture.y = placed[c].y;
+		const Int width = tc.width;
+		for (Int i = 0; i < width; i++) {
+			for (Int j = 0; j < width; j++) {
+				const Int baseNdx = tc.firstTile + i + j * width;
+				if (baseNdx < 0 || baseNdx >= tileCapacity || tiles == nullptr) {
+					if (stats->tilesPlaced > 0) stats->tilesPlaced--;
+					stats->rejectedTiles++;
+					char line[256];
+					snprintf(line, sizeof(line), "%s tile index %d outside [0,%d) class %d \"%s\"",
+						kindName, baseNdx, tileCapacity, c, tc.name.str());
+					bfmeLogTerrainAtlasDetail(detailed, line);
+					continue;
+				}
+				Int page = -1, x = 0, y = 0;
+				if (!bfmeAtlasTilePixel(stats, &placed[c], width, i, j, &page, &x, &y)) {
+					if (stats->tilesPlaced > 0) stats->tilesPlaced--;
+					stats->rejectedTiles++;
+					char line[256];
+					snprintf(line, sizeof(line), "%s tile index %d pixel outside page %dx%d class %d \"%s\"",
+						kindName, baseNdx, stats->pageWidth, stats->pageHeight, c, tc.name.str());
+					bfmeLogTerrainAtlasDetail(detailed, line);
+					continue;
+				}
+				if (tiles[baseNdx] == nullptr) continue;	// slot reserved, no bitmap (upstream)
+				tiles[baseNdx]->m_tileLocationInTexture.x = x;
+				tiles[baseNdx]->m_tileLocationInTexture.y = y;
+				tiles[baseNdx]->m_atlasPage = page;
+			}
+		}
+	}
+}
+
+static void packOneAtlas(const char *kind, Bool largestFirst, TXTextureClass *texClasses, Int classCount,
+	TileData **tiles, Int tileCapacity, TerrainAtlasStats *stats, Int *page0Height)
+{
+	clearTileLocations(tiles, tileCapacity);
+	std::vector<TerrainAtlasClassIn> in(size_t(classCount > 0 ? classCount : 0));
+	std::vector<TerrainAtlasClassOut> out(in.size());
+	for (Int c = 0; c < classCount; c++) {
+		in[size_t(c)].index = c;
+		in[size_t(c)].firstTile = texClasses[c].firstTile;
+		in[size_t(c)].numTiles = texClasses[c].numTiles;
+		in[size_t(c)].width = texClasses[c].width;
+		in[size_t(c)].name = texClasses[c].name.str();
+	}
+	Int detailed = 0;
+	bfmePackTerrainAtlas(in.empty() ? nullptr : in.data(), classCount, out.empty() ? nullptr : out.data(),
+		stats, &detailed, kind, largestFirst);
+	if (!out.empty()) {
+		applyAtlasClasses(texClasses, classCount, tiles, tileCapacity, out.data(), stats, &detailed, kind);
+	}
+	bfmeLogTerrainAtlasSummary(kind, stats);
+	if (page0Height) *page0Height = stats->pageCount > 0 ? stats->pageContentHeight[0] : 0;
+}
+
 /** updateTileTexturePositions - assigns each tile a location in the texture.
 */
 Int WorldHeightMap::updateTileTexturePositions(Int *edgeHeight)
 {
-	Int i, j;
-	Int maxHeight = 0;
-	const Int tilesPerRow = TEXTURE_WIDTH/(TILE_PIXEL_EXTENT+TILE_OFFSET);
+	// BFME: E1-51 one 4096x2048 page when the device allows it and the map fits; otherwise
+	// pages of 2048. The search order matches upstream (largest class first for the base
+	// atlas, file order for edges, first free cell of a row). A class that does not fit is
+	// moved to a new page, or logged, instead of being dropped by the old break.
+	Int baseHeight = 0;
+	packOneAtlas("base", true, m_textureClasses, m_numTextureClasses, m_sourceTiles, m_tileCapacity,
+		&m_atlasStats, &baseHeight);
+	Int edgeH = 0;
+	packOneAtlas("edge", false, m_edgeTextureClasses, m_numEdgeTextureClasses, m_edgeTiles, m_tileCapacity,
+		&m_edgeAtlasStats, &edgeH);
+	if (edgeHeight) *edgeHeight = edgeH;
+	return baseHeight;
+}
 
-	Bool availableGrid[tilesPerRow][tilesPerRow];
-	Int row, column;
-	for (row=0; row<tilesPerRow; row++) {
-		for (column=0; column<tilesPerRow; column++) {
-			availableGrid[row][column] = true;
-		}
+// BFME: E1-51 a placed block's 4 px border must sit inside the page. Upstream memcpy'd it
+// unconditionally. A block that fits the slot grid stays inside the page, including the border:
+// the last border row of a block on the last slot row is still within pageHeight.
+static Bool atlasRectInside(Int x, Int y, Int w, Int h, Int texW, Int texH)
+{
+	if (w < 0 || h < 0 || x < 0 || y < 0) return false;
+	if (w > texW || h > texH) return false;
+	if (x > texW - w || y > texH - h) return false;
+	return true;
+}
+
+static void rejectOne(Int *rejected)
+{
+	if (rejected) *rejected += 1;
+}
+
+Int WorldHeightMap::blitBaseAtlasPage(UnsignedByte *bits, Int pitchBytes, Int texW, Int texH, Int page, Int *rejected)
+{
+	const Int pixelBytes = 2;
+	if (bits == nullptr || texW <= 0 || texH <= 0 || pitchBytes < texW * pixelBytes) {
+		if (rejected) *rejected += m_numBitmapTiles;
+		return 0;
 	}
-
-	for (i=0; i<m_numBitmapTiles; i++) {
-		if (m_sourceTiles[i]) {
-			m_sourceTiles[i]->m_tileLocationInTexture.x = 0;
-			m_sourceTiles[i]->m_tileLocationInTexture.y = 0;
-		}
-	}
-
-	/* put the normal tiles into the terrain texture */
-	Int texClass;
-	Int tileWidth;
-	for (tileWidth = tilesPerRow; tileWidth>0; tileWidth--) {
-		for (texClass=0; texClass<m_numTextureClasses; texClass++) {
-			Int width = m_textureClasses[texClass].width;
-			if (width != tileWidth) continue;
-			// Find an available block of space.
-			Bool found = false;
-			for (row=0; row<tilesPerRow-width+1 && !found; row++) {
-				for (column=0; column<tilesPerRow-width+1 && !found; column++) {
-					if (availableGrid[row][column]) {
-						Bool open = true;
-						for (i=0; i<width && open; i++) {
-							for (j=0; j<width&&open; j++) {
-								if (!availableGrid[row+j][column+i]) {
-									open = false;
-								}
-							}
-						}
-						if (open) found = true;
-						break;
-					}
-				}
-				if (found) break;
-			}
-			if (!found) {
-				m_textureClasses[texClass].positionInTexture.x = 0;
-				m_textureClasses[texClass].positionInTexture.y = 0;
-				continue;
-			}
-
-			Int xOrigin = TILE_OFFSET/2 + column*(TILE_PIXEL_EXTENT+TILE_OFFSET);
-			Int yOrigin = TILE_OFFSET/2 + row*(TILE_PIXEL_EXTENT+TILE_OFFSET);
-			m_textureClasses[texClass].positionInTexture.x = xOrigin;
-			m_textureClasses[texClass].positionInTexture.y = yOrigin;
-			Int classHeight = yOrigin + width*TILE_PIXEL_EXTENT+ TILE_OFFSET/2;
-			if (maxHeight < classHeight) maxHeight = classHeight;
-
-			for (i=0; i<width; i++) {
-				for (j=0; j<width; j++) {
-					availableGrid[row+j][column+i] = false;
-					Int baseNdx = m_textureClasses[texClass].firstTile + i + j*width;
-					// In case we are just checking for room...
-					if (m_sourceTiles[baseNdx] == nullptr) continue;
-					Int x = xOrigin + i*TILE_PIXEL_EXTENT;
-					Int y = yOrigin + (width-j-1)*TILE_PIXEL_EXTENT;
-					m_sourceTiles[baseNdx]->m_tileLocationInTexture.x = x;
-					m_sourceTiles[baseNdx]->m_tileLocationInTexture.y = y;
-				}
-			}
-		}
-	}
-
-	for (i=0; i<m_numBitmapTiles; i++) {
-		if (m_edgeTiles[i]) {
-			m_edgeTiles[i]->m_tileLocationInTexture.x = 0;
-			m_edgeTiles[i]->m_tileLocationInTexture.y = 0;
-		}
-	}
-
-	/* put the blend edge tiles into the blend edges texture */
-	Int maxEdgeHeight = 0;
-	// Reset the grid, cause we're using a different texture now.
-	for (row=0; row<tilesPerRow; row++) {
-		for (column=0; column<tilesPerRow; column++) {
-			availableGrid[row][column] = true;
-		}
-	}
-	for (texClass=0; texClass<m_numEdgeTextureClasses; texClass++) {
-		Int width = m_edgeTextureClasses[texClass].width;
-		// Find an available block of space.
-		Bool found = false;
-		for (row=0; row<tilesPerRow-width+1 && !found; row++) {
-			for (column=0; column<tilesPerRow-width+1 && !found; column++) {
-				if (availableGrid[row][column]) {
-					Bool open = true;
-					for (i=0; i<width && open; i++) {
-						for (j=0; j<width&&open; j++) {
-							if (!availableGrid[row+j][column+i]) {
-								open = false;
-							}
-						}
-					}
-					if (open) found = true;
-					break;
-				}
-			}
-			if (found) break;
-		}
-		if (!found) {
-			m_edgeTextureClasses[texClass].positionInTexture.x = 0;
-			m_edgeTextureClasses[texClass].positionInTexture.y = 0;
+	const Int tilePixelExtent = TILE_PIXEL_EXTENT;
+	Int written = 0;
+	for (Int tileNdx = 0; tileNdx < m_numBitmapTiles; tileNdx++) {
+		TileData *pTile = getSourceTile(tileNdx);
+		if (!pTile) continue;
+		if (pTile->m_atlasPage != page) continue;
+		ICoord2D position = pTile->m_tileLocationInTexture;
+		if (position.x <= 0) continue; // all real tile offsets start at 2.  jba.
+		if (!atlasRectInside(position.x, position.y, tilePixelExtent, tilePixelExtent, texW, texH)) {
+			rejectOne(rejected);
 			continue;
 		}
-
-		Int xOrigin = TILE_OFFSET/2 + column*(TILE_PIXEL_EXTENT+TILE_OFFSET);
-		Int yOrigin = TILE_OFFSET/2 + row*(TILE_PIXEL_EXTENT+TILE_OFFSET);
-		m_edgeTextureClasses[texClass].positionInTexture.x = xOrigin;
-		m_edgeTextureClasses[texClass].positionInTexture.y = yOrigin;
-		Int classHeight = yOrigin + width*TILE_PIXEL_EXTENT+ TILE_OFFSET/2;
-		if (maxEdgeHeight < classHeight) maxEdgeHeight = classHeight;
-
-		for (i=0; i<width; i++) {
-			for (j=0; j<width; j++) {
-				availableGrid[row+j][column+i] = false;
-				Int baseNdx = m_edgeTextureClasses[texClass].firstTile + i + j*width;
-				// In case we are just checking for room...
-				if (m_edgeTiles[baseNdx] == nullptr) continue;
-				Int x = xOrigin + i*TILE_PIXEL_EXTENT;
-				Int y = yOrigin + (width-j-1)*TILE_PIXEL_EXTENT;
-				// Use negative offsets to differentiate between tiles & edges.
-				m_edgeTiles[baseNdx]->m_tileLocationInTexture.x = x;
-				m_edgeTiles[baseNdx]->m_tileLocationInTexture.y = y;
+		for (Int j = 0; j < tilePixelExtent; j++) {
+			UnsignedByte *pBGR = pTile->getRGBDataForWidth(tilePixelExtent);
+			pBGR += (tilePixelExtent - 1 - j) * TILE_BYTES_PER_PIXEL * tilePixelExtent; // invert to match.
+			UnsignedByte *pBGRX = bits + (position.y + j) * pitchBytes + position.x * pixelBytes;
+			for (Int i = 0; i < tilePixelExtent; i++) {
+				*((Short*)pBGRX) = 0x8000 + ((pBGR[2] >> 3) << 10) + ((pBGR[1] >> 3) << 5) + (pBGR[0] >> 3);
+				pBGRX += pixelBytes;
+				pBGR += TILE_BYTES_PER_PIXEL;
 			}
 		}
+		written++;
 	}
-	if (edgeHeight) *edgeHeight = maxEdgeHeight;
-	return maxHeight;
+	for (Int texClass = 0; texClass < m_numTextureClasses; texClass++) {
+		TXTextureClass &tc = m_textureClasses[texClass];
+		if (tc.atlasPage != page) continue;
+		ICoord2D origin = tc.positionInTexture;
+		if (origin.x <= 0) continue;
+		const Int widthPx = tc.width * TILE_PIXEL_EXTENT;
+		if (!atlasRectInside(origin.x - 4, origin.y - 4, widthPx + 8, widthPx + 8, texW, texH)) {
+			rejectOne(rejected);
+			continue;
+		}
+		for (Int j = 0; j < widthPx; j++) {
+			UnsignedByte *pBGRX = bits + (origin.y + j) * pitchBytes + origin.x * pixelBytes;
+			memcpy(pBGRX - 4 * pixelBytes, pBGRX + (widthPx - 4) * pixelBytes, 4 * pixelBytes);
+			memcpy(pBGRX + widthPx * pixelBytes, pBGRX, 4 * pixelBytes);
+		}
+		for (Int j = 0; j < 4; j++) {
+			UnsignedByte *pBGRX = bits + (origin.y - j - 1) * pitchBytes;
+			UnsignedByte *target = pBGRX + (origin.x - 4) * pixelBytes;
+			memcpy(target, target + widthPx * pitchBytes, (widthPx + 8) * pixelBytes);
+			pBGRX = bits + (origin.y + j) * pitchBytes;
+			target = pBGRX + (origin.x - 4) * pixelBytes;
+			memcpy(target + widthPx * pitchBytes, target, (widthPx + 8) * pixelBytes);
+		}
+	}
+	return written;
+}
+
+Int WorldHeightMap::blitEdgeAtlasPage(UnsignedByte *bits, Int pitchBytes, Int texW, Int texH, Int page, Int *rejected)
+{
+	const Int pixelBytes = 4;
+	if (bits == nullptr || texW <= 0 || texH <= 0 || pitchBytes < texW * pixelBytes) {
+		if (rejected) *rejected += m_numEdgeTiles;
+		return 0;
+	}
+	const Int tilePixelExtent = TILE_PIXEL_EXTENT;
+	Int written = 0;
+	for (Int tileNdx = 0; tileNdx < m_numEdgeTiles; tileNdx++) {
+		TileData *pTile = getEdgeTile(tileNdx);
+		if (!pTile) continue;
+		if (pTile->m_atlasPage != page) continue;
+		ICoord2D position = pTile->m_tileLocationInTexture;
+		if (position.x <= 0) continue; // all real edge offsets start at 4.  jba.
+		if (!atlasRectInside(position.x, position.y, tilePixelExtent, tilePixelExtent, texW, texH)) {
+			rejectOne(rejected);
+			continue;
+		}
+		for (Int j = 0; j < tilePixelExtent; j++) {
+			UnsignedByte *pBGR = pTile->getRGBDataForWidth(tilePixelExtent);
+			pBGR += (tilePixelExtent - 1 - j) * TILE_BYTES_PER_PIXEL * tilePixelExtent;
+			UnsignedByte *pBGRX = bits + (position.y + j) * pitchBytes + position.x * pixelBytes;
+			for (Int i = 0; i < tilePixelExtent; i++) {
+				pBGRX[0] = pBGR[0];
+				pBGRX[1] = pBGR[1];
+				pBGRX[2] = pBGR[2];
+				if (pBGR[0] == 0 && pBGR[1] == 0 && pBGR[2] == 0) {
+					pBGRX[3] = 0x80;
+				} else if (pBGR[0] == 0xff && pBGR[1] == 0xff && pBGR[2] == 0xff) {
+					pBGRX[3] = 0x00;
+				} else {
+					pBGRX[3] = 0xff;
+				}
+				pBGRX += pixelBytes;
+				pBGR += TILE_BYTES_PER_PIXEL;
+			}
+		}
+		written++;
+	}
+	return written;
+}
+
+void WorldHeightMap::releaseAtlasPages()
+{
+	if (m_atlasExtraPages) {
+		for (Int i = 0; i < m_atlasExtraCount; i++) {
+			REF_PTR_RELEASE(m_atlasExtraPages[i]);
+		}
+		delete[] m_atlasExtraPages;
+		m_atlasExtraPages = nullptr;
+	}
+	m_atlasExtraCount = 0;
+	if (m_edgeExtraPages) {
+		for (Int i = 0; i < m_edgeExtraCount; i++) {
+			REF_PTR_RELEASE(m_edgeExtraPages[i]);
+		}
+		delete[] m_edgeExtraPages;
+		m_edgeExtraPages = nullptr;
+	}
+	m_edgeExtraCount = 0;
+}
+
+Int WorldHeightMap::baseAtlasWidth() const
+{
+	return m_atlasStats.pageWidth > 0 ? m_atlasStats.pageWidth : TEXTURE_WIDTH;
+}
+
+Int WorldHeightMap::baseAtlasHeight(Int /*page*/) const
+{
+	// Every page of one atlas has the same size (4096x2048, or Nx2048²). UVs divide by that.
+	if (m_atlasStats.pageHeight > 0) return m_atlasStats.pageHeight;
+	return m_terrainTexHeight > 0 ? m_terrainTexHeight : 1;
+}
+
+Int WorldHeightMap::edgeAtlasWidth() const
+{
+	return m_edgeAtlasStats.pageWidth > 0 ? m_edgeAtlasStats.pageWidth : TEXTURE_WIDTH;
+}
+
+Int WorldHeightMap::edgeAtlasHeight(Int /*page*/) const
+{
+	if (m_edgeAtlasStats.pageHeight > 0) return m_edgeAtlasStats.pageHeight;
+	return m_alphaEdgeHeight > 0 ? m_alphaEdgeHeight : 1;
 }
 
 /** getUVData - Gets the texture coordinates to use.  See getTerrainTexture.
 */
-void WorldHeightMap::getUVForNdx(Int tileNdx, float *minU, float *minV, float *maxU, float*maxV)
+// BFME: E1-51 texture class that owns baseTile, or -1.
+static Int textureClassForTile(const TXTextureClass *classes, Int count, Int baseTile)
 {
+	if (classes == nullptr || baseTile < 0) return -1;
+	for (Int i = 0; i < count; i++) {
+		if (classes[i].firstTile < 0) continue;
+		if (baseTile >= classes[i].firstTile && baseTile < classes[i].firstTile + classes[i].numTiles) return i;
+	}
+	return -1;
+}
+
+void WorldHeightMap::getUVForNdx(Int tileNdx, float *minU, float *minV, float *maxU, float*maxV, Int *page)
+{
+	if (page) *page = -1;
 	Short baseNdx = tileNdx>>2;
 	if (baseNdx < 0 || baseNdx >= m_tileCapacity || m_sourceTiles[baseNdx] == nullptr) {	// BFME: E1-25 heap table bound
 		// Missing texture.
 		*minU = *minV = *maxU = *maxV = 0.0f;
 		return;
 	}
+	if (page) *page = m_sourceTiles[baseNdx]->m_atlasPage;	// BFME: E1-51 Draw_Triangles groups on this
 	ICoord2D pos = m_sourceTiles[baseNdx]->m_tileLocationInTexture;
 	*minU = pos.x;
 	*minV = pos.y;
@@ -1922,10 +2072,14 @@ void WorldHeightMap::getUVForNdx(Int tileNdx, float *minU, float *minV, float *m
 		*maxV = *minV+TILE_PIXEL_EXTENT;
 	}
 #endif
-	*minU/=TEXTURE_WIDTH;
-	*minV/=m_terrainTexHeight;
-	*maxU/=TEXTURE_WIDTH;
-	*maxV/=m_terrainTexHeight;
+	// BFME: E1-51 U is a fraction of the page edge, V of that page's texture height (not TEXTURE_WIDTH).
+	const Int atlasPage = m_sourceTiles[baseNdx]->m_atlasPage;
+	const Int atlasW = baseAtlasWidth();
+	const Int atlasH = baseAtlasHeight(atlasPage >= 0 ? atlasPage : 0);
+	*minU/=atlasW;
+	*minV/=atlasH;
+	*maxU/=atlasW;
+	*maxV/=atlasH;
 
 	// Tiles are 64x64 pixels, height grids map to 32x32.
 	// So get the proper quadrant of the tile.
@@ -1945,14 +2099,53 @@ void WorldHeightMap::getUVForNdx(Int tileNdx, float *minU, float *minV, float *m
 
 /** getUVData - Gets the texture coordinates to use.  See getTerrainTexture.
 */
-void WorldHeightMap::getUVForBlend(Int edgeClass, Region2D *range)
+void WorldHeightMap::getUVForBlend(Int edgeClass, Region2D *range, Int *page)
 {
+	if (page) *page = -1;	// BFME: E1-51
+	if (range == nullptr) return;
+	// BFME: E1-51 edgeClass is an index into m_edgeTextureClasses; upstream read it unchecked.
+	if (edgeClass < 0 || edgeClass >= m_numEdgeTextureClasses) {
+		range->lo.x = range->lo.y = range->hi.x = range->hi.y = 0;
+		return;
+	}
+	if (page) *page = m_edgeTextureClasses[edgeClass].atlasPage;
 	ICoord2D pos = m_edgeTextureClasses[edgeClass].positionInTexture;
 	Int width = m_edgeTextureClasses[edgeClass].width;
-	range->lo.x = (Real)pos.x/TEXTURE_WIDTH;
-	range->lo.y = (Real)pos.y/m_alphaEdgeHeight;
-	range->hi.x = ((Real)pos.x + width*TILE_PIXEL_EXTENT)/TEXTURE_WIDTH;
-	range->hi.y = ((Real)pos.y + width*TILE_PIXEL_EXTENT)/m_alphaEdgeHeight;
+	const Int atlasPage = m_edgeTextureClasses[edgeClass].atlasPage;
+	const Int atlasW = edgeAtlasWidth();
+	const Int atlasH = edgeAtlasHeight(atlasPage >= 0 ? atlasPage : 0);
+	range->lo.x = (Real)pos.x/atlasW;
+	range->lo.y = (Real)pos.y/atlasH;
+	range->hi.x = ((Real)pos.x + width*TILE_PIXEL_EXTENT)/atlasW;
+	range->hi.y = ((Real)pos.y + width*TILE_PIXEL_EXTENT)/atlasH;
+}
+
+Bool WorldHeightMap::getCliffClassInfo(Int ndx, Int *page, Coord2D *origin, Coord2D *size) const
+{
+	if (page) *page = -1;
+	if (origin) origin->x = origin->y = 0;
+	if (size) size->x = size->y = 0;
+	if (ndx < 0 || ndx >= m_dataSize || m_tileNdxes == nullptr || m_cliffInfoNdxes == nullptr) return false;
+	const Int cliffNdx = m_cliffInfoNdxes[ndx];
+	if (cliffNdx <= 0 || cliffNdx >= m_cliffInfoCapacity || m_cliffInfo == nullptr) return false;
+	const Int cellClass = textureClassForTile(m_textureClasses, m_numTextureClasses, m_tileNdxes[ndx] >> 2);
+	const Int cliffClass = textureClassForTile(m_textureClasses, m_numTextureClasses, m_cliffInfo[cliffNdx].tileIndex >> 2);
+	if (cellClass < 0 || cellClass != cliffClass) return false;
+	const TXTextureClass &tc = m_textureClasses[cliffClass];
+	if (tc.atlasPage < 0) return false;
+	const Int atlasW = baseAtlasWidth();
+	const Int atlasH = baseAtlasHeight(tc.atlasPage);
+	if (atlasW <= 0 || atlasH <= 0) return false;
+	if (page) *page = tc.atlasPage;
+	if (origin) {
+		origin->x = (Real)tc.positionInTexture.x / (Real)atlasW;
+		origin->y = (Real)tc.positionInTexture.y / (Real)atlasH;
+	}
+	if (size) {
+		size->x = (Real)(tc.width * TILE_PIXEL_EXTENT) / (Real)atlasW;
+		size->y = (Real)(tc.width * TILE_PIXEL_EXTENT) / (Real)atlasH;
+	}
+	return true;
 }
 
 /// Get whether something is cliff indexed with the offset that HeightMapRenderObjClass uses built in.
@@ -2038,19 +2231,20 @@ Bool WorldHeightMap::getUVForTileIndex(Int ndx, Short tileNdx, float U[4], float
 				}
 			}
 			if (tilesMatch) {
-				Real minU = m_textureClasses[i].positionInTexture.x;
-				Real maxV = m_textureClasses[i].positionInTexture.y + m_textureClasses[i].width*TILE_PIXEL_EXTENT;
-				minU/=TEXTURE_WIDTH;
-				maxV/=m_terrainTexHeight;
-				Real vFactor = TEXTURE_WIDTH/m_terrainTexHeight;
-				U[0] = info.u0+minU;
-				U[1] = info.u1+minU;
-				U[2] = info.u2+minU;
-				U[3] = info.u3+minU;
-				V[0] = info.v0*vFactor+maxV;
-				V[1] = info.v1*vFactor+maxV;
-				V[2] = info.v2*vFactor+maxV;
-				V[3] = info.v3*vFactor+maxV;
+				// BFME: E1-51 file u/v are fractions of TEXTURE_WIDTH (TEX_PER_CELL = 32/TEXTURE_WIDTH).
+				// v = 0 is the bottom edge of the class (WorldBuilder adds it to the class bottom).
+				// Local units: 1 is one class edge, origin at the top-left. No wrap here.
+				// The shader samples origin + fract(local) * size (getCliffClassInfo).
+				const Int classPx = m_textureClasses[i].width * TILE_PIXEL_EXTENT;
+				const Real localScale = classPx > 0 ? (Real)TEXTURE_WIDTH / (Real)classPx : 0;
+				U[0] = info.u0 * localScale;
+				U[1] = info.u1 * localScale;
+				U[2] = info.u2 * localScale;
+				U[3] = info.u3 * localScale;
+				V[0] = 1.0f + info.v0 * localScale;
+				V[1] = 1.0f + info.v1 * localScale;
+				V[2] = 1.0f + info.v2 * localScale;
+				V[3] = 1.0f + info.v3 * localScale;
 				return info.flip;
 			}
 		}
@@ -2135,10 +2329,14 @@ Bool WorldHeightMap::getUVForTileIndex(Int ndx, Short tileNdx, float U[4], float
 			nVb = m_textureClasses[texClass].positionInTexture.y;
 			xUb = nUb+m_textureClasses[texClass].width*TILE_PIXEL_EXTENT;
 			xVb = nVb+m_textureClasses[texClass].width*TILE_PIXEL_EXTENT;
-			nUb/=TEXTURE_WIDTH;
-			nVb/=m_terrainTexHeight;
-			xUb/=TEXTURE_WIDTH;
-			xVb/=m_terrainTexHeight;
+			// BFME: E1-51 same page as the class block.
+			const Int page = m_textureClasses[texClass].atlasPage;
+			const Int atlasW = baseAtlasWidth();
+			const Int atlasH = baseAtlasHeight(page >= 0 ? page : 0);
+			nUb/=atlasW;
+			nVb/=atlasH;
+			xUb/=atlasW;
+			xVb/=atlasH;
 			// Now covers texture bounds.
 			// too much stretch.
 			Real divisor = TILE_LIMIT/(deltaH*HEIGHT_SCALE);
@@ -2438,33 +2636,54 @@ void WorldHeightMap::setTextureLOD(Int lod)
 {
 	if (m_terrainTex)
 		m_terrainTex->setLOD(lod);
+	for (Int i = 0; i < m_atlasExtraCount; i++) {	// BFME: E1-51
+		if (m_atlasExtraPages && m_atlasExtraPages[i]) m_atlasExtraPages[i]->setLOD(lod);
+	}
 }
 
 TextureClass *WorldHeightMap::getTerrainTexture()
 {
 	if (m_terrainTex == nullptr) {
-		Int edgeHeight;
-		Int height = updateTileTexturePositions(&edgeHeight);
-		Int pow2Height = 1;
-		while (pow2Height<height) {
-			pow2Height *=2;
-		}
+		releaseAtlasPages();	// BFME: E1-51
+		updateTileTexturePositions(nullptr);
+		// Full page, not a pow2 of the content. MIP_LEVELS_3: the GLES upload otherwise
+		// builds the whole chain (glGenerateMipmap, MAX_LEVEL 1000) and trilinear
+		// filtering mixes neighbouring tiles past the 4px border. Five 2048² A1R5G5B5
+		// pages are 40 MiB at level 0; the shadow m_bits copy follows the level count.
+		const Int atlasW = baseAtlasWidth();
+		const Int atlasH = baseAtlasHeight(0);
 		REF_PTR_RELEASE(m_terrainTex);
-		m_terrainTex = MSGNEW("WorldHeightMap_getTerrainTexture") TerrainTextureClass(pow2Height);
-		m_terrainTexHeight = m_terrainTex->update(this);
+		m_terrainTex = MSGNEW("WorldHeightMap_getTerrainTexture") TerrainTextureClass(atlasH, atlasW, MIP_LEVELS_3);
+		m_terrainTexHeight = m_terrainTex->update(this, 0);
+		const Int extra = m_atlasStats.pageCount > 1 ? m_atlasStats.pageCount - 1 : 0;
+		if (extra > 0) {
+			m_atlasExtraPages = MSGNEW("WorldHeightMap_getTerrainTexture") TerrainTextureClass*[extra]();
+			m_atlasExtraCount = extra;
+			for (Int p = 1; p < m_atlasStats.pageCount; p++) {
+				m_atlasExtraPages[p - 1] = MSGNEW("WorldHeightMap_getTerrainTexture") TerrainTextureClass(atlasH, atlasW, MIP_LEVELS_3);
+				m_atlasExtraPages[p - 1]->update(this, p);
+			}
+		}
 		char buf[64];
-		sprintf(buf, "Base tex height %d", pow2Height);
+		sprintf(buf, "Base tex %dx%d pages %d", atlasW, atlasH, m_atlasStats.pageCount);
 		DEBUG_LOG((buf));
 		REF_PTR_RELEASE(m_alphaTerrainTex);
 		m_alphaTerrainTex = MSGNEW("WorldHeightMap_getTerrainTexture") AlphaTerrainTextureClass(m_terrainTex);
 
-		pow2Height = 1;
-		while (pow2Height<edgeHeight) {
-			pow2Height *=2;
-		}
+		const Int edgeW = edgeAtlasWidth();
+		const Int edgeH = edgeAtlasHeight(0);
 		REF_PTR_RELEASE(m_alphaEdgeTex);
-		m_alphaEdgeTex = MSGNEW("WorldHeightMap_getTerrainTexture") AlphaEdgeTextureClass(pow2Height);
-		m_alphaEdgeHeight = m_alphaEdgeTex->update(this);
+		m_alphaEdgeTex = MSGNEW("WorldHeightMap_getTerrainTexture") AlphaEdgeTextureClass(edgeH, edgeW, MIP_LEVELS_3);
+		m_alphaEdgeHeight = m_alphaEdgeTex->update(this, 0);
+		const Int edgeExtra = m_edgeAtlasStats.pageCount > 1 ? m_edgeAtlasStats.pageCount - 1 : 0;
+		if (edgeExtra > 0) {
+			m_edgeExtraPages = MSGNEW("WorldHeightMap_getTerrainTexture") AlphaEdgeTextureClass*[edgeExtra]();
+			m_edgeExtraCount = edgeExtra;
+			for (Int p = 1; p < m_edgeAtlasStats.pageCount; p++) {
+				m_edgeExtraPages[p - 1] = MSGNEW("WorldHeightMap_getTerrainTexture") AlphaEdgeTextureClass(edgeH, edgeW, MIP_LEVELS_3);
+				m_edgeExtraPages[p - 1]->update(this, p);
+			}
+		}
 
 		//Generate lookup table for determining triangle order in each terrain cell.
 		//Not the best place to put this but getAlphaUVData() requires a valid terrain

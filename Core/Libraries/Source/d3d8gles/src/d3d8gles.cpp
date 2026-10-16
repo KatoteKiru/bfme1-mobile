@@ -40,6 +40,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <map>
+#include <new>
 #include <vector>
 
 #if defined(__ANDROID__)
@@ -50,6 +51,10 @@
 #endif
 
 #include "gles_pipeline.h"
+
+// BFME: E1-51 GL_MAX_TEXTURE_SIZE, filled in WebGLPipeline::initContext once a context is current.
+// The terrain atlas reads this as a weak symbol. 4096 until that query runs (FillCaps uses it too).
+extern "C" int d3d8gles_MaxTextureEdge = 4096;
 
 // BFME: E1-17b The picker is part of the GLES backend, not of Android.
 // The cfg-file reader below stays __ANDROID__ (app-internal storage).
@@ -269,6 +274,24 @@ static bool FormatIsDXT(D3DFORMAT fmt)
 	       fmt == D3DFMT_DXT4 || fmt == D3DFMT_DXT5;
 }
 
+// BFME: E1-51 Formats prepareLevelUpload stores as a GLES 3 color attachment:
+// RGBA8 (A8R8G8B8 / X8R8G8B8), RGB565, RGBA4, RGB5_A1. Luminance, alpha and
+// S3TC cannot be bound to GL_COLOR_ATTACHMENT0.
+static bool FormatIsColorAttachment(D3DFORMAT fmt)
+{
+	switch (fmt) {
+	case D3DFMT_A8R8G8B8:
+	case D3DFMT_X8R8G8B8:
+	case D3DFMT_R5G6B5:
+	case D3DFMT_X1R5G5B5:
+	case D3DFMT_A1R5G5B5:
+	case D3DFMT_A4R4G4B4:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static UINT FormatDXTBlockBytes(D3DFORMAT fmt)
 {
 	return (fmt == D3DFMT_DXT1) ? 8 : 16;
@@ -329,7 +352,13 @@ public:
 		: m_device(dev), m_width(w), m_height(h), m_format(fmt), m_containerType(containerType)
 	{
 		FormatLevelLayout(fmt, w, h, &m_pitch, &m_size);
-		m_bits.resize(m_size);
+		// BFME: E1-51 CreateTexture turns this bad_alloc into D3DERR_OUTOFVIDEOMEMORY.
+		try {
+			m_bits.resize(m_size);
+		} catch (const std::bad_alloc &) {
+			m_bits.clear();
+			throw;
+		}
 	}
 
 	// Manual IUnknown: texture-level views are privately owned by their
@@ -472,6 +501,10 @@ public:
 	WebGLTexture(WebGLDevice *dev, UINT w, UINT h, UINT levels, D3DFORMAT fmt, D3DPOOL pool)
 		: m_device(dev), m_format(fmt), m_pool(pool)
 	{
+		// BFME: E1-51 levels == 0 asks for the full chain. An explicit count (the terrain
+		// atlas passes 3) must stay that count: each extra level is another m_bits shadow
+		// copy, and sampling past it blends neighbouring tiles.
+		m_explicitMips = levels != 0;
 		if (levels == 0) {
 			levels = 1;
 			UINT tw = w, th = h;
@@ -481,15 +514,23 @@ public:
 				levels++;
 			}
 		}
-		UINT tw = w, th = h;
-		for (UINT i = 0; i < levels; i++) {
-			WebGLSurface *lvl = new WebGLSurface(dev, tw, th, fmt, D3DRTYPE_TEXTURE);
-			lvl->m_ownerGL = &m_gl;
-			lvl->m_ownerTex = this;
-			lvl->m_textureOwned = true;
-			m_levels.push_back(lvl);
-			tw = tw > 1 ? tw / 2 : 1;
-			th = th > 1 ? th / 2 : 1;
+		// BFME: E1-51 a bad_alloc from new or from a level's m_bits.resize must
+		// leave no half-built texture. CreateTexture catches it.
+		try {
+			UINT tw = w, th = h;
+			for (UINT i = 0; i < levels; i++) {
+				WebGLSurface *lvl = new WebGLSurface(dev, tw, th, fmt, D3DRTYPE_TEXTURE);
+				lvl->m_ownerGL = &m_gl;
+				lvl->m_ownerTex = this;
+				lvl->m_textureOwned = true;
+				m_levels.push_back(lvl);
+				tw = tw > 1 ? tw / 2 : 1;
+				th = th > 1 ? th / 2 : 1;
+			}
+		} catch (const std::bad_alloc &) {
+			for (WebGLSurface *s : m_levels) delete s;
+			m_levels.clear();
+			throw;
 		}
 		m_shapeKey = LiveTextureShapeKey{w, h, fmt};
 		g_liveTexturesByShape[m_shapeKey]++;
@@ -635,6 +676,7 @@ public:
 	DWORD m_lod = 0;
 	GLTextureState m_gl;
 	std::vector<WebGLSurface *> m_levels;
+	bool m_explicitMips = false; // BFME: E1-51 caller asked for N levels, not the full chain
 	LiveTextureShapeKey m_shapeKey;
 };
 
@@ -1259,11 +1301,55 @@ public:
 	}
 
 	// --- Resource creation --------------------------------------------------
-	HRESULT CreateTexture(UINT w, UINT h, UINT levels, DWORD /*usage*/, D3DFORMAT fmt, D3DPOOL pool,
+	HRESULT CreateTexture(UINT w, UINT h, UINT levels, DWORD usage, D3DFORMAT fmt, D3DPOOL pool,
 	                      IDirect3DTexture8 **ppTexture) override
 	{
+		// BFME: E1-51 dx8wrapper.cpp:3080-3125 already branches on these codes.
+		// A failure must not leave a stale pointer in *ppTexture.
 		if (!ppTexture) return D3DERR_INVALIDCALL;
-		*ppTexture = new WebGLTexture(this, w, h, levels, fmt, pool);
+		*ppTexture = nullptr;
+		const int maxEdge = d3d8gles_MaxTextureEdge > 0 ? d3d8gles_MaxTextureEdge : 4096;
+		if (w == 0 || h == 0 || (int)w > maxEdge || (int)h > maxEdge) return D3DERR_INVALIDCALL;
+		if (levels != 0) {
+			UINT edge = w > h ? w : h;
+			UINT limit = 1; // floor(log2(max(w,h))) + 1
+			while (edge > 1) {
+				edge >>= 1;
+				limit++;
+			}
+			if (levels > limit) return D3DERR_INVALIDCALL;
+		}
+		// BFME: E1-51 setRenderTarget attaches this texture to an FBO, and pillarbox
+		// (dx8wrapper.cpp) creates an A8R8G8B8 offscreen target with this flag.
+		// NOTAVAILABLE only when the format cannot be a color attachment.
+		if ((usage & D3DUSAGE_RENDERTARGET) != 0 && !FormatIsColorAttachment(fmt)) {
+			return D3DERR_NOTAVAILABLE;
+		}
+		switch (fmt) {
+		case D3DFMT_A8R8G8B8:
+		case D3DFMT_X8R8G8B8:
+		case D3DFMT_R5G6B5:
+		case D3DFMT_X1R5G5B5:
+		case D3DFMT_A1R5G5B5:
+		case D3DFMT_A4R4G4B4:
+		case D3DFMT_A8:
+		case D3DFMT_L8:
+		case D3DFMT_A8L8:
+		case D3DFMT_DXT1:
+		case D3DFMT_DXT2:
+		case D3DFMT_DXT3:
+		case D3DFMT_DXT4:
+		case D3DFMT_DXT5:
+			break;
+		default:
+			return D3DERR_NOTAVAILABLE;
+		}
+		try {
+			*ppTexture = new WebGLTexture(this, w, h, levels, fmt, pool);
+		} catch (const std::bad_alloc &) {
+			*ppTexture = nullptr;
+			return D3DERR_OUTOFVIDEOMEMORY;
+		}
 		return D3D_OK;
 	}
 
@@ -1975,8 +2061,8 @@ static void FillCaps(D3DCAPS8 *caps, UINT adapter)
 	caps->LineCaps = D3DLINECAPS_TEXTURE | D3DLINECAPS_ZTEST | D3DLINECAPS_BLEND |
 	                 D3DLINECAPS_ALPHACMP | D3DLINECAPS_FOG;
 
-	caps->MaxTextureWidth = 4096;
-	caps->MaxTextureHeight = 4096;
+	caps->MaxTextureWidth = d3d8gles_MaxTextureEdge > 0 ? (UINT)d3d8gles_MaxTextureEdge : 4096;	// BFME: E1-51
+	caps->MaxTextureHeight = caps->MaxTextureWidth;
 	caps->MaxVolumeExtent = 256;
 	caps->MaxTextureRepeat = 8192;
 	caps->MaxTextureAspectRatio = 4096;

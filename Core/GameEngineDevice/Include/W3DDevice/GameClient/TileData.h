@@ -78,6 +78,7 @@ protected:
 
 public:
 	ICoord2D	m_tileLocationInTexture;
+	Int m_atlasPage;	///< BFME: E1-51 atlas page, -1 until the tile is placed
 
 
 protected:

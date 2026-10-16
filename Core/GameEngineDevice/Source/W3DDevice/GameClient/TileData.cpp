@@ -40,7 +40,7 @@
 //
 TileData::TileData()
 {
-
+	m_atlasPage = -1;	// BFME: E1-51
 }
 
 #define TILE_PIXEL_EXTENT_MIP1 32
