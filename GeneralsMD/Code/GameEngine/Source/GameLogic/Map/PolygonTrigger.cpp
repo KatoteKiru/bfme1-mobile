@@ -35,6 +35,8 @@
 #include "GameLogic/PolygonTrigger.h"
 #include "GameLogic/TerrainLogic.h"
 
+#include <stdio.h>	// BFME: release builds have no DEBUG_LOG; version and numPoints errors go to stderr.
+
 /* ********* PolygonTrigger class ****************************/
 PolygonTrigger *PolygonTrigger::ThePolygonTriggerListPtr = nullptr;
 Int PolygonTrigger::s_currentID = 1;
@@ -51,7 +53,16 @@ m_isWaterArea(false),
 m_shouldRender(true),
 m_selected(false),
 m_isRiver(FALSE),
-m_riverStart(0)
+m_riverStart(0),
+// BFME: v5 water parameters. v1–v4 maps never read them.
+m_waterAdditive(false),
+m_waterColorR(0),
+m_waterColorG(0),
+m_waterColorB(0),
+m_waterColorPad(0),
+m_waterUvScrollU(0),
+m_waterUvScrollV(0),
+m_waterAlpha(0)
 {
 	if (initialAllocation < 2) initialAllocation = 2;
 	m_points = NEW ICoord3D[initialAllocation];		// pool[]ify
@@ -125,6 +136,16 @@ PolygonTrigger *PolygonTrigger::getPolygonTriggerByID(Int triggerID)
 
 }
 
+const AsciiString& PolygonTrigger::getWaterTexture(Int index) const
+{
+	// BFME: out-of-range index returns an empty name instead of a point past the array.
+	static const AsciiString empty;
+	if (index < 0 || index >= WATER_TEX_COUNT) {
+		return empty;
+	}
+	return m_waterTextures[index];
+}
+
 /**
 * PolygonTrigger::ParsePolygonTriggersDataChunk - read a polygon triggers chunk.
 * Format is the newer CHUNKY format.
@@ -143,6 +164,15 @@ Bool PolygonTrigger::ParsePolygonTriggersDataChunk(DataChunkInput &file, DataChu
 	Int riverStart;
 	AsciiString triggerName;
 	AsciiString layerName;
+	// BFME: a version this parser has never seen must not be read as v4. v5 inserts
+	// water fields before numPoints; the next version would be read as a point count.
+	if (info->version > K_TRIGGERS_VERSION_5) {
+		DEBUG_LOG(("PolygonTriggers: unsupported version v%d (newest supported v%d)", info->version, K_TRIGGERS_VERSION_5));
+		fprintf(stderr, "PolygonTriggers: unsupported version v%d (newest supported v%d)\n", info->version, K_TRIGGERS_VERSION_5);
+		// BFME: the throw used to land before deleteTriggers and keep the previous map's polygons.
+		PolygonTrigger::deleteTriggers();
+		throw ERROR_CORRUPT_FILE_FORMAT;
+	}
 	// Remove any existing polygon triggers, if any.
 	PolygonTrigger::deleteTriggers(); // just in case.
 	PolygonTrigger *pPrevTrig = nullptr;
@@ -166,7 +196,62 @@ Bool PolygonTrigger::ParsePolygonTriggersDataChunk(DataChunkInput &file, DataChu
 			riverStart = file.readInt();
 		}
 
+		// BFME: v5 fields sit between riverStart and numPoints. v1–v4 do not have them.
+		// Order: 6 texture names, additive, RGB + pad, uv scroll (2 floats), alpha.
+		AsciiString waterTextures[WATER_TEX_COUNT];
+		Bool waterAdditive = false;
+		Byte waterR = 0;
+		Byte waterG = 0;
+		Byte waterB = 0;
+		Byte waterPad = 0;
+		Real uvU = 0;
+		Real uvV = 0;
+		Real waterAlpha = 0;
+		if (info->version >= K_TRIGGERS_VERSION_5) {
+			Int t;
+			for (t = 0; t < WATER_TEX_COUNT; t++) {
+				waterTextures[t] = file.readAsciiString();
+			}
+			waterAdditive = file.readByte() ? true : false;
+			waterR = file.readByte();
+			waterG = file.readByte();
+			waterB = file.readByte();
+			waterPad = file.readByte();
+			uvU = file.readReal();
+			uvV = file.readReal();
+			waterAlpha = file.readReal();
+			// BFME: readAsciiString only asserts a past-end read in debug. Release reads the
+			// bytes anyway, and dataLeft goes negative. Reject that before numPoints.
+			const UnsignedInt chunkBytes = file.getChunkDataSize();
+			const UnsignedInt bytesLeft = file.getChunkDataSizeLeft();
+			if (bytesLeft > chunkBytes || bytesLeft < sizeof(Int)) {
+				DEBUG_LOG(("PolygonTriggers: '%s' v5 water fields do not fit the chunk (%u bytes left of %u)",
+						triggerName.str(), bytesLeft, chunkBytes));
+				fprintf(stderr, "PolygonTriggers: '%s' v5 water fields do not fit the chunk (%u bytes left of %u)\n",
+						triggerName.str(), bytesLeft, chunkBytes);
+				PolygonTrigger::deleteTriggers();
+				throw ERROR_CORRUPT_FILE_FORMAT;
+			}
+		}
+
 		numPoints = file.readInt();
+		// BFME: one point is 3 Ints, 12 bytes. The check is before the allocation: a v4
+		// read of a v5 texture name yields numPoints 1465122829 and a ~17.6 GB new[].
+		// bytesLeft above the chunk size means an earlier read already passed the end.
+		{
+			const UnsignedInt chunkBytes = file.getChunkDataSize();
+			const UnsignedInt bytesLeft = file.getChunkDataSizeLeft();
+			const UnsignedInt maxPoints = bytesLeft / 12;
+			if (bytesLeft > chunkBytes || numPoints < 0 || (UnsignedInt)numPoints > maxPoints) {
+				DEBUG_LOG(("PolygonTriggers: '%s' numPoints %d is outside 0..%u (%u bytes left)",
+						triggerName.str(), numPoints, maxPoints, bytesLeft));
+				fprintf(stderr, "PolygonTriggers: '%s' numPoints %d is outside 0..%u (%u bytes left)\n",
+						triggerName.str(), numPoints, maxPoints, bytesLeft);
+				// Drop polygons already taken from this chunk. The bad one is not allocated yet.
+				PolygonTrigger::deleteTriggers();
+				throw ERROR_CORRUPT_FILE_FORMAT;
+			}
+		}
 		PolygonTrigger *pTrig = newInstance(PolygonTrigger)(numPoints+1);
 		pTrig->setTriggerName(triggerName);
 		if (info->version >= K_TRIGGERS_VERSION_4) {
@@ -175,6 +260,20 @@ Bool PolygonTrigger::ParsePolygonTriggersDataChunk(DataChunkInput &file, DataChu
 		pTrig->setWaterArea(isWater);
 		pTrig->setRiver(isRiver);
 		pTrig->setRiverStart(riverStart);
+		if (info->version >= K_TRIGGERS_VERSION_5) {
+			Int t;
+			for (t = 0; t < WATER_TEX_COUNT; t++) {
+				pTrig->m_waterTextures[t] = waterTextures[t];
+			}
+			pTrig->m_waterAdditive = waterAdditive;
+			pTrig->m_waterColorR = waterR;
+			pTrig->m_waterColorG = waterG;
+			pTrig->m_waterColorB = waterB;
+			pTrig->m_waterColorPad = waterPad;
+			pTrig->m_waterUvScrollU = uvU;
+			pTrig->m_waterUvScrollV = uvV;
+			pTrig->m_waterAlpha = waterAlpha;
+		}
 		pTrig->m_triggerID = triggerID;
 		if (triggerID > maxTriggerId) {
 			maxTriggerId = triggerID;
@@ -239,6 +338,8 @@ Bool PolygonTrigger::ParsePolygonTriggersDataChunk(DataChunkInput &file, DataChu
 */
 void PolygonTrigger::WritePolygonTriggersDataChunk(DataChunkOutput &chunkWriter)
 {
+	// BFME: TODO(E1-29): still writes v4, so the six water texture names, additive,
+	// color, uv scroll and alpha are dropped. WorldBuilder is unchanged. See docs/E1-BACKLOG.md.
 	chunkWriter.openDataChunk("PolygonTriggers", 	K_TRIGGERS_VERSION_4);
 
 		PolygonTrigger *pTrig;

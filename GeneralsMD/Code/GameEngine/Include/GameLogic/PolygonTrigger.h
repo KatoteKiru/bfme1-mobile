@@ -66,6 +66,10 @@ class PolygonTrigger : public MemoryPoolObject,
 {
 	MEMORY_POOL_GLUE_WITH_USERLOOKUP_CREATE(PolygonTrigger, "PolygonTrigger")
 
+public:
+	// BFME: v5 texture-name count. Order is river, noise, alpha edge, sparkle, bump, sky.
+	enum { WATER_TEX_COUNT = 6 };
+
 protected:
 	PolygonTrigger*		m_nextPolygonTrigger;		///< linked list.
 	AsciiString				m_triggerName;		///< The name of this polygon area.
@@ -84,6 +88,17 @@ protected:
 	AsciiString			m_layerName;  ///< Used to specify the layer in the World Builder.
 	Bool				m_shouldRender;
 	Bool				m_selected;
+	// BFME: PolygonTriggers v5, stored for the water renderer (E1-29). File order of the names:
+	// river, noise, alpha edge, sparkle, bump, sky. v1–v4 leave these at the defaults.
+	AsciiString			m_waterTextures[WATER_TEX_COUNT];
+	Bool				m_waterAdditive;
+	Byte				m_waterColorR;
+	Byte				m_waterColorG;
+	Byte				m_waterColorB;
+	Byte				m_waterColorPad;
+	Real				m_waterUvScrollU;
+	Real				m_waterUvScrollV;
+	Real				m_waterAlpha;
 
 	static PolygonTrigger* ThePolygonTriggerListPtr;
 	static Int s_currentID; ///< Current id for new triggers.
@@ -147,6 +162,16 @@ public:
 	void setRiver(Bool val) {m_isRiver = val;}
 	Int getRiverStart() const {return m_riverStart;}
 	void setRiverStart(Int val) {m_riverStart = val;}
+	// BFME: v5 water parameters. Index 0..5 is river, noise, alpha edge, sparkle, bump, sky.
+	const AsciiString& getWaterTexture(Int index) const;
+	Bool isWaterAdditive() const {return m_waterAdditive;}
+	Byte getWaterColorR() const {return m_waterColorR;}
+	Byte getWaterColorG() const {return m_waterColorG;}
+	Byte getWaterColorB() const {return m_waterColorB;}
+	Byte getWaterColorPad() const {return m_waterColorPad;}
+	Real getWaterUvScrollU() const {return m_waterUvScrollU;}
+	Real getWaterUvScrollV() const {return m_waterUvScrollV;}
+	Real getWaterAlpha() const {return m_waterAlpha;}
 	const WaterHandle* getWaterHandle() const;
 	Bool isValid() const;
 };
