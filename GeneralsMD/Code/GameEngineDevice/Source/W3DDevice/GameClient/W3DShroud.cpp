@@ -40,6 +40,7 @@
 #include "W3DDevice/GameClient/W3DShroud.h"
 #include "WW3D2/textureloader.h"
 #include "Common/GlobalData.h"
+#include "WW3D2/bfme_host_limits.h"
 #include "GameLogic/PartitionManager.h"
 
 
@@ -229,6 +230,10 @@ void W3DShroud::ReleaseResources()
 ///Restore resources that are lost on D3D device reset.
 Bool W3DShroud::ReAcquireResources()
 {
+		// BFME: K6
+		if (!BfmeHostLimits::deviceResourcesAvailable(TheGlobalData && TheGlobalData->m_headless, DX8Wrapper::_Get_D3D_Device8()))
+			return TRUE;
+
 		if (!m_dstTextureWidth)
 			return TRUE;	//nothing to reacquire since shroud was never initialized with valid data
 

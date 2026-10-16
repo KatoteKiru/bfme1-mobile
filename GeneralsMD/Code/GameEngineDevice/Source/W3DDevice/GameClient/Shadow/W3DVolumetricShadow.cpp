@@ -51,6 +51,7 @@
 #include "W3DDevice/GameClient/HeightMap.h"
 #include "d3dx8math.h"
 #include "Common/GlobalData.h"
+#include "WW3D2/bfme_host_limits.h"
 #include "Common/DrawModule.h"
 #include "W3DDevice/GameClient/W3DVolumetricShadow.h"
 #include "W3DDevice/GameClient/W3DShadow.h"
@@ -3757,6 +3758,10 @@ void W3DVolumetricShadowManager::ReleaseResources()
 Bool W3DVolumetricShadowManager::ReAcquireResources()
 {
 	ReleaseResources();
+
+	// BFME: K6
+	if (!BfmeHostLimits::deviceResourcesAvailable(TheGlobalData && TheGlobalData->m_headless, DX8Wrapper::_Get_D3D_Device8()))
+		return TRUE;
 
 	LPDIRECT3DDEVICE8 m_pDev=DX8Wrapper::_Get_D3D_Device8();
 

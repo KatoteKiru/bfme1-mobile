@@ -54,6 +54,7 @@
 #include "Common/FramePacer.h"
 #include "Common/GameState.h"
 #include "Common/GlobalData.h"
+#include "WW3D2/bfme_host_limits.h"
 #include "Common/PerfTimer.h"
 #include "Common/Xfer.h"
 #include "Common/GameLOD.h"
@@ -855,6 +856,10 @@ void WaterRenderObjClass::ReleaseResources()
 void WaterRenderObjClass::ReAcquireResources()
 {
 	HRESULT hr;
+
+	// BFME: K6
+	if (!BfmeHostLimits::deviceResourcesAvailable(TheGlobalData && TheGlobalData->m_headless, DX8Wrapper::_Get_D3D_Device8()))
+		return;
 
 	m_indexBuffer=NEW_REF(DX8IndexBufferClass,(6));
 	// Fill up the IB

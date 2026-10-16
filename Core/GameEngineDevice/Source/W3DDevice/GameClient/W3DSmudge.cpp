@@ -37,6 +37,8 @@
 #include "WW3D2/texture.h"
 #include "WW3D2/dx8indexbuffer.h"
 #include "WW3D2/dx8wrapper.h"
+#include "WW3D2/bfme_host_limits.h"
+#include "Common/GlobalData.h"
 #include "WW3D2/rinfo.h"
 #include "WW3D2/camera.h"
 #include "WW3D2/sortingrenderer.h"
@@ -128,6 +130,10 @@ static_assert(SMUDGE_DRAW_SIZE * 5 < 0x10000, "Vertex index exceeds 16-bit limit
 void W3DSmudgeManager::ReAcquireResources()
 {
 	ReleaseResources();
+
+	// BFME: K6 no back buffer in headless; the description read below would null-deref.
+	if (!BfmeHostLimits::deviceResourcesAvailable(TheGlobalData && TheGlobalData->m_headless, DX8Wrapper::_Get_D3D_Device8()))
+		return;
 
 	SurfaceClass *surface=DX8Wrapper::_Get_DX8_Back_Buffer();
 	SurfaceClass::SurfaceDescription surface_desc;

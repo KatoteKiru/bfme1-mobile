@@ -55,6 +55,7 @@
 #include "camera.h"
 #include "assetmgr.h"
 #include "WW3D2/dx8wrapper.h"
+#include "WW3D2/bfme_host_limits.h"
 #include "WW3D2/scene.h"
 #include "GameLogic/TerrainLogic.h"
 #include "GameLogic/Object.h"
@@ -586,6 +587,10 @@ TerrainTracksRenderObjClassSystem::~TerrainTracksRenderObjClassSystem()
 //=============================================================================
 void TerrainTracksRenderObjClassSystem::ReAcquireResources()
 {
+	// BFME: K6
+	if (!BfmeHostLimits::deviceResourcesAvailable(TheGlobalData && TheGlobalData->m_headless, DX8Wrapper::_Get_D3D_Device8()))
+		return;
+
 	Int i;
 	const Int numModules=TheGlobalData->m_maxTerrainTracks;
 

@@ -83,6 +83,7 @@
 #include "W3DDevice/GameClient/W3DWater.h"
 #include "W3DDevice/GameClient/W3DShroud.h"
 #include "WW3D2/dx8wrapper.h"
+#include "WW3D2/bfme_host_limits.h"
 #include "WW3D2/light.h"
 #include "WW3D2/scene.h"
 #include "W3DDevice/GameClient/W3DPoly.h"
@@ -439,6 +440,10 @@ void BaseHeightMapRenderObjClass::ReleaseResources()
 //=============================================================================
 void BaseHeightMapRenderObjClass::ReAcquireResources()
 {
+	// BFME: K6 map load calls this. Every child below allocates device buffers.
+	if (!BfmeHostLimits::deviceResourcesAvailable(TheGlobalData && TheGlobalData->m_headless, DX8Wrapper::_Get_D3D_Device8()))
+		return;
+
 	W3DShaderManager::init();	//reaquire resources which may be needed by custom shaders
 
 	if (TheWaterRenderObj)

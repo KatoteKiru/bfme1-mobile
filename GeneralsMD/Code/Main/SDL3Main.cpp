@@ -477,6 +477,14 @@ int main(int argc, char* argv[])
 	__argc = argc;
 	__argv = argv;
 
+#if !defined(__ANDROID__)
+	// BFME: K6 llvmpipe/lavapipe start one JIT thread per CPU. Hardware
+	// drivers ignore LP_NUM_THREADS. An explicit setting wins. This does
+	// not fix the lavapipe abort inside LLVM at vkCreateDevice.
+	if (getenv("LP_NUM_THREADS") == nullptr)
+		setenv("LP_NUM_THREADS", "2", 0);
+#endif
+
 #if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
 	// Diagnostic capture: an icon-launched app's stderr goes nowhere we can read,
 	// so mirror it to a file in Library/Caches (purgeable, not user-visible). This

@@ -51,6 +51,7 @@
 #endif
 
 #include "gles_pipeline.h"
+#include "../../WWVegas/WW3D2/bfme_host_limits.h" // BFME: K6
 
 // BFME: E1-51 GL_MAX_TEXTURE_SIZE, filled in WebGLPipeline::initContext once a context is current.
 // The terrain atlas reads this as a weak symbol. 4096 until that query runs (FillCaps uses it too).
@@ -306,8 +307,17 @@ static void FormatLevelLayout(D3DFORMAT fmt, UINT width, UINT height, INT *pitch
 		*pitch = (INT)(blocksWide * FormatDXTBlockBytes(fmt));
 		*size = blocksWide * blocksHigh * FormatDXTBlockBytes(fmt);
 	} else {
-		*pitch = (INT)(width * FormatBytesPerPixel(fmt));
-		*size = (UINT)(*pitch) * height;
+		// BFME: K6 width * bpp in 32-bit wraps; a negative pitch then becomes a huge UINT size.
+		const UINT bpp = FormatBytesPerPixel(fmt);
+		const unsigned long long row = (unsigned long long)width * bpp;
+		const unsigned long long bytes = row * height;
+		if (bpp == 0 || row > (unsigned long long)INT_MAX || bytes > 0xffffffffull) {
+			*pitch = 0;
+			*size = 0;
+			return;
+		}
+		*pitch = (INT)row;
+		*size = (UINT)bytes;
 	}
 }
 
@@ -1343,6 +1353,16 @@ public:
 			break;
 		default:
 			return D3DERR_NOTAVAILABLE;
+		}
+		// BFME: K6 defensive guard. A full 4096^2 A8R8G8B8 chain is ~85 MiB, under
+		// kMaxCommittedTextureBytes, so this does not reject a texture that
+		// already passed that edge. Skipped when the adopted edge is larger
+		// (Android/Mali, often 8192) so those uploads stay as they were.
+		// bytes == 0 is a wrapped pitch, not a real empty texture.
+		if ((unsigned)d3d8gles_MaxTextureEdge <= BfmeHostLimits::kMaxTextureEdge && !FormatIsDXT(fmt)) {
+			const unsigned long long bytes = BfmeHostLimits::mipChainBytes(w, h, FormatBytesPerPixel(fmt), levels);
+			if (bytes == 0 || bytes > BfmeHostLimits::kMaxCommittedTextureBytes)
+				return D3DERR_OUTOFVIDEOMEMORY;
 		}
 		try {
 			*ppTexture = new WebGLTexture(this, w, h, levels, fmt, pool);

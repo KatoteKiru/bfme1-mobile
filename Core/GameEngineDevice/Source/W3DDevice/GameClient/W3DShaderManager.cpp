@@ -54,6 +54,7 @@
 //-----------------------------------------------------------------------------
 
 #include "dx8wrapper.h"
+#include "bfme_host_limits.h"
 #include "assetmgr.h"
 #include "Lib/BaseType.h"
 #include "Common/file.h"
@@ -2645,6 +2646,10 @@ W3DShaderManager::W3DShaderManager()
 //=============================================================================
 void W3DShaderManager::init()
 {
+	// BFME: K6 GetRenderTarget below requires a device. Headless display init skips this; map reset does not.
+	if (!BfmeHostLimits::deviceResourcesAvailable(TheGlobalData && TheGlobalData->m_headless, DX8Wrapper::_Get_D3D_Device8()))
+		return;
+
 	int i,j;
 
 	D3DSURFACE_DESC desc;

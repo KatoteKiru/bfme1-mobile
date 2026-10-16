@@ -271,7 +271,7 @@ private:
 	static DeviceTypeS3 Get_S3_Device(unsigned device_id);
 	static DeviceTypeIntel Get_Intel_Device(unsigned device_id);
 
-	void Init_Caps(IDirect3DDevice8* D3DDevice);
+	void Init_Caps(IDirect3DDevice8* D3DDevice, const char *deviceName);
 	void Check_Texture_Format_Support(WW3DFormat display_format,const D3DCAPS8& caps);
 	void Check_Render_To_Texture_Support(WW3DFormat display_format,const D3DCAPS8& caps);
 	void Check_Depth_Stencil_Support(WW3DFormat display_format, const D3DCAPS8& caps);

@@ -22,6 +22,8 @@
 #include "W3DDevice/GameClient/HeightMap.h"
 #include "GameClient/View.h"
 #include "WW3D2/dx8wrapper.h"
+#include "WW3D2/bfme_host_limits.h"
+#include "Common/GlobalData.h"
 #include "WW3D2/rinfo.h"
 #include "WW3D2/camera.h"
 #include "WW3D2/assetmgr.h"
@@ -72,6 +74,10 @@ void W3DSnowManager::ReleaseResources()
 Bool W3DSnowManager::ReAcquireResources()
 {
 	ReleaseResources();
+
+	// BFME: K6 headless has no device. DX8IndexBufferClass null-dereferences CurrentCaps.
+	if (!BfmeHostLimits::deviceResourcesAvailable(TheGlobalData && TheGlobalData->m_headless, DX8Wrapper::_Get_D3D_Device8()))
+		return TRUE;
 
 	if (!TheWeatherSetting->m_snowEnabled)
 		return TRUE;	//no need for resources if snow is disabled.

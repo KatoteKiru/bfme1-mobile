@@ -41,6 +41,7 @@
 #include "dx8caps.h"
 #include "dx8wrapper.h"
 #include "formconv.h"
+#include "bfme_host_limits.h" // BFME: K6
 #pragma warning (disable : 4201)		// nonstandard extension - nameless struct
 #include <windows.h>
 #include <mmsystem.h>
@@ -476,7 +477,7 @@ DX8Caps::DX8Caps(
 	MaxDisplayWidth(0),
 	MaxDisplayHeight(0)
 {
-	Init_Caps(D3DDevice);
+	Init_Caps(D3DDevice, adapter_id.Description);
 	Compute_Caps(display_format, adapter_id);
 }
 
@@ -513,7 +514,7 @@ void DX8Caps::Shutdown()
 //
 // ----------------------------------------------------------------------------
 
-void DX8Caps::Init_Caps(IDirect3DDevice8* D3DDevice)
+void DX8Caps::Init_Caps(IDirect3DDevice8* D3DDevice, const char *deviceName)
 {
 	D3DDevice->SetRenderState(D3DRS_SOFTWAREVERTEXPROCESSING,TRUE);
 	DX8CALL(GetDeviceCaps(&Caps));
@@ -526,6 +527,17 @@ void DX8Caps::Init_Caps(IDirect3DDevice8* D3DDevice)
 	} else {
 		SupportTnL=false;
 	}
+
+	// BFME: K6 software devices only. A real GPU keeps the reported edge
+	// (Mali is often 8192). Not compiled in on Android.
+#if !defined(__ANDROID__)
+	if (BfmeHostLimits::softwareRasterizerName(deviceName)) {
+		Caps.MaxTextureWidth = BfmeHostLimits::clampTextureEdge(Caps.MaxTextureWidth);
+		Caps.MaxTextureHeight = BfmeHostLimits::clampTextureEdge(Caps.MaxTextureHeight);
+	}
+#else
+	(void)deviceName;
+#endif
 }
 
 // ----------------------------------------------------------------------------

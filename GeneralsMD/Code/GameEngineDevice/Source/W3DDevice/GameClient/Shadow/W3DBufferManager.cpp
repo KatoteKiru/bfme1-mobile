@@ -24,7 +24,10 @@
 
 
 #include "Common/Debug.h"
+#include "Common/GlobalData.h"
 #include "W3DDevice/GameClient/W3DBufferManager.h"
+#include "WW3D2/bfme_host_limits.h"
+#include "WW3D2/dx8wrapper.h"
 
 W3DBufferManager *TheW3DBufferManager=nullptr;	//singleton
 
@@ -183,6 +186,10 @@ void W3DBufferManager::ReleaseResources()
 
 Bool W3DBufferManager::ReAcquireResources()
 {
+	// BFME: K6
+	if (!BfmeHostLimits::deviceResourcesAvailable(TheGlobalData && TheGlobalData->m_headless, DX8Wrapper::_Get_D3D_Device8()))
+		return TRUE;
+
 	for (Int i=0; i<MAX_FVF; i++)
 	{
 		W3DVertexBuffer *vb = m_W3DVertexBuffers[i];

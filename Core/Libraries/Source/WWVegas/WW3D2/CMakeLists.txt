@@ -212,6 +212,7 @@ set(WW3D2_SRC
     textureloader.cpp
     textureloader.h
     dx8_thread.h # BFME: E1-32 Is_DX8_Thread when the main tid is not recorded yet
+    bfme_host_limits.h # BFME: K6 headless device gate and software-rasterizer texture edge
     texturethumbnail.cpp
     texturethumbnail.h
     #vertmaterial.cpp

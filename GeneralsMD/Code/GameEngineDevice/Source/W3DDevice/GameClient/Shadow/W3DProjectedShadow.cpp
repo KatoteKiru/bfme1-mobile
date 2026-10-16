@@ -47,6 +47,7 @@
 #include "W3DDevice/GameClient/HeightMap.h"
 #include "d3dx8math.h"
 #include "Common/GlobalData.h"
+#include "WW3D2/bfme_host_limits.h"
 #include "W3DDevice/GameClient/W3DProjectedShadow.h"
 #include "WW3D2/statistics.h"
 #include "Common/Debug.h"
@@ -264,6 +265,10 @@ Bool W3DProjectedShadowManager::init()
 
 Bool W3DProjectedShadowManager::ReAcquireResources()
 {
+	// BFME: K6
+	if (!BfmeHostLimits::deviceResourcesAvailable(TheGlobalData && TheGlobalData->m_headless, DX8Wrapper::_Get_D3D_Device8()))
+		return TRUE;
+
 	//grab assets which don't survive a device reset and need
 	//to be present for duration of game.
 

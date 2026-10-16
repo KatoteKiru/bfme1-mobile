@@ -463,8 +463,19 @@ bool WebGLPipeline::initContext(int w, int h, SDL_Window *window)
 	{
 		GLint maxTex = 0;
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTex);
-		if (maxTex >= 64) d3d8gles_MaxTextureEdge = (int)maxTex;
-		fprintf(stderr, "[d3d8gles] GL_MAX_TEXTURE_SIZE %d\n", (int)maxTex);
+		// BFME: K6 clamp only llvmpipe/softpipe/lavapipe/swrast, and never on Android.
+		// Mali reports 8192 and must keep it; the atlas still picks 4096 itself.
+		if (maxTex >= 64) {
+			const char *renderer = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
+#if defined(__ANDROID__)
+			const bool android = true;
+#else
+			const bool android = false;
+#endif
+			d3d8gles_MaxTextureEdge = (int)BfmeHostLimits::textureEdgeForDevice(
+				(unsigned)maxTex, renderer, android);
+		}
+		fprintf(stderr, "[d3d8gles] GL_MAX_TEXTURE_SIZE %d, using %d\n", (int)maxTex, d3d8gles_MaxTextureEdge);
 	}
 
 	const char *extensions = (const char *)glGetString(GL_EXTENSIONS);

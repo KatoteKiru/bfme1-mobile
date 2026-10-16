@@ -206,3 +206,6 @@ add_test(NAME launch.registry_complete COMMAND ${CMAKE_COMMAND}
 
 # Line rules (tests/ini also builds on its own, without the engine sources).
 add_subdirectory(ini)
+
+# BFME: K6 headless device gate and the llvmpipe texture-edge budget.
+add_subdirectory(texturebudget)
