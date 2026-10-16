@@ -51,6 +51,9 @@
 #define K_LIGHTING_VERSION_1	1
 #define K_LIGHTING_VERSION_2	2	// Added 2 additional global lights for objects.
 #define K_LIGHTING_VERSION_3	3	// Added 2 additional global lights for terrain.
+// BFME: ADR-0005 §4.1. Nine lights per time of day, then a shadow colour and 44 raw bytes.
+// WorldBuilder still writes v3; this constant is read-only.
+#define K_LIGHTING_VERSION_7	7
 #define K_WORLDDICT_VERSION_1 1
 #define K_MAPPREVIEW_VERSION_1 1
 /** Virtual helper class, so that we can write map data using FILE* or CFile. */

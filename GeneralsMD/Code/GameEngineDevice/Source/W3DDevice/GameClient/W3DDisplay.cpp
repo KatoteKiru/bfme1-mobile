@@ -2820,6 +2820,10 @@ void W3DDisplay::enableLetterBox(Bool enable)
 //=============================================================================
 void W3DDisplay::setTimeOfDay( TimeOfDay tod )
 {
+	// BFME: ADR-0005 §4.1. Object lights, including the three v7 object slots, take this
+	// existing path into the scene lights. Infantry is not applied here: RTS3DScene
+	// swaps m_infantryLight when the drawable is KINDOF_INFANTRY. Scene ambient stays
+	// object slot 0, and each light's own ambient stays 0, same as ZH.
 	const GlobalData::TerrainLighting *ol=&TheGlobalData->m_terrainObjectsLighting[tod][0];
 
 	if( m_3DScene )

@@ -2013,6 +2013,14 @@ void HeightMapRenderObjClass::Render(RenderInfoClass & rinfo)
 
  		st=W3DShaderManager::ST_TERRAIN_BASE; //set default shader
 
+		// BFME: ADR-0005 §3.1–3.2. d3d8gles reports two stages and shader version 0, so
+		// getChipset() stays DC_UNKNOWN and TerrainShader2Stage is the shader that runs.
+		// NOISE1 (clouds) and NOISE12 (clouds + light map) are 3 passes. The light-map
+		// UV is D3DTSS_TCI_CAMERASPACEPOSITION times the stage texture matrix
+		// (gles_pipeline.cpp: a D3D row-major matrix uploaded as the GL transpose).
+		// Pass count follows these flags only. Two passes and no light map means both
+		// flags are off: BFME gamelod.ini does that on VeryLow and Low at night, not
+		// because a texture or a GLES stage failed.
  		//set correct shader based on current settings
  		if (!ShaderClass::Is_Backface_Culling_Inverted())
  		{	//not reflection pass

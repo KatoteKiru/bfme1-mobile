@@ -48,6 +48,7 @@
 #include "GameClient/Color.h"
 #include "GameClient/View.h"
 #include "W3DDevice/GameClient/HeightMap.h"
+#include "matrix3d.h"
 #include "W3DDevice/GameClient/W3DScene.h"
 #include "W3DDevice/GameClient/W3DDynamicLight.h"
 #include "W3DDevice/GameClient/W3DShadow.h"
@@ -660,6 +661,11 @@ void RTS3DScene::renderOneObject(RenderInfoClass &rinfo, RenderObjClass *robj, I
 		{
 			//ambient = m_infantryAmbient;  //has no effect - see comment on m_infantryAmbient
 			sceneLights = m_infantryLight;
+			// BFME: ADR-0005 §4.1. A v7 map stored its own infantry sun ambient. ZH maps
+			// leave the flag clear and keep the scene (object-sun) ambient: scaling that
+			// ambient is what the comment above refuses, because it hid the direction.
+			if (TheGlobalData->m_terrainInfantryLightingPresent)
+				ambient = m_infantryAmbient;
 		}
 
 		lightEnv.Reset(sph.Center, ambient);
@@ -907,22 +913,48 @@ void RTS3DScene::updateFixedLightEnvironments(RenderInfoClass & rinfo)
 	m_foggedLightEnv.Reset(Vector3(0,0,0), Get_Ambient_Light()*foggedLightFrac);
 
 	Vector3 oldDiffuse, oldAmbient;
+	// BFME: ADR-0005 §4.1. v7 infantry lights replace the ZH scale of the object lights,
+	// in the same m_infantryLight slots Customized_Render already selects for
+	// KINDOF_INFANTRY. Light ambient stays 0, matching W3DDisplay::setTimeOfDay: accent
+	// ambient is stored on GlobalData and not added, same as object accents. A script
+	// override still scales diffuse. ZH maps (flag clear) keep the scale below.
+	const Bool bfmeInfantry = TheGlobalData->m_terrainInfantryLightingPresent;
 	for (Int globalLightIndex = 0; globalLightIndex < m_numGlobalLights; globalLightIndex++)
 	{
 		m_defaultLightEnv.Add_Light(*m_globalLight[globalLightIndex]);
-		//copy default lighting for infantry so we can tweak it.
-		*m_infantryLight[globalLightIndex]=*m_globalLight[globalLightIndex];
-		m_infantryLight[globalLightIndex]->Set_Transform(m_globalLight[globalLightIndex]->Get_Transform());
+		if (bfmeInfantry && globalLightIndex < MAX_GLOBAL_LIGHTS)
+		{
+			const GlobalData::TerrainLighting &il =
+				TheGlobalData->m_terrainInfantryLighting[TheGlobalData->m_timeOfDay][globalLightIndex];
+			Vector3 diffuse(il.diffuse.red, il.diffuse.green, il.diffuse.blue);
+			if (TheGlobalData->m_scriptOverrideInfantryLightScale != -1.0f)
+			{
+				diffuse *= TheGlobalData->m_scriptOverrideInfantryLightScale;
+				static Vector3 id(1.0f, 1.0f, 1.0f);
+				diffuse.Cap_Absolute_To(id);
+			}
+			m_infantryLight[globalLightIndex]->Set_Ambient(Vector3(0.0f, 0.0f, 0.0f));
+			m_infantryLight[globalLightIndex]->Set_Diffuse(diffuse);
+			Matrix3D mtx;
+			mtx.Set(Vector3(1,0,0), Vector3(0,1,0), Vector3(il.lightPos.x, il.lightPos.y, il.lightPos.z), Vector3(0,0,0));
+			m_infantryLight[globalLightIndex]->Set_Transform(mtx);
+		}
+		else
+		{
+			//copy default lighting for infantry so we can tweak it.
+			*m_infantryLight[globalLightIndex]=*m_globalLight[globalLightIndex];
+			m_infantryLight[globalLightIndex]->Set_Transform(m_globalLight[globalLightIndex]->Get_Transform());
 
-		m_globalLight[globalLightIndex]->Get_Diffuse(&oldDiffuse);
-		m_globalLight[globalLightIndex]->Get_Ambient(&oldAmbient);
-    oldDiffuse *= infantryLightScale;
-    oldAmbient *= infantryLightScale;
-    static Vector3 id (1.0f, 1.0f, 1.0f);
-    oldDiffuse.Cap_Absolute_To(id);
-    oldAmbient.Cap_Absolute_To(id);
-		m_infantryLight[globalLightIndex]->Set_Ambient(oldAmbient);//CLAMPED
-		m_infantryLight[globalLightIndex]->Set_Diffuse(oldDiffuse);//CLAMPED
+			m_globalLight[globalLightIndex]->Get_Diffuse(&oldDiffuse);
+			m_globalLight[globalLightIndex]->Get_Ambient(&oldAmbient);
+			oldDiffuse *= infantryLightScale;
+			oldAmbient *= infantryLightScale;
+			static Vector3 id (1.0f, 1.0f, 1.0f);
+			oldDiffuse.Cap_Absolute_To(id);
+			oldAmbient.Cap_Absolute_To(id);
+			m_infantryLight[globalLightIndex]->Set_Ambient(oldAmbient);//CLAMPED
+			m_infantryLight[globalLightIndex]->Set_Diffuse(oldDiffuse);//CLAMPED
+		}
 
 		//copy the normal light for fog so we can modify it
 		m_scratchLight->Set_Transform(m_globalLight[globalLightIndex]->Get_Transform());
@@ -937,7 +969,21 @@ void RTS3DScene::updateFixedLightEnvironments(RenderInfoClass & rinfo)
 	m_defaultLightEnv.Pre_Render_Update(rinfo.Camera.Get_Transform());
 	m_foggedLightEnv.Pre_Render_Update(rinfo.Camera.Get_Transform());
 
-	m_infantryAmbient = Get_Ambient_Light();// * infantryLightScale;	//for now don't adjust ambient so that we don't lose directional lighting.
+	if (bfmeInfantry)
+	{
+		// Slot 0 only, same as the object sun that W3DDisplay puts on the scene.
+		const GlobalData::TerrainLighting &sun =
+			TheGlobalData->m_terrainInfantryLighting[TheGlobalData->m_timeOfDay][0];
+		m_infantryAmbient = Vector3(sun.ambient.red, sun.ambient.green, sun.ambient.blue);
+		if (TheGlobalData->m_scriptOverrideInfantryLightScale != -1.0f)
+		{
+			m_infantryAmbient *= TheGlobalData->m_scriptOverrideInfantryLightScale;
+			static Vector3 id(1.0f, 1.0f, 1.0f);
+			m_infantryAmbient.Cap_Absolute_To(id);
+		}
+	}
+	else
+		m_infantryAmbient = Get_Ambient_Light();// * infantryLightScale;	//for now don't adjust ambient so that we don't lose directional lighting.
 }
 
 /**Generate custom rendering passes for each potential player color.  This is currently only used

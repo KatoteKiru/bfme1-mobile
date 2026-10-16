@@ -771,8 +771,23 @@ GlobalData::GlobalData()
 			m_terrainObjectsLighting[ j ][i].lightPos.x=0;
 			m_terrainObjectsLighting[ j ][i].lightPos.y=0;
 			m_terrainObjectsLighting[ j ][i].lightPos.z=-1.0f;
+
+			// BFME: ADR-0005. Same sentinel as Zero Hour; Generals maps never set the present flag.
+			m_terrainInfantryLighting[ j ][i].ambient.red=0;
+			m_terrainInfantryLighting[ j ][i].ambient.green=0;
+			m_terrainInfantryLighting[ j ][i].ambient.blue=0;
+			m_terrainInfantryLighting[ j ][i].diffuse.red=0;
+			m_terrainInfantryLighting[ j ][i].diffuse.green=0;
+			m_terrainInfantryLighting[ j ][i].diffuse.blue=0;
+			m_terrainInfantryLighting[ j ][i].lightPos.x=0;
+			m_terrainInfantryLighting[ j ][i].lightPos.y=0;
+			m_terrainInfantryLighting[ j ][i].lightPos.z=-1.0f;
 		}
 	}
+	m_terrainInfantryLightingPresent = FALSE;
+	m_bfmeLightingUnknownPresent = FALSE;
+	for (i = 0; i < BFME_LIGHTING_UNKNOWN_BYTES; ++i)
+		m_bfmeLightingUnknown[i] = 0;
 
 	for (j=TIME_OF_DAY_FIRST; j<TIME_OF_DAY_COUNT; j++)
 		m_infantryLightScale[j] = 1.5f;

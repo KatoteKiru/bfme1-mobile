@@ -243,6 +243,13 @@ public:
 
 	TerrainLighting	m_terrainLighting[TIME_OF_DAY_COUNT][MAX_GLOBAL_LIGHTS];
 	TerrainLighting	m_terrainObjectsLighting[TIME_OF_DAY_COUNT][MAX_GLOBAL_LIGHTS];
+	// BFME: ADR-0005 §4.1. Same fields as the Zero Hour GlobalData: the shared
+	// WorldHeightMap parser writes them. Generals maps never set the flag.
+	TerrainLighting	m_terrainInfantryLighting[TIME_OF_DAY_COUNT][MAX_GLOBAL_LIGHTS];
+	Bool m_terrainInfantryLightingPresent;
+	static constexpr Int BFME_LIGHTING_UNKNOWN_BYTES = 44;
+	UnsignedByte m_bfmeLightingUnknown[BFME_LIGHTING_UNKNOWN_BYTES];
+	Bool m_bfmeLightingUnknownPresent;
 
 	//Settings for each global light
 	RGBColor m_terrainAmbient[MAX_GLOBAL_LIGHTS];

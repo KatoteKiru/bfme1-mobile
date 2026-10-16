@@ -507,6 +507,10 @@ void BaseHeightMapRenderObjClass::doTheLight(VERTEX_FORMAT *vb, Vector3*light, V
 #else
 	Real shadeR, shadeG, shadeB;
 	Real shade;
+	// BFME: ADR-0005 §2 п.6 / §3.4. Ambient is terrain slot 0. The diffuse below uses
+	// m_terrainDiffuse[0..m_numGlobalLights). Callers build `light` from m_terrainLightPos.
+	// GlobalData::setTimeOfDay copies both from m_terrainLighting for the current time of
+	// day, so a v7 chunk's terrain sun/accents land here and the infantry array does not.
 	shadeR = TheGlobalData->m_terrainAmbient[0].red;	//only the first terrain light contributes to ambient
 	shadeG = TheGlobalData->m_terrainAmbient[0].green;
 	shadeB = TheGlobalData->m_terrainAmbient[0].blue;

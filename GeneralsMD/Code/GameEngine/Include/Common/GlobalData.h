@@ -244,6 +244,16 @@ public:
 
 	TerrainLighting	m_terrainLighting[TIME_OF_DAY_COUNT][MAX_GLOBAL_LIGHTS];
 	TerrainLighting	m_terrainObjectsLighting[TIME_OF_DAY_COUNT][MAX_GLOBAL_LIGHTS];
+	// BFME: ADR-0005 §4.1. Infantry lights from GlobalLighting v7, same index as the
+	// arrays above (TimeOfDay, not 0..3). Present only after a v7 chunk; ZH maps leave
+	// the flag clear and keep scaling object lights for infantry.
+	TerrainLighting	m_terrainInfantryLighting[TIME_OF_DAY_COUNT][MAX_GLOBAL_LIGHTS];
+	Bool m_terrainInfantryLightingPresent;
+	// BFME: 44 bytes stored raw when 7 <= version < 9. Not interpreted.
+	// Layout reference (not copied): OpenSAGE GlobalLightingConfiguration.cs, master, read 08.10.2026.
+	static constexpr Int BFME_LIGHTING_UNKNOWN_BYTES = 44;
+	UnsignedByte m_bfmeLightingUnknown[BFME_LIGHTING_UNKNOWN_BYTES];
+	Bool m_bfmeLightingUnknownPresent;
 
 	//Settings for each global light
 	RGBColor m_terrainAmbient[MAX_GLOBAL_LIGHTS];

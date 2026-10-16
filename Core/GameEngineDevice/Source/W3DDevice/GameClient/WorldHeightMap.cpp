@@ -30,6 +30,7 @@
 
 #include "windows.h"
 #include "stdlib.h"
+#include "stdio.h"
 #include "Common/STLTypedefs.h"
 
 #include "Common/DataChunk.h"
@@ -823,15 +824,64 @@ Bool WorldHeightMap::ParseWorldDictDataChunk(DataChunkInput &file, DataChunkInfo
 }
 
 /**
+* One global light: ambient rgb, diffuse rgb, direction xyz. 36 bytes, the same
+* order the ZH writer uses. BFME v7 uses the same record (ADR-0005 §4.1).
+* Layout reference, not copied: OpenSAGE GlobalLight.cs, master, read 08.10.2026.
+*/
+static void readGlobalLight(DataChunkInput &file, GlobalData::TerrainLighting &light)
+{
+	light.ambient.red = file.readReal();
+	light.ambient.green = file.readReal();
+	light.ambient.blue = file.readReal();
+	light.diffuse.red = file.readReal();
+	light.diffuse.green = file.readReal();
+	light.diffuse.blue = file.readReal();
+	light.lightPos.x = file.readReal();
+	light.lightPos.y = file.readReal();
+	light.lightPos.z = file.readReal();
+}
+
+/**
 * WorldHeightMap::ParseLightingDataChunk - read a global lights chunk.
 * Format is the newer CHUNKY format.
 *	See WHeightMapEdit.cpp for the writer.
 *	Input: DataChunkInput
 *
+* BFME: ADR-0005 §4.1. v1–v3 stay in the ZH order (terrain0, object0, then the
+* extra object lights, then the extra terrain lights). v7 is nine lights per
+* time of day: terrain/object/infantry × sun, accent1, accent2. Infantry goes
+* to m_terrainInfantryLighting and is not baked into the height vertex colour.
+* v7 then keeps 44 trailing bytes raw. Only versions 1, 2, 3 and 7 are read.
+* Anything else throws before a write: the old reader would keep going and
+* store the next time of day's sun in the wrong slot (the AFTERNOON sun on M1).
 */
 Bool WorldHeightMap::ParseLightingDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
+		(void)userData;
+		// v4–v6 are inside 1..7 but are not a known layout. Reading them as v3
+		// would accept a chunk this port has never seen.
+		if (info->version != K_LIGHTING_VERSION_1 && info->version != K_LIGHTING_VERSION_2
+			&& info->version != K_LIGHTING_VERSION_3 && info->version != K_LIGHTING_VERSION_7) {
+			DEBUG_LOG(("GlobalLighting: unsupported version v%d (supported v1, v2, v3, v7)", info->version));
+			fprintf(stderr, "GlobalLighting: unsupported version v%d (supported v1, v2, v3, v7)\n", info->version);
+			throw ERROR_CORRUPT_FILE_FORMAT;
+		}
+
 		TheWritableGlobalData->m_timeOfDay = (TimeOfDay)file.readInt();
+		TheWritableGlobalData->m_terrainInfantryLightingPresent = FALSE;
+		TheWritableGlobalData->m_bfmeLightingUnknownPresent = FALSE;
+		if (info->version == K_LIGHTING_VERSION_7) {
+			// BFME: release builds do not stop on the readReal assert, so a short
+			// chunk was consumed past its end. The time-of-day int is already read;
+			// what remains is 4 times × 9 lights × 36 bytes, the shadow colour, and
+			// the 44-byte tail.
+			const UnsignedInt v7Tail = 4 * 9 * 36 + 4 + 44;
+			if (file.getChunkDataSizeLeft() != v7Tail) {
+				fprintf(stderr, "GlobalLighting: v%d has %u bytes left after time of day, expected %u\n",
+					info->version, file.getChunkDataSizeLeft(), v7Tail);
+				throw ERROR_CORRUPT_FILE_FORMAT;
+			}
+		}
 		Int i;
 		GlobalData::TerrainLighting	initLightValues	= { { 0,0,0},{0,0,0},{0,0,-1.0f}};
 
@@ -840,60 +890,60 @@ Bool WorldHeightMap::ParseLightingDataChunk(DataChunkInput &file, DataChunkInfo 
 			for (Int j=0;j<MAX_GLOBAL_LIGHTS; j++) {
 				TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][j]=initLightValues;
 				TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][j]=initLightValues;
+				TheWritableGlobalData->m_terrainInfantryLighting[i+TIME_OF_DAY_FIRST][j]=initLightValues;
 			}
 		}
 
-		for (i=0; i<4; i++) {
-			TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][0].ambient.red = file.readReal();
-			TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][0].ambient.green = file.readReal();
-			TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][0].ambient.blue = file.readReal();
-			TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][0].diffuse.red = file.readReal();
-			TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][0].diffuse.green = file.readReal();
-			TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][0].diffuse.blue = file.readReal();
-			TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][0].lightPos.x = file.readReal();
-			TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][0].lightPos.y = file.readReal();
-			TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][0].lightPos.z = file.readReal();
-
-			TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][0].ambient.red = file.readReal();
-			TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][0].ambient.green = file.readReal();
-			TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][0].ambient.blue = file.readReal();
-			TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][0].diffuse.red = file.readReal();
-			TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][0].diffuse.green = file.readReal();
-			TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][0].diffuse.blue = file.readReal();
-			TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][0].lightPos.x = file.readReal();
-			TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][0].lightPos.y = file.readReal();
-			TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][0].lightPos.z = file.readReal();
-
-			if (info->version >= K_LIGHTING_VERSION_2) {
-				for (Int j=1; j<3; j++)	//added support for 2 extra object lights
-				{
-					TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][j].ambient.red = file.readReal();
-					TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][j].ambient.green = file.readReal();
-					TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][j].ambient.blue = file.readReal();
-					TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][j].diffuse.red = file.readReal();
-					TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][j].diffuse.green = file.readReal();
-					TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][j].diffuse.blue = file.readReal();
-					TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][j].lightPos.x = file.readReal();
-					TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][j].lightPos.y = file.readReal();
-					TheWritableGlobalData->m_terrainObjectsLighting[i+TIME_OF_DAY_FIRST][j].lightPos.z = file.readReal();
+		if (info->version >= K_LIGHTING_VERSION_7) {
+			// BFME: per time of day, OpenSAGE GlobalLightingConfiguration.Parse order
+			// (master, read 08.10.2026): T0 O0 I0, T1 O1 I1, T2 O2 I2. Reading the
+			// infantry record is what puts the cursor back on the next time of day.
+			for (i=0; i<4; i++) {
+				const Int tod = i + TIME_OF_DAY_FIRST;
+				for (Int j=0; j<MAX_GLOBAL_LIGHTS; j++) {
+					readGlobalLight(file, TheWritableGlobalData->m_terrainLighting[tod][j]);
+					readGlobalLight(file, TheWritableGlobalData->m_terrainObjectsLighting[tod][j]);
+					readGlobalLight(file, TheWritableGlobalData->m_terrainInfantryLighting[tod][j]);
 				}
 			}
-			if (info->version >= K_LIGHTING_VERSION_3) {
-				for (Int j=1; j<3; j++)	//added support for 2 extra terrain lights
-				{
-					TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][j].ambient.red = file.readReal();
-					TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][j].ambient.green = file.readReal();
-					TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][j].ambient.blue = file.readReal();
-					TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][j].diffuse.red = file.readReal();
-					TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][j].diffuse.green = file.readReal();
-					TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][j].diffuse.blue = file.readReal();
-					TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][j].lightPos.x = file.readReal();
-					TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][j].lightPos.y = file.readReal();
-					TheWritableGlobalData->m_terrainLighting[i+TIME_OF_DAY_FIRST][j].lightPos.z = file.readReal();
+			TheWritableGlobalData->m_terrainInfantryLightingPresent = TRUE;
+		} else {
+			for (i=0; i<4; i++) {
+				const Int tod = i + TIME_OF_DAY_FIRST;
+				readGlobalLight(file, TheWritableGlobalData->m_terrainLighting[tod][0]);
+				readGlobalLight(file, TheWritableGlobalData->m_terrainObjectsLighting[tod][0]);
+
+				if (info->version >= K_LIGHTING_VERSION_2) {
+					for (Int j=1; j<3; j++)	//added support for 2 extra object lights
+						readGlobalLight(file, TheWritableGlobalData->m_terrainObjectsLighting[tod][j]);
+				}
+				if (info->version >= K_LIGHTING_VERSION_3) {
+					for (Int j=1; j<3; j++)	//added support for 2 extra terrain lights
+						readGlobalLight(file, TheWritableGlobalData->m_terrainLighting[tod][j]);
 				}
 			}
 		}
-		if (!file.atEndOfChunk()) {
+		if (info->version >= K_LIGHTING_VERSION_7) {
+			// v7 always has the shadow colour; skipping it would land the 44-byte tail in the colour.
+			if (file.atEndOfChunk()) {
+				fprintf(stderr, "GlobalLighting: v%d ended before the shadow colour\n", info->version);
+				throw ERROR_CORRUPT_FILE_FORMAT;
+			}
+			UnsignedInt shadowColor = file.readInt();
+			if (TheW3DShadowManager) {
+				TheW3DShadowManager->setShadowColor(shadowColor);
+			}
+			// 44 raw bytes. OpenSAGE keeps them while 7 <= version < 9; versions
+			// other than 7 never reach this branch, so the old `< 9` test was dead.
+			file.readArrayOfBytes((char *)TheWritableGlobalData->m_bfmeLightingUnknown,
+				GlobalData::BFME_LIGHTING_UNKNOWN_BYTES);
+			TheWritableGlobalData->m_bfmeLightingUnknownPresent = TRUE;
+			if (!file.atEndOfChunk()) {
+				fprintf(stderr, "GlobalLighting: v%d has %u bytes left after the v7 layout\n",
+					info->version, file.getChunkDataSizeLeft());
+				throw ERROR_CORRUPT_FILE_FORMAT;
+			}
+		} else if (!file.atEndOfChunk()) {
 			UnsignedInt shadowColor = file.readInt();
 			if (TheW3DShadowManager) {
 				TheW3DShadowManager->setShadowColor(shadowColor);
