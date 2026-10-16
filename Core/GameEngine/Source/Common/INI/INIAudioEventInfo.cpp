@@ -149,6 +149,10 @@ const FieldParse AudioEventInfo::m_audioEventInfo[] =
 	{ "MinRange",							INI::parseReal,						nullptr,								offsetof( AudioEventInfo, m_minDistance) },
 	{ "MaxRange",							INI::parseReal,						nullptr,								offsetof( AudioEventInfo, m_maxDistance) },
 	{ "LowPassCutoff",				INI::parsePercentToReal,	nullptr,								offsetof( AudioEventInfo, m_lowPassFreq) },
+	// BFME: E1-37. End marker, as upstream has it. findFieldParse() walks the table until token == nullptr;
+	// without it an unknown field (BFME ReverbEffectLevel, DryLevel, SubmixSlider) read past the array
+	// and called a garbage parse pointer (SIGBUS in initFromINIMulti on the Pixel).
+	{ nullptr, nullptr, nullptr, 0 }
 };
 
 //-------------------------------------------------------------------------------------------------

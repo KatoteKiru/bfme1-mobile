@@ -69,13 +69,14 @@ Bool GetStringFromRegistry(AsciiString, AsciiString, AsciiString &) { return FAL
 AudioEventRTS::AudioEventRTS() {}
 AudioEventRTS::~AudioEventRTS() {}
 void AudioEventRTS::setEventName(AsciiString) {}
+// E1-37: INIAudioEventInfo.cpp is linked for its real field table; its block parsers are never reached.
+void AudioManager::addTrackName(const AsciiString &) {}
 
 // Block parsers of INI.cpp's theTypeTable, except Terrain (TestIniMode.cpp).
 #define BFME_INI_BLOCK_STUB(name) void INI::name(INI *) {}
 BFME_INI_BLOCK_STUB(parseAIDataDefinition)
 BFME_INI_BLOCK_STUB(parseAnim2DDefinition)
 BFME_INI_BLOCK_STUB(parseArmorDefinition)
-BFME_INI_BLOCK_STUB(parseAudioEventDefinition)
 BFME_INI_BLOCK_STUB(parseAudioSettingsDefinition)
 BFME_INI_BLOCK_STUB(parseBenchProfile)
 BFME_INI_BLOCK_STUB(parseCampaignDefinition)
@@ -87,7 +88,6 @@ BFME_INI_BLOCK_STUB(parseControlBarSchemeDefinition)
 BFME_INI_BLOCK_STUB(parseCrateTemplateDefinition)
 BFME_INI_BLOCK_STUB(parseCredits)
 BFME_INI_BLOCK_STUB(parseDamageFXDefinition)
-BFME_INI_BLOCK_STUB(parseDialogDefinition)
 BFME_INI_BLOCK_STUB(parseDrawGroupNumberDefinition)
 BFME_INI_BLOCK_STUB(parseDynamicGameLODDefinition)
 BFME_INI_BLOCK_STUB(parseEvaEvent)
@@ -108,7 +108,6 @@ BFME_INI_BLOCK_STUB(parseMouseDefinition)
 BFME_INI_BLOCK_STUB(parseMultiplayerColorDefinition)
 BFME_INI_BLOCK_STUB(parseMultiplayerSettingsDefinition)
 BFME_INI_BLOCK_STUB(parseMultiplayerStartingMoneyChoiceDefinition)
-BFME_INI_BLOCK_STUB(parseMusicTrackDefinition)
 BFME_INI_BLOCK_STUB(parseObjectCreationListDefinition)
 BFME_INI_BLOCK_STUB(parseObjectDefinition)
 BFME_INI_BLOCK_STUB(parseObjectReskinDefinition)

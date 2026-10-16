@@ -11,6 +11,7 @@
 #include "Common/INI.h"
 #include "Common/INIException.h"
 #include "Common/INILenient.h"
+#include "Common/AudioEventInfo.h"
 #include "Common/LocalFileSystem.h"
 #include "StdDevice/Common/StdLocalFileSystem.h"
 
@@ -18,6 +19,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <string>
 #include <unistd.h>
@@ -37,6 +39,11 @@ const FieldParse s_testTerrainTable[] = {
 	{ nullptr, nullptr, nullptr, 0 },
 };
 TestTerrain s_parsed;
+
+// E1-37: "Terrain Audio" blocks are parsed with the real AudioEventInfo table into raw zeroed storage
+// (only plain fields are used, no Sounds lists), so the test needs no AudioManager or memory pool.
+alignas(16) unsigned char s_audio[sizeof(AudioEventInfo)];
+AudioEventInfo &audio() { return *reinterpret_cast<AudioEventInfo *>(s_audio); }
 
 std::string writeIni(const char *name, const char *text)
 {
@@ -83,6 +90,10 @@ const char *const kUnknownBlock = "BfmeOnlyBlock Foo\n  Something = 1\nEnd\nTerr
 const char *const kUnknownField = "Terrain T\n  ShowProps = No\n  Known = 7\nEnd\n";
 const char *const kBfmeClass = "Terrain T\n  Class = Type Grass NEXT Region Edoras\n  Known = 7\nEnd\n";
 const char *const kMissingEnd = "Terrain T\n  Known = 7\n";
+// BFME Data\INI\Default\Music.ini shape (own text): a Type value ZH does not know, then three
+// fields that are not in the ZH AudioEventInfo table, then a known one.
+const char *const kBfmeAudio = "Terrain Audio\n  Volume = 50.0\n  Type = DEFAULT\n  ReverbEffectLevel = 0\n"
+	"  DryLevel = 100\n  SubmixSlider = music\n  Limit = 3\nEnd\n";
 const char *const kZhClass = "Terrain T\n  Class = GRASS\n  Known = 7\nEnd\n";
 
 } // namespace
@@ -90,8 +101,11 @@ const char *const kZhClass = "Terrain T\n  Class = GRASS\n  Known = 7\nEnd\n";
 // The "Terrain" block of theTypeTable; the real one lives in TerrainTypes.cpp.
 void INI::parseTerrainDefinition(INI *ini)
 {
-	ini->getNextToken();	// block name
-	ini->initFromINI(&s_parsed, s_testTerrainTable);
+	const char *name = ini->getNextToken();	// block name
+	if (strcmp(name, "Audio") == 0)
+		ini->initFromINI(s_audio, AudioEventInfo::m_audioEventInfo);
+	else
+		ini->initFromINI(&s_parsed, s_testTerrainTable);
 }
 
 TEST(zh_mode_is_default_off)
@@ -154,4 +168,25 @@ TEST(bfme_mode_closes_block_at_eof)
 {
 	REQUIRE(!loadThrows(writeIni("noend.ini", kMissingEnd), true));
 	REQUIRE(s_parsed.known == 7);
+}
+
+// E1-37: findFieldParse() stops only at token == nullptr. The AudioEventInfo table lost that end
+// marker, and the first unknown audio field read past the array (SIGBUS on the Pixel).
+TEST(audio_field_table_has_end_marker)
+{
+	int n = 0;
+	while (n < 256 && AudioEventInfo::m_audioEventInfo[n].token != nullptr)
+		++n;
+	REQUIRE(n < 256);
+	REQUIRE(n > 0);
+	REQUIRE(AudioEventInfo::m_audioEventInfo[n].parse == nullptr);
+}
+
+TEST(bfme_mode_skips_unknown_audio_fields)
+{
+	std::memset(s_audio, 0, sizeof(s_audio));
+	REQUIRE(!loadThrows(writeIni("music.ini", kBfmeAudio), true));
+	REQUIRE(audio().m_limit == 3);
+	REQUIRE(INILenient::counters().values == 1);	// Type = DEFAULT
+	REQUIRE(INILenient::counters().fields == 3);	// ReverbEffectLevel, DryLevel, SubmixSlider
 }

@@ -162,6 +162,7 @@ add_executable(bfme_ini_mode_tests
     ${BFME_ENGINE_VFS_SOURCES}
     ${R}/Core/GameEngine/Source/Common/INI/INI.cpp
     ${R}/Core/GameEngine/Source/Common/INI/INILenientRules.cpp
+    ${R}/Core/GameEngine/Source/Common/INI/INIAudioEventInfo.cpp
     vfs/TestMain.cpp
     vfs/GlobalDataStub.cpp
     ini/IniEngineStubs.cpp
@@ -180,6 +181,7 @@ set(BFME_INI_MODE_TESTS
     zh_mode_throws_on_bad_index_list_value zh_mode_throws_on_missing_end zh_mode_parses_valid_file
     bfme_mode_skips_unknown_block bfme_mode_skips_unknown_field bfme_mode_skips_bad_index_list_value
     bfme_mode_closes_block_at_eof
+    audio_field_table_has_end_marker bfme_mode_skips_unknown_audio_fields
 )
 foreach(t IN LISTS BFME_INI_MODE_TESTS)
     add_test(NAME ini.${t} COMMAND bfme_ini_mode_tests ${t})
