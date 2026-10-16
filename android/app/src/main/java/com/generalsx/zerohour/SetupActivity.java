@@ -1950,7 +1950,9 @@ public class SetupActivity extends Activity {
             sb.append(getString(R.string.setup_status_folder_not_set));
         } else {
             File dir = new File(path);
-            boolean valid = isValidGameFolder(dir);
+            // BFME: E1-12c — imported GameData is valid by import-state, not ZH INIZH.big/INI.big.
+            boolean imported = path.equals(com.generalsx.zerohour.importer.GameDataLocation.resolve(this));
+            boolean valid = imported || isValidGameFolder(dir);
             sb.append(getString(R.string.setup_status_folder_line, path));
             int statusStart = sb.length();
             int statusColorRes;
@@ -1958,7 +1960,9 @@ public class SetupActivity extends Activity {
                 sb.append(getString(R.string.setup_status_folder_invalid));
                 statusColorRes = R.color.gzh_status_error;
             } else {
-                java.util.List<String> issues = findGameFolderIntegrityIssues(dir);
+                java.util.List<String> issues = imported
+                        ? java.util.Collections.<String>emptyList()  // BFME: E1-12c
+                        : findGameFolderIntegrityIssues(dir);
                 if (issues.isEmpty()) {
                     sb.append(getString(R.string.setup_status_folder_valid));
                     statusColorRes = R.color.gzh_status_ok;
@@ -2166,6 +2170,11 @@ public class SetupActivity extends Activity {
     // Public + static so GeneralsZHActivity uses the exact same recovery
     // logic instead of its own copy that only ever checked SharedPreferences.
     static String getSavedGamePath(android.content.Context ctx) {
+        // BFME: E1-12c — imported GameData (gamedata_path.txt + import-state) wins.
+        String bfme = com.generalsx.zerohour.importer.GameDataLocation.resolve(ctx);
+        if (bfme != null) {
+            return bfme;
+        }
         SharedPreferences prefs = ctx.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         String path = prefs.getString(PREF_GAME_PATH, null);
         if (path != null) {

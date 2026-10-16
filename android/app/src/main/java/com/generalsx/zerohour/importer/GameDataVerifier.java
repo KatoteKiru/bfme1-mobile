@@ -93,13 +93,7 @@ public final class GameDataVerifier {
         }
 
         // Marker + complete
-        File marker = new File(app.getFilesDir(), GameDataPaths.GAMEDATA_PATH_MARKER);
-        File tmp = new File(marker.getAbsolutePath() + ".tmp");
-        try (OutputStreamWriter w = new OutputStreamWriter(new FileOutputStream(tmp), StandardCharsets.UTF_8)) {
-            w.write(gameData.getAbsolutePath());
-            w.write("\n");
-        }
-        AtomicFiles.moveReplace(tmp, marker);
+        GameDataLocation.publish(app, gameData);
 
         state.status = ImportState.STATUS_COMPLETE;
         state.completedAtMs = System.currentTimeMillis();

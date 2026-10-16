@@ -306,14 +306,7 @@ public final class GameDataImporter {
     }
 
     private void writeGamedataPathMarker(File gameData) throws IOException {
-        File marker = new File(appCtx.getFilesDir(), GameDataPaths.GAMEDATA_PATH_MARKER);
-        File tmp = new File(marker.getAbsolutePath() + ".tmp");
-        try (OutputStreamWriter w = new OutputStreamWriter(new FileOutputStream(tmp), StandardCharsets.UTF_8)) {
-            w.write(gameData.getAbsolutePath());
-            w.write("\n");
-        }
-        AtomicFiles.moveReplace(tmp, marker);
-        ImportLog.i(TAG, "wrote gamedata_path.txt → " + gameData.getAbsolutePath());
+        GameDataLocation.publish(appCtx, gameData);
     }
 
     private ImportProgress cancelAt(ImportState state, int filesDone, int filesTotal,

@@ -367,10 +367,8 @@ public class GeneralsZHActivity extends SDLActivity {
 
     // BFME: E1-12a — native reads filesDir/gamedata_path.txt; always point at our GameData.
     private void writeBfmeGamedataPathMarker(File gameData) {
-        File marker = new File(getFilesDir(), "gamedata_path.txt");
-        try (java.io.FileWriter w = new java.io.FileWriter(marker, false)) {
-            w.write(gameData.getAbsolutePath());
-            w.write("\n");
+        try {
+            com.generalsx.zerohour.importer.GameDataLocation.publish(this, gameData); // BFME: E1-12c
         } catch (java.io.IOException e) {
             Log.w(TAG, "could not write gamedata_path.txt: " + e.getMessage());
         }
