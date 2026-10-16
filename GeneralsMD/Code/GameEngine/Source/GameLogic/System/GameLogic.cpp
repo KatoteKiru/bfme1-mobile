@@ -2537,6 +2537,13 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 #endif
 	TheWritableGlobalData->m_loadScreenRender = FALSE;	///< mark to resume rendering as normal
 
+	// BFME: E1-39b. A finished map start printed nothing, so a headless run that was already
+	// simulating looked idle. One line here, then a heartbeat in update().
+	if (INILenient::isEnabled())
+		fprintf(stderr, "[launch] BFME: E1-39b map started '%s': frame %u, players %d, objects %u\n",
+			TheGlobalData->m_mapName.str(), (unsigned)m_frame,
+			ThePlayerList ? ThePlayerList->getPlayerCount() : 0, (unsigned)getObjectCount());
+
 	// if we're in a gamespy game, mark us as playing
 	if (TheGameSpyBuddyMessageQueue && TheGameSpyGame && isInInternetGame())
 	{
@@ -4493,6 +4500,9 @@ void GameLogic::update()
 	if (!m_startNewGame)
 	{
 		m_frame++;
+		// BFME: E1-39b. Heartbeat every 10 s of game time (300 frames at 30 Hz).
+		if (INILenient::isEnabled() && m_frame % 300 == 0)
+			fprintf(stderr, "[launch] BFME: E1-39b logic frame %u, objects %u\n", (unsigned)m_frame, (unsigned)getObjectCount());
 		m_hasUpdated = TRUE;
 #if defined(GENERALS_ONLINE_HIGH_FPS_SERVER)
 		if (m_frame % 2 == 0)
