@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BFME: branding. Adaptive-icon layer, 108x108 dp (safe zone 66 dp). Converted 1:1 from
+     /workspace/bfme-mobile/design/icon/ic_launcher_monochrome.svg (Дизайнер); see docs/branding.md. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFF" android:pathData="M33 72 L40 63 L47 66 L60 64 L68 60 L75 72 L66 80 L42 80 Z" />
+    <path android:fillColor="#FFFFFF" android:fillType="evenOdd" android:pathData="M45 36 H63 V66 H45 Z M42 30 H66 V36 H42 Z M42 26 H48 V30 H42 Z M51 26 H57 V30 H51 Z M60 26 H66 V30 H60 Z M52 50 V43 A2 2 0 0 1 56 43 V50 Z M50 66 V60 A4 4 0 0 1 58 60 V66 Z" />
+</vector>

@@ -191,7 +191,7 @@ final class NetworkDiagnostics {
 
     private static void header(Context ctx, StringBuilder r) {
         SimpleDateFormat iso = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
-        r.append("GeneralsZH network diagnostics\n");
+        r.append("BFME1 Mobile network diagnostics\n"); // BFME: branding
         r.append("run at      : ").append(iso.format(new Date())).append('\n');
         r.append("app version : ").append(versionName(ctx)).append('\n');
         r.append("android     : ").append(Build.VERSION.RELEASE)

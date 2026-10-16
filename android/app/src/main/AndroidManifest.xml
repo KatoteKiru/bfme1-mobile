@@ -84,6 +84,7 @@
     <application
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:allowBackup="false"
         android:fullBackupContent="@xml/backup_rules"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -140,9 +141,11 @@
              "GeneralsZH Settings" and the gear: it inherits label and icon from
              <application>, which is why the overrides that used to sit here are
              gone. setup_window_title is still the title shown inside the screen. -->
+        <!-- BFME: branding. Launcher label is the short "BFME1"; the application label stays "BFME1 Mobile". -->
         <activity
             android:name=".SetupActivity"
             android:exported="true"
+            android:label="@string/app_name_short"
             android:theme="@style/Theme.GeneralsZHSettings"
             android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>

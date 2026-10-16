@@ -438,7 +438,7 @@ void androidCrashHandler(int sig, siginfo_t *info, void *ucontext) {
 	const void *faultAddr = (info != nullptr) ? info->si_addr : nullptr;
 	int len = snprintf(buf, sizeof(buf),
 		"\n=== NATIVE CRASH === signal=%d (%s) fault_addr=%p pid=%d tid=%d ===\n"
-		"If you're reading this: open the GeneralsZH Setup app -> View Logs,\n"
+		"If you're reading this: open BFME1 Mobile -> Send report,\n" // BFME: branding
 		"and share this file's contents.\n",
 		sig, strsignal(sig), faultAddr, (int)getpid(), (int)gettid());
 	if (len > 0) {

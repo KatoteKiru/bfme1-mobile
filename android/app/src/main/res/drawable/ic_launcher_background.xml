@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Dark navy-teal backdrop for the real Zero Hour eagle emblem
-     (mipmap-xxxhdpi/ic_launcher_foreground.png, upscaled from the actual
-     GeneralsMD/Code/Main/Generals.ico game icon). -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <solid android:color="#0F2530" />
-</shape>
+<!-- BFME: branding. Adaptive-icon layer, 108x108 dp (safe zone 66 dp). Converted 1:1 from
+     /workspace/bfme-mobile/design/icon/ic_launcher_background.svg (Дизайнер); see docs/branding.md. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#2A2622" android:pathData="M0,0 H108 V108 H0 Z" />
+</vector>

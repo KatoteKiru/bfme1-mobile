@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ME1 Mobile</string>
+    <string name="app_name">BFME1 Mobile</string>
+    <!-- BFME: branding. Launcher (home screen) label. -->
+    <string name="app_name_short">BFME1</string>
     <string name="common_cancel">Cancel</string>
 
     <!-- SetupActivity: title / fallback -->
-    <string name="setup_window_title">GeneralsZH Settings</string>
-    <string name="setup_title">Command &amp; Conquer Generals: Zero Hour</string>
+    <string name="setup_window_title">BFME1 Mobile Settings</string>
+    <string name="setup_title">BFME1 Mobile</string>
     <string name="setup_subtitle">Android Settings</string>
     <string name="setup_fallback_warning">The normal Settings UI failed to load (%1$s). Showing a basic fallback so you can still get to your logs/game folder.</string>
 
@@ -20,13 +22,13 @@
     <string name="setup_status_folder_not_set">Game folder: not set.\n</string>
     <string name="setup_status_folder_line">Game folder: %1$s\n</string>
     <string name="setup_status_folder_valid">Status: looks valid (found game archive files).\n</string>
-    <string name="setup_status_folder_invalid">Status: this folder does NOT contain the expected INIZH.big / INI.big — double check you picked the right one.\n</string>
+    <string name="setup_status_folder_invalid">Status: this folder does NOT contain the expected INI.big — double check you picked the right one.\n</string>
     <string name="setup_status_folder_incomplete">Status: game archives found, but the set is incomplete:\n%1$s\n</string>
     <string name="setup_dialog_folder_problem_title">Game Folder Problem</string>
     <string name="setup_folder_issue_empty_file">%1$s is empty (0 bytes)</string>
     <string name="setup_folder_issue_bad_header">%1$s doesn\'t look like a valid game archive</string>
     <string name="setup_folder_issue_missing_data">%1$s is missing expected game data — likely an incomplete copy</string>
-    <string name="setup_folder_issue_no_base_game">Base Generals game data missing:%1$s\n\nOr point Setup at the folder that already has them — the “Base Generals folder” button below (usually ZH_Generals or Command and Conquer Generals).</string>
+    <string name="setup_folder_issue_no_base_game">Base game data missing:%1$s\n\nOr point Setup at the folder that already has them with the “Base game folder” button below.</string>
     <string name="setup_status_logs_note">Crash/engine logs live in this app\'s private storage and are only reachable through \"View Logs\" above — Android hides them from normal file managers by design (this is standard Android sandboxing, not specific to this app).</string>
 
     <!-- SetupActivity: Language card -->
@@ -37,8 +39,8 @@
     <string name="setup_language_dialog_title">Choose a language</string>
     <string name="setup_language_system_default">System Default</string>
     <string name="setup_language_game_status_default">Game text: unaffected by this setting (uses its own data/registry.ini language, or English by default).</string>
-    <string name="setup_language_game_status_override">Game text: also switched to match (found data/%1$s/generals.csf in your game folder).</string>
-    <string name="setup_language_game_status_missing">Game text: NOT switched — no data/%1$s/generals.csf found in your game folder, so the game keeps its own language.</string>
+    <string name="setup_language_game_status_override">Game text: also switched to match (found a language pack in data/%1$s/ in your game folder).</string>
+    <string name="setup_language_game_status_missing">Game text: NOT switched — no language pack in data/%1$s/ in your game folder, so the game keeps its own language.</string>
 
     <!-- SetupActivity: Menu Text Size card -->
     <string name="setup_card_text_size">Menu Text Size</string>
@@ -148,13 +150,13 @@
 
     <!-- SetupActivity: How this works card -->
     <string name="setup_card_how_it_works">How this works</string>
-    <string name="setup_how_it_works_body">1. \"Select Game Folder\" opens a folder browser on your phone\'s storage. Navigate to wherever you copied your own Command &amp; Conquer Generals Zero Hour install (the folder containing INIZH.big, Data\\, ZH_Generals\\, etc.) and tap \"Use This Folder\".\n\n2. If browsing looks empty, Android is asking for the \"All files access\" permission first — grant it in the screen that opens (this is a normal Android permission, no root involved).\n\n3. \"View Logs\" shows the engine log and, if the game crashed, a native crash log — no computer or adb needed. Use the Share button there to send the log to yourself.\n\n4. \"Launch Game\" starts the game with the folder you picked.</string>
+    <string name="setup_how_it_works_body">1. \"Select Game Folder\" opens a folder browser on your phone\'s storage. Navigate to wherever you copied your own game data (the folder containing INI.big, Data\\, etc.) and tap \"Use This Folder\".\n\n2. If browsing looks empty, Android is asking for the \"All files access\" permission first — grant it in the screen that opens (this is a normal Android permission, no root involved).\n\n3. \"View Logs\" shows the engine log and, if the game crashed, a native crash log — no computer or adb needed. Use the Share button there to send the log to yourself.\n\n4. \"Launch Game\" starts the game with the folder you picked.</string>
 
     <!-- SetupActivity: folder selection / misc toasts -->
     <string name="setup_toast_grant_all_files">Grant \"Allow access to manage all files\" on the next screen, then come back and tap Select Game Folder again.</string>
     <string name="setup_toast_storage_permission_denied">Storage permission is required to browse for the game folder. Tap Select Game Folder again to retry.</string>
     <string name="setup_toast_folder_saved">Game folder saved.</string>
-    <string name="setup_toast_folder_saved_invalid">Saved, but no INIZH.big/INI.big found there — check the folder.</string>
+    <string name="setup_toast_folder_saved_invalid">Saved, but no INI.big found there — check the folder.</string>
     <string name="setup_toast_folder_saved_incomplete">Saved, but some game files look incomplete or corrupted — see the details on the main screen before launching.</string>
     <string name="setup_toast_marker_save_failed">Could not save folder marker: %1$s</string>
     <string name="setup_toast_folder_cleared">Cleared. The game will fall back to its default folder convention.</string>
@@ -165,10 +167,10 @@
     <string name="folderpicker_title">Select Game Folder</string>
     <string name="folderpicker_up_entry">⬆️  .. (up)</string>
     <string name="folderpicker_button_use">Use This Folder</string>
-    <string name="folderpicker_hint_valid">✓ This folder contains INIZH.big/INI.big — looks correct.</string>
+    <string name="folderpicker_hint_valid">✓ This folder contains INI.big — looks correct.</string>
     <string name="folderpicker_hint_invalid">Navigate into your game folder, then tap \"Use This Folder\".</string>
     <string name="folderpicker_toast_cant_read">Can\'t read this folder. If browsing looks empty everywhere, grant \"All files access\" from the Setup screen first.</string>
-    <string name="folderpicker_toast_cant_read_legacy">Can\'t read this folder. On Android 9–10, allow the Storage permission for this app (Settings → Apps → GeneralsZH → Permissions → Storage), then try again.</string>
+    <string name="folderpicker_toast_cant_read_legacy">Can\'t read this folder. On Android 9–10, allow the Storage permission for this app (Settings → Apps → BFME1 Mobile → Permissions → Storage), then try again.</string>
 
     <!-- NetworkDiagnosticsActivity -->
     <string name="netdiag_title">Network diagnostics</string>
@@ -181,7 +183,7 @@
     <string name="netdiag_button_copy">Copy</string>
     <string name="netdiag_toast_copied">Report copied to clipboard.</string>
     <string name="netdiag_toast_share_failed">Could not share the report: %1$s</string>
-    <string name="netdiag_share_subject">GeneralsZH network log</string>
+    <string name="netdiag_share_subject">BFME1 Mobile network log</string>
 
     <!-- LogViewerActivity -->
     <string name="logviewer_title">Logs</string>
@@ -193,16 +195,16 @@
     <string name="logviewer_crash_log_absent">(not present — no native crash recorded since install, or the app has never launched past library load)</string>
     <string name="logviewer_section_crash_prev_log">=== crash-prev.log (native crash handler, previous session) ===\n</string>
     <string name="logviewer_crash_prev_log_absent">(not present)</string>
-    <string name="logviewer_section_stderr_log">=== generals-stderr.log (engine log, external storage) ===\n</string>
+    <string name="logviewer_section_stderr_log">=== Engine log (generals-stderr.log, external storage) ===\n</string>
     <string name="logviewer_stderr_log_absent">(not present — the engine\'s main() has not started yet, or external storage is unavailable)</string>
-    <string name="logviewer_section_prev_log">=== generals-stderr-prev.log (previous session) ===\n</string>
+    <string name="logviewer_section_prev_log">=== Engine log, previous session (generals-stderr-prev.log) ===\n</string>
     <string name="logviewer_prev_log_absent">(not present)</string>
     <string name="logviewer_dialog_clear_title">Clear Logs</string>
     <string name="logviewer_dialog_clear_message">Delete the crash log and engine log files? This can\'t be undone.</string>
     <string name="logviewer_dialog_clear_confirm">Clear</string>
     <string name="logviewer_dialog_clear_cancel">Cancel</string>
     <string name="logviewer_toast_cleared">Logs cleared.</string>
-    <string name="logviewer_share_subject">GeneralsZH Android log</string>
+    <string name="logviewer_share_subject">BFME1 Mobile Android log</string>
     <string name="logviewer_share_chooser_title">Share log</string>
     <string name="logviewer_toast_share_failed">Could not prepare log file to share: %1$s</string>
     <string name="logviewer_toast_share_none">No log files found to share yet.</string>
@@ -246,7 +248,7 @@
     <string name="online_switch_crossplay_desc">Reports the Windows client\'s EXE checksum so its games will accept you. That checksum is not anti-cheat — it is what keeps two machines that would compute the match differently from playing it together, so this can desync the game for everyone in the lobby. Turn it on for a PC you own, and only after copying that PC\'s INI data into this game folder so the two really do match.</string>
     <string name="online_button_sign_in">Sign In</string>
     <string name="online_status_signing_in">Signing in...</string>
-    <string name="online_status_battery_opt">Allow GeneralsZH to run in the background on the next screen, then come back and tap Sign In again -- otherwise Android may kill the sign-in check while you\'re in the browser.</string>
+    <string name="online_status_battery_opt">Allow BFME1 Mobile to run in the background on the next screen, then come back and tap Sign In again -- otherwise Android may kill the sign-in check while you\'re in the browser.</string>
     <string name="online_toast_no_browser">No browser available: %1$s</string>
     <string name="online_status_continue_browser">Continue in your browser -- come back here once you\'ve signed in.</string>
     <string name="online_status_network_error">Network error -- check your connection and try again.</string>
@@ -259,12 +261,12 @@
     <string name="online_toast_signed_out">Signed out.</string>
     <string name="online_status_signed_in_as">Signed in as %1$s.</string>
     <string name="online_status_not_signed_in">Not signed in.</string>
-    <string name="setup_button_select_base_generals">Base Generals folder…</string>
-    <string name="setup_button_clear_base_generals">Clear base Generals folder</string>
-    <string name="setup_toast_base_generals_saved">Base Generals folder: %1$s</string>
-    <string name="setup_toast_base_generals_cleared">Base Generals folder cleared</string>
-    <string name="setup_base_generals_not_here">No base Generals archives in %1$s — pick the folder that holds Terrain.big, Textures.big and W3D.big.</string>
-    <string name="setup_status_base_generals_line">Base Generals: %1$s\n</string>
+    <string name="setup_button_select_base_generals">Base game folder…</string>
+    <string name="setup_button_clear_base_generals">Clear base game folder</string>
+    <string name="setup_toast_base_generals_saved">Base game folder: %1$s</string>
+    <string name="setup_toast_base_generals_cleared">Base game folder cleared</string>
+    <string name="setup_base_generals_not_here">No base game archives in %1$s — pick the folder that holds Terrain.big, Textures.big and W3D.big.</string>
+    <string name="setup_status_base_generals_line">Base game: %1$s\n</string>
 
     <!-- Launcher bottom navigation (SetupActivity) + short, segment-sized
          versions of the render-backend names. All three backend names are

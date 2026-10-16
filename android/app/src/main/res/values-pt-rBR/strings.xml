@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ME1 Mobile</string>
+    <string name="app_name">BFME1 Mobile</string>
     <string name="common_cancel">Cancelar</string>
 
     <!-- SetupActivity: title / fallback -->
-    <string name="setup_window_title">Configurações do GeneralsZH</string>
-    <string name="setup_title">Command &amp; Conquer Generals: Zero Hour</string>
     <string name="setup_subtitle">Configurações do Android</string>
     <string name="setup_fallback_warning">A interface normal de configurações não carregou (%1$s). Uma interface alternativa simples está sendo exibida para que você ainda consiga acessar os registros/pasta do jogo.</string>
 
@@ -20,13 +18,11 @@
     <string name="setup_status_folder_not_set">Pasta do jogo: não definida.\n</string>
     <string name="setup_status_folder_line">Pasta do jogo: %1$s\n</string>
     <string name="setup_status_folder_valid">Status: parece válida (arquivos de dados do jogo encontrados).\n</string>
-    <string name="setup_status_folder_invalid">Status: esta pasta NÃO contém os arquivos INIZH.big / INI.big esperados — verifique se você escolheu a pasta correta.\n</string>
     <string name="setup_status_folder_incomplete">Status: arquivos do jogo encontrados, mas o conjunto está incompleto:\n%1$s\n</string>
     <string name="setup_dialog_folder_problem_title">Problema na pasta do jogo</string>
     <string name="setup_folder_issue_empty_file">%1$s está vazio (0 bytes)</string>
     <string name="setup_folder_issue_bad_header">%1$s não parece um arquivo de jogo válido</string>
     <string name="setup_folder_issue_missing_data">Faltam dados esperados do jogo em %1$s — provavelmente uma cópia incompleta</string>
-    <string name="setup_folder_issue_no_base_game">Faltam dados do jogo base Generals:%1$s\n\nOu indique ao Setup a pasta que já os contém — o botão “Pasta do jogo base Generals…” abaixo (normalmente ZH_Generals ou Command and Conquer Generals).</string>
     <string name="setup_status_logs_note">Os registros de falha/motor ficam no armazenamento privado deste aplicativo e só podem ser acessados por \"Ver registros\" acima — o Android os oculta intencionalmente dos gerenciadores de arquivos comuns (esse é o isolamento padrão do Android, não algo específico deste aplicativo).</string>
 
     <!-- SetupActivity: Language card -->
@@ -37,8 +33,6 @@
     <string name="setup_language_dialog_title">Escolha um idioma</string>
     <string name="setup_language_system_default">Padrão do sistema</string>
     <string name="setup_language_game_status_default">Texto do jogo: não afetado por esta configuração (usa o próprio idioma do jogo definido no registry.ini, ou inglês por padrão).</string>
-    <string name="setup_language_game_status_override">Texto do jogo: também alterado (data/%1$s/generals.csf encontrado na pasta do jogo).</string>
-    <string name="setup_language_game_status_missing">Texto do jogo: NÃO alterado — data/%1$s/generals.csf não encontrado na pasta do jogo, então o jogo mantém seu próprio idioma.</string>
 
     <!-- SetupActivity: Menu Text Size card -->
     <string name="setup_card_text_size">Tamanho do texto do menu</string>
@@ -136,12 +130,10 @@
 
     <!-- SetupActivity: How this works card -->
     <string name="setup_card_how_it_works">Como funciona</string>
-    <string name="setup_how_it_works_body">1. \"Selecionar pasta do jogo\" abre um navegador de pastas no armazenamento do seu telefone. Navegue até onde você copiou sua própria instalação de Command &amp; Conquer Generals Zero Hour (a pasta contendo INIZH.big, Data\\, ZH_Generals\\ etc.) e toque em \"Usar esta pasta\".\n\n2. Se a navegação parecer vazia, o Android está pedindo primeiro a permissão \"Acesso a todos os arquivos\" — conceda-a na tela que se abre (é uma permissão normal do Android, sem necessidade de root).\n\n3. \"Ver registros\" mostra o registro do motor e, se o jogo travou, um registro de falha nativo — sem precisar de computador ou adb. Use o botão Compartilhar ali para enviar o registro para você mesmo.\n\n4. \"Iniciar jogo\" inicia o jogo com a pasta que você escolheu.</string>
 
     <!-- SetupActivity: folder selection / misc toasts -->
     <string name="setup_toast_grant_all_files">Conceda \"Permitir acesso para gerenciar todos os arquivos\" na próxima tela, depois volte e toque em Selecionar pasta do jogo novamente.</string>
     <string name="setup_toast_folder_saved">Pasta do jogo salva.</string>
-    <string name="setup_toast_folder_saved_invalid">Salvo, mas nenhum INIZH.big/INI.big foi encontrado lá — verifique a pasta.</string>
     <string name="setup_toast_folder_saved_incomplete">Salvo, mas alguns arquivos do jogo parecem incompletos ou corrompidos — veja os detalhes na tela principal antes de iniciar.</string>
     <string name="setup_toast_marker_save_failed">Não foi possível salvar o marcador da pasta: %1$s</string>
     <string name="setup_toast_folder_cleared">Redefinido. O jogo voltará à sua convenção de pasta padrão.</string>
@@ -152,10 +144,8 @@
     <string name="folderpicker_title">Selecionar pasta do jogo</string>
     <string name="folderpicker_up_entry">⬆️  .. (subir)</string>
     <string name="folderpicker_button_use">Usar esta pasta</string>
-    <string name="folderpicker_hint_valid">✓ Esta pasta contém INIZH.big/INI.big — parece correta.</string>
     <string name="folderpicker_hint_invalid">Navegue até a pasta do jogo e toque em \"Usar esta pasta\".</string>
     <string name="folderpicker_toast_cant_read">Não é possível ler esta pasta. Se a navegação parecer vazia em todo lugar, conceda primeiro \"Acesso a todos os arquivos\" na tela de Configurações.</string>
-    <string name="folderpicker_toast_cant_read_legacy">Não é possível ler esta pasta. No Android 9–10, conceda ao app a permissão de Armazenamento (Configurações → Apps → GeneralsZH → Permissões → Armazenamento) e tente novamente.</string>
 
     <!-- LogViewerActivity -->
     <string name="logviewer_title">Registros</string>
@@ -165,16 +155,13 @@
     <string name="logviewer_toast_copied">Copiado para a área de transferência.</string>
     <string name="logviewer_section_crash_log">=== crash.log (manipulador de falhas nativo, armazenamento interno) ===\n</string>
     <string name="logviewer_crash_log_absent">(ausente — nenhuma falha nativa registrada desde a instalação, ou o aplicativo nunca foi executado além do carregamento da biblioteca)</string>
-    <string name="logviewer_section_stderr_log">=== generals-stderr.log (registro do motor, armazenamento externo) ===\n</string>
     <string name="logviewer_stderr_log_absent">(ausente — o main() do motor ainda não foi iniciado, ou o armazenamento externo não está disponível)</string>
-    <string name="logviewer_section_prev_log">=== generals-stderr-prev.log (sessão anterior) ===\n</string>
     <string name="logviewer_prev_log_absent">(ausente)</string>
     <string name="logviewer_dialog_clear_title">Limpar registros</string>
     <string name="logviewer_dialog_clear_message">Excluir o registro de falhas e os arquivos de registro do motor? Isso não pode ser desfeito.</string>
     <string name="logviewer_dialog_clear_confirm">Limpar</string>
     <string name="logviewer_dialog_clear_cancel">Cancelar</string>
     <string name="logviewer_toast_cleared">Registros limpos.</string>
-    <string name="logviewer_share_subject">Registro do GeneralsZH Android</string>
     <string name="logviewer_share_chooser_title">Compartilhar registro</string>
     <string name="logviewer_toast_share_failed">Não foi possível preparar o arquivo de registro para compartilhar: %1$s</string>
     <string name="logviewer_read_failed">(não foi possível ler %1$s: %2$s)</string>
@@ -187,7 +174,6 @@
     <string name="online_signin_help">Toque em Entrar. Na primeira vez, pode ser solicitado que você isente este aplicativo da otimização de bateria — permita isso, depois volte e toque em Entrar novamente. Em seguida, um navegador abrirá em , já com um código de uso único para este dispositivo. Escolha Steam, Discord ou GameReplays lá, depois é só voltar para este aplicativo; o processo termina sozinho.</string>
     <string name="online_button_sign_in">Entrar</string>
     <string name="online_status_signing_in">Entrando...</string>
-    <string name="online_status_battery_opt">Permita que o GeneralsZH seja executado em segundo plano na próxima tela, depois volte e toque em Entrar novamente — caso contrário, o Android pode interromper a verificação de login enquanto você está no navegador.</string>
     <string name="online_toast_no_browser">Nenhum navegador disponível: %1$s</string>
     <string name="online_status_continue_browser">Continue no seu navegador — volte aqui assim que tiver entrado.</string>
     <string name="online_status_network_error">Erro de rede — verifique sua conexão e tente novamente.</string>
@@ -198,12 +184,6 @@
     <string name="online_toast_signed_out">Desconectado.</string>
     <string name="online_status_signed_in_as">Conectado como %1$s.</string>
     <string name="online_status_not_signed_in">Não conectado.</string>
-    <string name="setup_button_select_base_generals">Pasta do jogo base Generals…</string>
-    <string name="setup_button_clear_base_generals">Limpar pasta do jogo base</string>
-    <string name="setup_toast_base_generals_saved">Pasta do jogo base Generals: %1$s</string>
-    <string name="setup_toast_base_generals_cleared">Pasta do jogo base limpa</string>
-    <string name="setup_base_generals_not_here">Não há arquivos do jogo base Generals em %1$s — escolha a pasta que contém Terrain.big, Textures.big e W3D.big.</string>
-    <string name="setup_status_base_generals_line">Generals base: %1$s\n</string>
     <string name="logviewer_crash_prev_log_absent">(não presente)</string>
     <string name="logviewer_elided_notice">\n...(%1$d caracteres omitidos aqui; o início da sessão acima e a saída mais recente abaixo foram mantidos)...\n\n</string>
     <string name="logviewer_section_crash_prev_log">=== crash-prev.log (manipulador nativo de falhas, sessão anterior) ===\n</string>
@@ -239,7 +219,6 @@
     <string name="netdiag_button_copy">Copiar</string>
     <string name="netdiag_toast_copied">Relatório copiado para a área de transferência.</string>
     <string name="netdiag_toast_share_failed">Não foi possível compartilhar o relatório: %1$s</string>
-    <string name="netdiag_share_subject">Registro de rede do GeneralsZH</string>
     <string name="online_status_banned">Esta conta está banida no Online. Você pode recorrer no Discord deles.</string>
     <string name="online_status_banned_reason">Esta conta está banida no Online: %1$s</string>
     <string name="online_status_requesting_code">Solicitando um código de login ao servidor…</string>

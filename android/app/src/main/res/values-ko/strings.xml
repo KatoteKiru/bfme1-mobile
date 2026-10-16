@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ME1 Mobile</string>
+    <string name="app_name">BFME1 Mobile</string>
     <string name="common_cancel">취소</string>
 
     <!-- SetupActivity: title / fallback -->
-    <string name="setup_window_title">GeneralsZH 설정</string>
-    <string name="setup_title">Command &amp; Conquer Generals: Zero Hour</string>
     <string name="setup_subtitle">Android 설정</string>
     <string name="setup_fallback_warning">일반 설정 화면을 불러오지 못했습니다 (%1$s). 로그/게임 폴더에는 계속 접근할 수 있도록 간단한 대체 화면을 표시합니다.</string>
 
@@ -20,13 +18,11 @@
     <string name="setup_status_folder_not_set">게임 폴더: 설정되지 않음.\n</string>
     <string name="setup_status_folder_line">게임 폴더: %1$s\n</string>
     <string name="setup_status_folder_valid">상태: 유효한 것으로 보입니다 (게임 아카이브 파일 발견).\n</string>
-    <string name="setup_status_folder_invalid">상태: 이 폴더에는 예상되는 INIZH.big / INI.big 파일이 없습니다 — 올바른 폴더를 선택했는지 다시 확인하세요.\n</string>
     <string name="setup_status_folder_incomplete">상태: 게임 아카이브를 찾았지만 구성이 불완전합니다:\n%1$s\n</string>
     <string name="setup_dialog_folder_problem_title">게임 폴더 문제</string>
     <string name="setup_folder_issue_empty_file">%1$s 파일이 비어 있습니다 (0바이트)</string>
     <string name="setup_folder_issue_bad_header">%1$s은(는) 올바른 게임 아카이브로 보이지 않습니다</string>
     <string name="setup_folder_issue_missing_data">%1$s에 예상되는 게임 데이터가 없습니다 — 불완전한 복사본일 가능성이 있습니다</string>
-    <string name="setup_folder_issue_no_base_game">기본 게임 Generals의 데이터가 없습니다:%1$s\n\n또는 이미 파일이 있는 폴더를 지정하세요 — 아래의 “기본 게임 Generals 폴더…” 버튼 (보통 ZH_Generals 또는 Command and Conquer Generals).</string>
     <string name="setup_status_logs_note">충돌/엔진 로그는 이 앱의 전용 저장소에 보관되며 위의 \"로그 보기\"를 통해서만 접근할 수 있습니다 — Android는 이를 일반 파일 관리자로부터 의도적으로 숨깁니다 (이는 이 앱만의 특징이 아니라 Android의 표준 샌드박스 동작입니다).</string>
 
     <!-- SetupActivity: Language card -->
@@ -37,8 +33,6 @@
     <string name="setup_language_dialog_title">언어 선택</string>
     <string name="setup_language_system_default">시스템 기본값</string>
     <string name="setup_language_game_status_default">게임 텍스트: 이 설정의 영향을 받지 않습니다 (registry.ini에 지정된 게임 자체 언어를 사용하거나, 기본값은 영어입니다).</string>
-    <string name="setup_language_game_status_override">게임 텍스트: 함께 전환되었습니다 (게임 폴더에서 data/%1$s/generals.csf를 발견했습니다).</string>
-    <string name="setup_language_game_status_missing">게임 텍스트: 전환되지 않았습니다 — 게임 폴더에서 data/%1$s/generals.csf를 찾을 수 없어 게임이 원래 언어를 유지합니다.</string>
 
     <!-- SetupActivity: Menu Text Size card -->
     <string name="setup_card_text_size">메뉴 글자 크기</string>
@@ -136,12 +130,10 @@
 
     <!-- SetupActivity: How this works card -->
     <string name="setup_card_how_it_works">작동 방식</string>
-    <string name="setup_how_it_works_body">1. \"게임 폴더 선택\"을 누르면 휴대폰 저장소의 폴더 탐색기가 열립니다. Command &amp; Conquer Generals Zero Hour 설치본을 복사해 둔 위치(INIZH.big, Data\\, ZH_Generals\\ 등이 있는 폴더)로 이동한 다음 \"이 폴더 사용\"을 누르세요.\n\n2. 폴더 목록이 비어 있는 것처럼 보인다면 Android가 먼저 \"모든 파일 접근\" 권한을 요청하는 것입니다 — 열리는 화면에서 이를 허용하세요 (루트 권한이 필요 없는 일반적인 Android 권한입니다).\n\n3. \"로그 보기\"는 엔진 로그를, 게임이 충돌했다면 네이티브 충돌 로그도 함께 보여줍니다 — 컴퓨터나 adb가 필요 없습니다. 거기 있는 공유 버튼으로 로그를 자신에게 보낼 수 있습니다.\n\n4. \"게임 실행\"은 선택한 폴더로 게임을 시작합니다.</string>
 
     <!-- SetupActivity: folder selection / misc toasts -->
     <string name="setup_toast_grant_all_files">다음 화면에서 \"모든 파일 관리 접근 허용\"을 허용한 다음 돌아와서 게임 폴더 선택을 다시 누르세요.</string>
     <string name="setup_toast_folder_saved">게임 폴더가 저장되었습니다.</string>
-    <string name="setup_toast_folder_saved_invalid">저장되었지만 해당 위치에서 INIZH.big/INI.big을 찾을 수 없습니다 — 폴더를 확인하세요.</string>
     <string name="setup_toast_folder_saved_incomplete">저장되었지만, 일부 게임 파일이 불완전하거나 손상된 것으로 보입니다 — 실행하기 전에 메인 화면에서 자세한 내용을 확인하세요.</string>
     <string name="setup_toast_marker_save_failed">폴더 표시를 저장할 수 없습니다: %1$s</string>
     <string name="setup_toast_folder_cleared">초기화되었습니다. 게임이 다시 기본 폴더 규칙을 사용합니다.</string>
@@ -152,10 +144,8 @@
     <string name="folderpicker_title">게임 폴더 선택</string>
     <string name="folderpicker_up_entry">⬆️  .. (위로)</string>
     <string name="folderpicker_button_use">이 폴더 사용</string>
-    <string name="folderpicker_hint_valid">✓ 이 폴더에는 INIZH.big/INI.big이 있습니다 — 올바른 것으로 보입니다.</string>
     <string name="folderpicker_hint_invalid">게임 폴더로 이동한 다음 \"이 폴더 사용\"을 누르세요.</string>
     <string name="folderpicker_toast_cant_read">이 폴더를 읽을 수 없습니다. 어디서나 폴더 목록이 비어 있다면 먼저 설정 화면에서 \"모든 파일 접근\"을 허용하세요.</string>
-    <string name="folderpicker_toast_cant_read_legacy">이 폴더를 읽을 수 없습니다. Android 9–10에서는 앱에 저장공간 권한을 허용한 뒤(설정 → 애플리케이션 → GeneralsZH → 권한 → 저장공간) 다시 시도하세요.</string>
 
     <!-- LogViewerActivity -->
     <string name="logviewer_title">로그</string>
@@ -165,16 +155,13 @@
     <string name="logviewer_toast_copied">클립보드에 복사되었습니다.</string>
     <string name="logviewer_section_crash_log">=== crash.log (네이티브 충돌 처리기, 내부 저장소) ===\n</string>
     <string name="logviewer_crash_log_absent">(없음 — 설치 이후 기록된 네이티브 충돌이 없거나, 앱이 라이브러리 로딩 이후 단계까지 실행된 적이 없습니다)</string>
-    <string name="logviewer_section_stderr_log">=== generals-stderr.log (엔진 로그, 외부 저장소) ===\n</string>
     <string name="logviewer_stderr_log_absent">(없음 — 엔진의 main()이 아직 시작되지 않았거나 외부 저장소를 사용할 수 없습니다)</string>
-    <string name="logviewer_section_prev_log">=== generals-stderr-prev.log (이전 세션) ===\n</string>
     <string name="logviewer_prev_log_absent">(없음)</string>
     <string name="logviewer_dialog_clear_title">로그 지우기</string>
     <string name="logviewer_dialog_clear_message">충돌 로그와 엔진 로그 파일을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</string>
     <string name="logviewer_dialog_clear_confirm">지우기</string>
     <string name="logviewer_dialog_clear_cancel">취소</string>
     <string name="logviewer_toast_cleared">로그가 지워졌습니다.</string>
-    <string name="logviewer_share_subject">GeneralsZH Android 로그</string>
     <string name="logviewer_share_chooser_title">로그 공유</string>
     <string name="logviewer_toast_share_failed">공유할 로그 파일을 준비할 수 없습니다: %1$s</string>
     <string name="logviewer_read_failed">(%1$s을(를) 읽을 수 없습니다: %2$s)</string>
@@ -187,7 +174,6 @@
     <string name="online_signin_help">로그인을 누르세요. 처음 누르면 이 앱을 배터리 최적화에서 제외할지 묻는 화면이 나타날 수 있습니다 — 허용한 다음 돌아와서 로그인을 다시 누르세요. 그러면 이 기기용 일회용 코드가 이미 포함된 상태로  브라우저가 열립니다. 거기서 Steam, Discord 또는 GameReplays를 선택한 다음 이 앱으로 돌아오기만 하면 로그인이 자동으로 완료됩니다.</string>
     <string name="online_button_sign_in">로그인</string>
     <string name="online_status_signing_in">로그인 중...</string>
-    <string name="online_status_battery_opt">다음 화면에서 GeneralsZH가 백그라운드에서 실행되도록 허용한 다음 돌아와서 로그인을 다시 누르세요 — 그렇지 않으면 브라우저에 있는 동안 Android가 로그인 확인을 중단할 수 있습니다.</string>
     <string name="online_toast_no_browser">사용 가능한 브라우저가 없습니다: %1$s</string>
     <string name="online_status_continue_browser">브라우저에서 계속 진행하세요 — 로그인 후 여기로 돌아오세요.</string>
     <string name="online_status_network_error">네트워크 오류 — 연결 상태를 확인한 후 다시 시도하세요.</string>
@@ -198,12 +184,6 @@
     <string name="online_toast_signed_out">로그아웃되었습니다.</string>
     <string name="online_status_signed_in_as">%1$s(으)로 로그인되었습니다.</string>
     <string name="online_status_not_signed_in">로그인되지 않았습니다.</string>
-    <string name="setup_button_select_base_generals">기본 게임 Generals 폴더…</string>
-    <string name="setup_button_clear_base_generals">기본 게임 폴더 지우기</string>
-    <string name="setup_toast_base_generals_saved">기본 게임 Generals 폴더: %1$s</string>
-    <string name="setup_toast_base_generals_cleared">기본 게임 폴더를 지웠습니다</string>
-    <string name="setup_base_generals_not_here">%1$s에는 기본 게임 Generals 아카이브가 없습니다 — Terrain.big, Textures.big, W3D.big이 있는 폴더를 선택하세요.</string>
-    <string name="setup_status_base_generals_line">기본 Generals: %1$s\n</string>
     <string name="logviewer_crash_prev_log_absent">(없음)</string>
     <string name="logviewer_elided_notice">\n...(여기서 %1$d자 생략됨. 위의 세션 시작 부분과 아래의 최신 출력은 유지됩니다)...\n\n</string>
     <string name="logviewer_section_crash_prev_log">=== crash-prev.log (네이티브 크래시 핸들러, 이전 세션) ===\n</string>
@@ -239,7 +219,6 @@
     <string name="netdiag_button_copy">복사</string>
     <string name="netdiag_toast_copied">보고서를 클립보드에 복사했습니다.</string>
     <string name="netdiag_toast_share_failed">보고서를 공유하지 못했습니다: %1$s</string>
-    <string name="netdiag_share_subject">GeneralsZH 네트워크 로그</string>
     <string name="online_status_banned">이 계정은 Online에서 차단되었습니다. 해당 Discord에서 이의를 제기할 수 있습니다.</string>
     <string name="online_status_banned_reason">이 계정은 Online에서 차단되었습니다: %1$s</string>
     <string name="online_status_requesting_code">서버에 로그인 코드를 요청하는 중…</string>

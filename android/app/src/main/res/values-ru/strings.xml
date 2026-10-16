@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ME1 Mobile</string>
+    <string name="app_name">BFME1 Mobile</string>
+    <!-- BFME: branding. Launcher (home screen) label. -->
+    <string name="app_name_short">BFME1</string>
     <string name="common_cancel">Отмена</string>
 
     <!-- SetupActivity: title / fallback -->
-    <string name="setup_window_title">Настройки GeneralsZH</string>
-    <string name="setup_title">Command &amp; Conquer Generals: Zero Hour</string>
+    <string name="setup_window_title">Настройки BFME1 Mobile</string>
+    <string name="setup_title">BFME1 Mobile</string>
     <string name="setup_subtitle">Настройки Android</string>
     <string name="setup_fallback_warning">Обычный интерфейс настроек не загрузился (%1$s). Показан упрощённый вариант, чтобы вы всё равно могли открыть логи или папку с игрой.</string>
 
@@ -20,13 +22,13 @@
     <string name="setup_status_folder_not_set">Папка с игрой: не задана.\n</string>
     <string name="setup_status_folder_line">Папка с игрой: %1$s\n</string>
     <string name="setup_status_folder_valid">Статус: похоже на верную папку (найдены файлы архивов игры).\n</string>
-    <string name="setup_status_folder_invalid">Статус: в этой папке НЕТ ожидаемых INIZH.big / INI.big — проверьте, ту ли папку вы выбрали.\n</string>
+    <string name="setup_status_folder_invalid">Статус: в этой папке НЕТ ожидаемого INI.big — проверьте, ту ли папку вы выбрали.\n</string>
     <string name="setup_status_folder_incomplete">Статус: архивы игры найдены, но набор неполный:\n%1$s\n</string>
     <string name="setup_dialog_folder_problem_title">Проблема с папкой игры</string>
     <string name="setup_folder_issue_empty_file">%1$s пустой (0 байт)</string>
     <string name="setup_folder_issue_bad_header">%1$s не похож на корректный архив игры</string>
     <string name="setup_folder_issue_missing_data">В %1$s не хватает ожидаемых данных игры — вероятно, неполная копия</string>
-    <string name="setup_folder_issue_no_base_game">Отсутствуют данные базовой игры Generals:%1$s\n\nЛибо укажите папку, где они уже есть — кнопка «Папка базовой Generals…» ниже (обычно ZH_Generals или Command and Conquer Generals).</string>
+    <string name="setup_folder_issue_no_base_game">Отсутствуют данные базовой игры:%1$s\n\nЛибо укажите папку, где они уже есть — кнопка «Папка базовой игры…» ниже.</string>
     <string name="setup_status_logs_note">Логи краша/движка хранятся в приватном хранилище приложения и доступны только через кнопку «Просмотреть логи» выше — Android намеренно скрывает их от обычных файловых менеджеров (это стандартная песочница Android, не особенность этого приложения).</string>
 
     <!-- SetupActivity: Language card -->
@@ -37,8 +39,8 @@
     <string name="setup_language_dialog_title">Выберите язык</string>
     <string name="setup_language_system_default">Как в системе</string>
     <string name="setup_language_game_status_default">Текст игры: не затронут этой настройкой (используется собственный язык игры из registry.ini, либо английский по умолчанию).</string>
-    <string name="setup_language_game_status_override">Текст игры: тоже переключён (найден data/%1$s/generals.csf в папке игры).</string>
-    <string name="setup_language_game_status_missing">Текст игры: НЕ переключён — в папке игры нет data/%1$s/generals.csf, поэтому игра сохраняет свой язык.</string>
+    <string name="setup_language_game_status_override">Текст игры: тоже переключён (найден языковой пакет в data/%1$s/ в папке игры).</string>
+    <string name="setup_language_game_status_missing">Текст игры: НЕ переключён — в папке игры нет языкового пакета в data/%1$s/, поэтому игра сохраняет свой язык.</string>
 
     <!-- SetupActivity: Menu Text Size card -->
     <string name="setup_card_text_size">Размер текста меню</string>
@@ -146,13 +148,13 @@
 
     <!-- SetupActivity: How this works card -->
     <string name="setup_card_how_it_works">Как это работает</string>
-    <string name="setup_how_it_works_body">1. «Выбрать папку с игрой» открывает браузер папок в памяти телефона. Перейдите туда, куда вы скопировали свою установку Command &amp; Conquer Generals Zero Hour (папку с INIZH.big, Data\\, ZH_Generals\\ и т. д.) и нажмите «Использовать эту папку».\n\n2. Если список папок выглядит пустым, значит Android сначала запрашивает разрешение «Доступ ко всем файлам» — предоставьте его на открывшемся экране (это обычное разрешение Android, root не требуется).\n\n3. «Просмотреть логи» показывает лог движка и, если игра упала, лог краша — без компьютера и adb. Кнопка «Поделиться» там же отправит лог себе.\n\n4. «Запустить игру» запускает игру с выбранной папкой.</string>
+    <string name="setup_how_it_works_body">1. «Выбрать папку с игрой» открывает браузер папок в памяти телефона. Перейдите туда, куда вы скопировали свои данные игры (папку с INI.big, Data\\ и т. д.) и нажмите «Использовать эту папку».\n\n2. Если список папок выглядит пустым, значит Android сначала запрашивает разрешение «Доступ ко всем файлам» — предоставьте его на открывшемся экране (это обычное разрешение Android, root не требуется).\n\n3. «Просмотреть логи» показывает лог движка и, если игра упала, лог краша — без компьютера и adb. Кнопка «Поделиться» там же отправит лог себе.\n\n4. «Запустить игру» запускает игру с выбранной папкой.</string>
 
     <!-- SetupActivity: folder selection / misc toasts -->
     <string name="setup_toast_grant_all_files">Предоставьте разрешение «Доступ ко всем файлам» на следующем экране, затем вернитесь и снова нажмите «Выбрать папку с игрой».</string>
     <string name="setup_toast_storage_permission_denied">Для выбора папки с игрой требуется разрешение на доступ к хранилищу. Нажмите «Выбрать папку с игрой» ещё раз, чтобы повторить попытку.</string>
     <string name="setup_toast_folder_saved">Папка с игрой сохранена.</string>
-    <string name="setup_toast_folder_saved_invalid">Сохранено, но INIZH.big/INI.big там не найдены — проверьте папку.</string>
+    <string name="setup_toast_folder_saved_invalid">Сохранено, но INI.big там не найден — проверьте папку.</string>
     <string name="setup_toast_folder_saved_incomplete">Сохранено, но некоторые файлы игры выглядят неполными или повреждёнными — смотрите детали на главном экране перед запуском.</string>
     <string name="setup_toast_marker_save_failed">Не удалось сохранить метку папки: %1$s</string>
     <string name="setup_toast_folder_cleared">Сброшено. Игра будет использовать папку по умолчанию.</string>
@@ -163,10 +165,10 @@
     <string name="folderpicker_title">Выбор папки с игрой</string>
     <string name="folderpicker_up_entry">⬆️  .. (вверх)</string>
     <string name="folderpicker_button_use">Использовать эту папку</string>
-    <string name="folderpicker_hint_valid">✓ В этой папке есть INIZH.big/INI.big — похоже на верную.</string>
+    <string name="folderpicker_hint_valid">✓ В этой папке есть INI.big — похоже на верную.</string>
     <string name="folderpicker_hint_invalid">Перейдите в папку с игрой и нажмите «Использовать эту папку».</string>
     <string name="folderpicker_toast_cant_read">Не удаётся прочитать эту папку. Если списки везде пустые, сначала предоставьте «Доступ ко всем файлам» на экране настроек.</string>
-    <string name="folderpicker_toast_cant_read_legacy">Не удаётся прочитать эту папку. На Android 9–10 разрешите приложению доступ к хранилищу (Настройки → Приложения → GeneralsZH → Разрешения → Хранилище) и попробуйте снова.</string>
+    <string name="folderpicker_toast_cant_read_legacy">Не удаётся прочитать эту папку. На Android 9–10 разрешите приложению доступ к хранилищу (Настройки → Приложения → BFME1 Mobile → Разрешения → Хранилище) и попробуйте снова.</string>
 
     <!-- LogViewerActivity -->
     <string name="logviewer_title">Логи</string>
@@ -176,16 +178,16 @@
     <string name="logviewer_toast_copied">Скопировано в буфер обмена.</string>
     <string name="logviewer_section_crash_log">=== crash.log (обработчик краша, внутреннее хранилище) ===\n</string>
     <string name="logviewer_crash_log_absent">(отсутствует — крашей движка с момента установки не было, либо приложение ни разу не запускалось дальше загрузки библиотеки)</string>
-    <string name="logviewer_section_stderr_log">=== generals-stderr.log (лог движка, внешнее хранилище) ===\n</string>
+    <string name="logviewer_section_stderr_log">=== Лог движка (generals-stderr.log, внешнее хранилище) ===\n</string>
     <string name="logviewer_stderr_log_absent">(отсутствует — main() движка ещё не запускался, либо внешнее хранилище недоступно)</string>
-    <string name="logviewer_section_prev_log">=== generals-stderr-prev.log (предыдущая сессия) ===\n</string>
+    <string name="logviewer_section_prev_log">=== Лог движка, предыдущая сессия (generals-stderr-prev.log) ===\n</string>
     <string name="logviewer_prev_log_absent">(отсутствует)</string>
     <string name="logviewer_dialog_clear_title">Очистить логи</string>
     <string name="logviewer_dialog_clear_message">Удалить файлы лога краша и лога движка? Это необратимо.</string>
     <string name="logviewer_dialog_clear_confirm">Очистить</string>
     <string name="logviewer_dialog_clear_cancel">Отмена</string>
     <string name="logviewer_toast_cleared">Логи очищены.</string>
-    <string name="logviewer_share_subject">Лог GeneralsZH Android</string>
+    <string name="logviewer_share_subject">Лог BFME1 Mobile Android</string>
     <string name="logviewer_share_chooser_title">Поделиться логом</string>
     <string name="logviewer_toast_share_failed">Не удалось подготовить файл лога для отправки: %1$s</string>
     <string name="logviewer_toast_share_none">Файлы логов пока не найдены.</string>
@@ -199,7 +201,7 @@
     <string name="online_signin_help">Нажмите «Войти». При первом нажатии может появиться запрос исключить приложение из оптимизации батареи — разрешите это, затем вернитесь и снова нажмите «Войти». После этого откроется браузер уже с одноразовым кодом для этого устройства. Выберите там Steam, Discord или GameReplays, затем просто вернитесь в приложение — вход завершится сам.</string>
     <string name="online_button_sign_in">Войти</string>
     <string name="online_status_signing_in">Выполняется вход...</string>
-    <string name="online_status_battery_opt">Разрешите GeneralsZH работать в фоне на следующем экране, затем вернитесь и снова нажмите «Войти» — иначе Android может прервать проверку входа, пока вы находитесь в браузере.</string>
+    <string name="online_status_battery_opt">Разрешите BFME1 Mobile работать в фоне на следующем экране, затем вернитесь и снова нажмите «Войти» — иначе Android может прервать проверку входа, пока вы находитесь в браузере.</string>
     <string name="online_toast_no_browser">Нет доступного браузера: %1$s</string>
     <string name="online_status_continue_browser">Продолжите в браузере — вернитесь сюда после входа.</string>
     <string name="online_status_network_error">Ошибка сети — проверьте соединение и попробуйте снова.</string>
@@ -210,12 +212,12 @@
     <string name="online_toast_signed_out">Выход выполнен.</string>
     <string name="online_status_signed_in_as">Вход выполнен как %1$s.</string>
     <string name="online_status_not_signed_in">Вход не выполнен.</string>
-    <string name="setup_button_select_base_generals">Папка базовой Generals…</string>
-    <string name="setup_button_clear_base_generals">Сбросить папку базовой Generals</string>
-    <string name="setup_toast_base_generals_saved">Папка базовой Generals: %1$s</string>
-    <string name="setup_toast_base_generals_cleared">Папка базовой Generals сброшена</string>
-    <string name="setup_base_generals_not_here">В %1$s нет архивов базовой Generals — выберите папку, где лежат Terrain.big, Textures.big и W3D.big.</string>
-    <string name="setup_status_base_generals_line">Базовая Generals: %1$s\n</string>
+    <string name="setup_button_select_base_generals">Папка базовой игры…</string>
+    <string name="setup_button_clear_base_generals">Сбросить папку базовой игры</string>
+    <string name="setup_toast_base_generals_saved">Папка базовой игры: %1$s</string>
+    <string name="setup_toast_base_generals_cleared">Папка базовой игры сброшена</string>
+    <string name="setup_base_generals_not_here">В %1$s нет архивов базовой игры — выберите папку, где лежат Terrain.big, Textures.big и W3D.big.</string>
+    <string name="setup_status_base_generals_line">Базовая игра: %1$s\n</string>
     <string name="logviewer_crash_prev_log_absent">(отсутствует)</string>
     <string name="logviewer_elided_notice">\n...(здесь пропущено символов: %1$d; начало сессии выше и самый свежий вывод ниже сохранены)...\n\n</string>
     <string name="logviewer_section_crash_prev_log">=== crash-prev.log (нативный обработчик падений, предыдущая сессия) ===\n</string>
@@ -241,7 +243,7 @@
     <string name="netdiag_button_copy">Копировать</string>
     <string name="netdiag_toast_copied">Отчёт скопирован в буфер обмена.</string>
     <string name="netdiag_toast_share_failed">Не удалось отправить отчёт: %1$s</string>
-    <string name="netdiag_share_subject">Сетевой лог GeneralsZH</string>
+    <string name="netdiag_share_subject">Сетевой лог BFME1 Mobile</string>
     <string name="online_status_banned">Этот аккаунт заблокирован на Online. Подать апелляцию можно в их Discord.</string>
     <string name="online_status_banned_reason">Этот аккаунт заблокирован на Online: %1$s</string>
     <string name="online_status_requesting_code">Запрашиваем код входа у сервера…</string>
