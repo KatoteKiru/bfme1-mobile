@@ -1730,7 +1730,7 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 #endif
 				ChunkInputStream *pStrm = &theInputStream;
 				DataChunkInput file( pStrm );
-				file.registerParser( "PlayerScriptsList", AsciiString::TheEmptyString, ScriptList::ParseScriptsDataChunk );
+				file.registerParser( "PlayerScriptsList", AsciiString::TheEmptyString, ScriptList::ParseScriptsDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("PlayerScriptsList") ); // BFME:
 				if (!file.parse(nullptr)) {
 #ifdef ALLOW_DEBUG_UTILS
 					fprintf(stderr, "[SKIRMISH_DIAG] ERROR parsing MultiplayerScripts.scb\n");

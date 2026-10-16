@@ -189,7 +189,8 @@ static Bool ParseObjectDataChunk(DataChunkInput &file, DataChunkInfo *info, void
 static Bool ParseObjectsDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
 	file.m_currentObject = nullptr;
-	file.registerParser( "Object", info->label, ParseObjectDataChunk );
+	// BFME: same Object ceiling as the logical map load.
+	file.registerParser( "Object", info->label, ParseObjectDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("Object") );
 	return (file.parse(userData));
 }
 
@@ -261,9 +262,10 @@ static Bool loadMap( AsciiString filename )
 
 	m_waypoints = NEW WaypointMap;
 
-	file.registerParser( "HeightMapData", AsciiString::TheEmptyString, ParseSizeOnlyInChunk );
-	file.registerParser( "WorldInfo", AsciiString::TheEmptyString, ParseWorldDictDataChunk );
-	file.registerParser( "ObjectsList", AsciiString::TheEmptyString, ParseObjectsDataChunk );
+	// BFME: preview load uses the same version ceilings as WorldHeightMap.
+	file.registerParser( "HeightMapData", AsciiString::TheEmptyString, ParseSizeOnlyInChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("HeightMapData") );
+	file.registerParser( "WorldInfo", AsciiString::TheEmptyString, ParseWorldDictDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("WorldInfo") );
+	file.registerParser( "ObjectsList", AsciiString::TheEmptyString, ParseObjectsDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("ObjectsList") );
 	if (!file.parse(nullptr)) {
 		throw(ERROR_CORRUPT_FILE_FORMAT);
 	}

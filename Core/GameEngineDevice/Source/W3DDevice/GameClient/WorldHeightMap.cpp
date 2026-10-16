@@ -577,22 +577,24 @@ WorldHeightMap::WorldHeightMap(ChunkInputStream *pStrm, Bool logicalDataOnly):
 
 	DataChunkInput file( pStrm );
 
+	// BFME: ceilings are the maps.big / _patch222maps.big scan maxima (mapChunkVersionCeiling).
+	// PolygonTriggers stops at K_TRIGGERS_VERSION_5. SidesList stops at K_SIDES_DATA_VERSION_6.
 	if (logicalDataOnly) {
-		file.registerParser( "HeightMapData", AsciiString::TheEmptyString, ParseSizeOnlyInChunk );
-		file.registerParser( "WorldInfo", AsciiString::TheEmptyString, ParseWorldDictDataChunk );
-		file.registerParser( "ObjectsList", AsciiString::TheEmptyString, ParseObjectsDataChunk );
+		file.registerParser( "HeightMapData", AsciiString::TheEmptyString, ParseSizeOnlyInChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("HeightMapData") );
+		file.registerParser( "WorldInfo", AsciiString::TheEmptyString, ParseWorldDictDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("WorldInfo") );
+		file.registerParser( "ObjectsList", AsciiString::TheEmptyString, ParseObjectsDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("ObjectsList") );
 		freeListOfMapObjects(); // just in case.
-		file.registerParser( "PolygonTriggers", AsciiString::TheEmptyString, PolygonTrigger::ParsePolygonTriggersDataChunk );
+		file.registerParser( "PolygonTriggers", AsciiString::TheEmptyString, PolygonTrigger::ParsePolygonTriggersDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("PolygonTriggers") );
 		PolygonTrigger::deleteTriggers(); // just in case.
 		TheSidesList->emptySides();
-		file.registerParser("SidesList", AsciiString::TheEmptyString,	SidesList::ParseSidesDataChunk );
+		file.registerParser("SidesList", AsciiString::TheEmptyString,	SidesList::ParseSidesDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("SidesList") );
 	}	else {
-		file.registerParser( "HeightMapData", AsciiString::TheEmptyString, ParseHeightMapDataChunk );
-		file.registerParser( "BlendTileData", AsciiString::TheEmptyString, ParseBlendTileDataChunk );
+		file.registerParser( "HeightMapData", AsciiString::TheEmptyString, ParseHeightMapDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("HeightMapData") );
+		file.registerParser( "BlendTileData", AsciiString::TheEmptyString, ParseBlendTileDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("BlendTileData") );
 #ifdef EVAL_TILING_MODES
 		file.registerParser( "FUNKY_TILING", AsciiString::TheEmptyString, ParseFunkyTilingDataChunk );
 #endif
-		file.registerParser( "GlobalLighting", AsciiString::TheEmptyString, ParseLightingDataChunk );
+		file.registerParser( "GlobalLighting", AsciiString::TheEmptyString, ParseLightingDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("GlobalLighting") );
 	}
 	if (!file.parse(this)) {
 
@@ -963,7 +965,8 @@ Bool WorldHeightMap::ParseLightingDataChunk(DataChunkInput &file, DataChunkInfo 
 Bool WorldHeightMap::ParseObjectsDataChunk(DataChunkInput &file, DataChunkInfo *info, void *userData)
 {
 	file.m_currentObject = nullptr;
-	file.registerParser( "Object", info->label, ParseObjectDataChunk );
+	// BFME: Object v3 is the newest layout. A newer chunk is an error, not a v3 read.
+	file.registerParser( "Object", info->label, ParseObjectDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("Object") );
 	// BFME: E1-25 count the objects ParseObjectData removes for their z, with a per-map summary.
 	WorldHeightMap *pThis = (WorldHeightMap *)userData;
 	memset(&pThis->m_objectsZStats, 0, sizeof(pThis->m_objectsZStats));

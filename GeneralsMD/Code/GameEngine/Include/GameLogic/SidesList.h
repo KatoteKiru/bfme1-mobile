@@ -147,9 +147,7 @@ public:
 	/// Writes sides (including build list info.)
 	static void WriteSidesDataChunk(DataChunkOutput &chunkWriter);
 
-	// BFME: the gamedata test puts the map name on the "exceeds 16" line and
-	// sums the side and build-entry counts the last chunk actually contained.
-	static void setParseMapName(const char* mapName);
+	// BFME: side and build-entry counts the last chunk actually contained.
 	static Int lastChunkSideCount();
 	static Int lastChunkBuildCount();
 

@@ -34,6 +34,9 @@
 
 typedef unsigned short DataChunkVersionType;
 
+// BFME: no version ceiling. A chunk version is an unsigned short, so none is greater than this.
+static const DataChunkVersionType DATA_CHUNK_VERSION_ANY = 0xFFFF;
+
 // forward declarations
 class DataChunkInput;
 class DataChunkOutput;
@@ -162,6 +165,8 @@ public:
 	AsciiString label;																	// the data chunk label to match
 	AsciiString parentLabel;														// the parent chunk's label (the scope)
 	void *userData;																	// user data pointer
+	// BFME: versions above this are an error. DATA_CHUNK_VERSION_ANY means the parser accepts any version.
+	DataChunkVersionType maxVersion;
 };
 EMPTY_DTOR(UserParser)
 
@@ -177,6 +182,7 @@ protected:
 	Int												m_fileposOfFirstChunk;										// seek position of first data chunk
 	UserParser*								m_parserList;																		// list of all registered parsers for this input stream
 	InputChunk*								m_chunkStack;																		// current stack of open data chunks
+	Int												m_skippedChunkCount;														// BFME: unknown skips on this file (names not in mapChunkVersionCeiling)
 
 	void clearChunkStack();										// clear the stack
 
@@ -196,8 +202,16 @@ public:
 	~DataChunkInput();
 
 	// register a parser function for data chunks with labels matching "label", whose parent
-	// chunks labels match "parentLabel" (or null for global scope)
-	void registerParser( const AsciiString& label, const AsciiString& parentLabel, DataChunkParserPtr parser, void *userData = nullptr );
+	// chunks labels match "parentLabel" (or null for global scope).
+	// BFME: a version above maxVersion is logged and throws ERROR_CORRUPT_FILE_FORMAT before the
+	// parser runs. For map chunks that maximum is the BFME1 data scan (mapChunkVersionCeiling),
+	// which can be newer than the layout this parser implements. DATA_CHUNK_VERSION_ANY (the
+	// default) leaves the version unchecked.
+	void registerParser( const AsciiString& label, const AsciiString& parentLabel, DataChunkParserPtr parser, void *userData = nullptr, DataChunkVersionType maxVersion = DATA_CHUNK_VERSION_ANY );
+
+	// BFME: highest version of this chunk in the BFME1 map scan, or DATA_CHUNK_VERSION_ANY when
+	// this port has no ceiling for that name (an unregistered chunk is skipped and logged).
+	static DataChunkVersionType mapChunkVersionCeiling(const char* label);
 
 	Bool parse( void *userData = nullptr );						// parse the chunk stream using registered parsers
 																									// assumed to be at the start of chunk when called

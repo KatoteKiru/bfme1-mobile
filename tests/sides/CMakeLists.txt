@@ -85,6 +85,7 @@ set(BFME_SIDES_UNIT_TESTS
     sides_v6_unicode_player_name
     sides_v6_player_name_ignores_case
     sides_v6_sides_past_cap_consumed
+    sides_v6_sides_past_cap_names_the_map
     sides_v3_zh_teams_and_scripts
     sides_v1_zh_no_nested_teams
     sides_v5_zh_layout

@@ -13,6 +13,7 @@
 #include "Common/DataChunk.h"
 #include "Common/Errors.h"
 #include "Common/GameType.h"
+#include "Common/GlobalData.h"
 #include "Common/WellKnownKeys.h"
 #include "GameLogic/SidesList.h"
 
@@ -20,6 +21,7 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <new>
 #include <map>
 #include <string>
 #include <unistd.h>
@@ -337,7 +339,6 @@ ParseResult parseArchiveMap(const Archive& a, const bfmeheights::BigEntry& e, st
 	std::string error;
 	if (!bfmeheights::decompressMap(stored, plain, error))
 		throw bfmetest::Failure(e.name + ": " + error);
-	SidesList::setParseMapName(e.name.c_str());
 	return parseChunk(plain);
 }
 
@@ -958,6 +959,46 @@ TEST(sides_v6_sides_past_cap_consumed)
 	REQUIRE_EQ(sideName(0), std::string("S00"));
 	REQUIRE_EQ(sideName(15), std::string("S15"));
 	REQUIRE(err.find("SidesList: map '?' has 17 sides, stored 16, dropped 1") != std::string::npos);
+}
+
+// The fallback '?' is only for a missing GlobalData name. A loaded map already has m_mapName.
+TEST(sides_v6_sides_past_cap_names_the_map)
+{
+	Symbols sym;
+	const ByteWriter build = buildEntry(false);
+	ByteWriter payload;
+	payload.u8(1);
+	payload.i32(17);
+	for (int i = 0; i < 17; ++i) {
+		const std::string name = (i < 10 ? "S0" : "S") + std::to_string(i);
+		writeSide(payload, sym, name, i == 16 ? &build : nullptr);
+	}
+	const std::vector<uint8_t> chunk = finish(sym, 6, payload);
+	bfmesides::reset();
+	// GlobalData::GlobalData() is not linked here: it needs the Money vtable and
+	// GlobalData::newOverride(). The warning only reads m_mapName, so the object
+	// storage is memset to zero and that one member is placement-new'd. Its
+	// destructor runs before the buffer goes out of scope.
+	alignas(GlobalData) unsigned char raw[sizeof(GlobalData)];
+	std::memset(raw, 0, sizeof(raw));
+	GlobalData* mapData = reinterpret_cast<GlobalData*>(raw);
+	new (&mapData->m_mapName) AsciiString("maps\\map mp rohan\\map mp rohan.map");
+	TheWritableGlobalData = mapData;
+	std::string err;
+	ParseResult r;
+	{
+		StderrPipe pipe;
+		r = parseChunk(chunk, false);
+		err = pipe.stop();
+	}
+	mapData->m_mapName.~AsciiString();
+	TheWritableGlobalData = nullptr;
+	REQUIRE(r.ok);
+	REQUIRE_EQ(r.left, 0u);
+	REQUIRE_EQ(TheSidesList->getNumSides(), 16);
+	const std::string line = "SidesList: map 'maps\\map mp rohan\\map mp rohan.map' has 17 sides, stored 16, dropped 1";
+	REQUIRE(err.find(line) != std::string::npos);
+	REQUIRE(err.find("map '?'") == std::string::npos);
 }
 
 TEST(gamedata_fords_of_isen_ten_sides)

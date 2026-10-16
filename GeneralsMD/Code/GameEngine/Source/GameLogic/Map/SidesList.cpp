@@ -57,13 +57,12 @@
 #include "GameLogic/AI.h"
 #include "GameLogic/Scripts.h"
 #include "GameLogic/SidesList.h"
+#include "Common/MapReaderWriterInfo.h"
 
 static const Int K_SIDES_DATA_VERSION_1 = 1;
 static const Int K_SIDES_DATA_VERSION_2 = 2;	// includes Team list.
 static const Int K_SIDES_DATA_VERSION_3 = 3;	// includes Team list.
-// BFME: BFME1 SidesList. One leading byte, then sides and build lists.
-// Teams and PlayerScriptsList are top-level chunks, not nested here.
-static const Int K_SIDES_DATA_VERSION_6 = 6;
+// BFME: K_SIDES_DATA_VERSION_6 is the shared ceiling constant in MapReaderWriterInfo.h.
 
 /* ********* SidesInfo class ****************************/
 /**
@@ -357,14 +356,8 @@ static void bfmeRequireCount(Int count, Int minBytes, Int dataLeft)
 		throw ERROR_CORRUPT_FILE_FORMAT;
 }
 
-static const char* s_bfmeParseMap = nullptr;
 static Int s_bfmeChunkSides = 0;
 static Int s_bfmeChunkBuilds = 0;
-
-void SidesList::setParseMapName(const char* mapName)
-{
-	s_bfmeParseMap = mapName;
-}
 
 Int SidesList::lastChunkSideCount()
 {
@@ -474,7 +467,8 @@ Bool SidesList::ParseSidesDataChunk(DataChunkInput &file, DataChunkInfo *info, v
 			}
 		}
 
-		file.registerParser( "PlayerScriptsList", info->label, ScriptList::ParseScriptsDataChunk );
+		// BFME: scan maximum. Versions above it error; v5 still reaches the current script reader.
+		file.registerParser( "PlayerScriptsList", info->label, ScriptList::ParseScriptsDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("PlayerScriptsList") );
 		if (!file.parse(nullptr)) {
 			throw(ERROR_CORRUPT_FILE_FORMAT);
 		}
@@ -713,7 +707,7 @@ void SidesList::prepareForMP_or_Skirmish()
 #endif
 				ChunkInputStream *pStrm = &theInputStream;
 				DataChunkInput file( pStrm );
-				file.registerParser( "PlayerScriptsList", AsciiString::TheEmptyString, ScriptList::ParseScriptsDataChunk );
+				file.registerParser( "PlayerScriptsList", AsciiString::TheEmptyString, ScriptList::ParseScriptsDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("PlayerScriptsList") ); // BFME:
 				file.registerParser( "ScriptsPlayers", AsciiString::TheEmptyString, ParsePlayersDataChunk );
 				file.registerParser( "ScriptTeams", AsciiString::TheEmptyString, ParseTeamsDataChunk );
 				if (!file.parse(this)) {

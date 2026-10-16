@@ -34,6 +34,11 @@
 #include "Common/file.h"
 #include "Common/FileSystem.h"
 
+// BFME: skipped-chunk and version-ceiling lines go to stderr (release builds compile DEBUG_LOG out).
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
+
 // If verbose, lots of debug logging.
 #define not_VERBOSE
 
@@ -593,7 +598,8 @@ DataChunkInput::DataChunkInput( ChunkInputStream *pStream ) : m_file( pStream ),
 																										m_userData(nullptr),
 																										m_currentObject(nullptr),
 																										m_chunkStack(nullptr),
-																										m_parserList(nullptr)
+																										m_parserList(nullptr),
+																										m_skippedChunkCount(0)	// BFME: one counter per file, which is one map
 {
 	// read table of m_contents
 	m_contents.read(*m_file);
@@ -616,7 +622,7 @@ DataChunkInput::~DataChunkInput()
 
 // register a user parsing function for a given DataChunk label
 void DataChunkInput::registerParser( const AsciiString& label, const AsciiString& parentLabel,
-																		 DataChunkParserPtr parser, void *userData )
+																		 DataChunkParserPtr parser, void *userData, DataChunkVersionType maxVersion )
 {
 	UserParser *p = newInstance(UserParser);
 
@@ -624,10 +630,74 @@ void DataChunkInput::registerParser( const AsciiString& label, const AsciiString
 	p->parentLabel.set(parentLabel );
 	p->parser = parser;
 	p->userData = userData;
+	p->maxVersion = maxVersion;	// BFME:
 
 	// prepend parser to parser list
 	p->next = m_parserList;
 	m_parserList = p;
+}
+
+// BFME: stderr stays visible when DEBUG_LOG is compiled out. DebugLog adds its own newline.
+static void logChunkLine(const char *fmt, ...)
+{
+	char line[512];
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(line, sizeof(line), fmt, args);
+	va_end(args);
+	DEBUG_LOG(("%s", line));
+	fprintf(stderr, "%s\n", line);
+	fflush(stderr);
+}
+
+// BFME: highest version of each chunk across every map in maps.big and _patch222maps.big
+// (406 maps). The numbers come from that scan, not from the Zero Hour parsers. A version
+// above the maximum is an error. SidesList uses K_SIDES_DATA_VERSION_6 from #59.
+// PolygonTriggers uses K_TRIGGERS_VERSION_5 from #60. A name in this table that a
+// partial pass did not register is still skipped, but it is not a line in the log.
+// GlobalLighting v4–v6 stay below this ceiling and are still rejected inside
+// ParseLightingDataChunk.
+DataChunkVersionType DataChunkInput::mapChunkVersionCeiling(const char *label)
+{
+	struct Row {
+		const char *name;
+		DataChunkVersionType maxVersion;
+	};
+	static const Row rows[] = {
+		{ "HeightMapData", K_HEIGHT_MAP_VERSION_5 },
+		{ "BlendTileData", K_BLEND_TILE_VERSION_MAX },
+		{ "GlobalLighting", K_LIGHTING_VERSION_7 },
+		{ "WorldInfo", K_WORLDDICT_VERSION_1 },
+		{ "ObjectsList", K_OBJECTS_VERSION_3 },
+		{ "Object", K_OBJECTS_VERSION_3 },
+		{ "PolygonTriggers", K_TRIGGERS_VERSION_5 },
+		{ "SidesList", K_SIDES_DATA_VERSION_6 },
+		{ "WaypointsList", K_WAYPOINTS_VERSION_1 },
+		{ "EnvironmentData", 3 },
+		{ "NamedCameras", 2 },
+		{ "SkyboxSettings", 1 },
+		{ "MPPositionList", 0 },
+		{ "MPPositionInfo", 1 },
+		{ "LibraryMapLists", 1 },
+		{ "LibraryMaps", 1 },
+		{ "BuildLists", 1 },
+		{ "Teams", 1 },
+		{ "PlayerScriptsList", 5 },
+		{ "ScriptList", 1 },
+		{ "ScriptGroup", 3 },
+		{ "Script", 2 },
+		{ "OrCondition", 1 },
+		{ "Condition", 4 },
+		{ "ScriptAction", 2 },
+		{ "ScriptActionFalse", 2 },
+	};
+	if (label != nullptr) {
+		for (int i = 0; i < int(sizeof(rows) / sizeof(rows[0])); ++i) {
+			if (strcmp(label, rows[i].name) == 0)
+				return rows[i].maxVersion;
+		}
+	}
+	return DATA_CHUNK_VERSION_ANY;
 }
 
 // parse the chunk stream using registered parsers
@@ -651,6 +721,10 @@ Bool DataChunkInput::parse( void *userData )
 	if (m_chunkStack)
 		parentLabel = m_contents.getName( m_chunkStack->id );
 
+	// BFME: known names closed by a partial pass (preview, logical, render). One summary
+	// for this parse() call; a line each was 39 lines on rohan.
+	Int knownSkipped = 0;
+
 	while( atEndOfFile() == false )
 	{
 		if (m_chunkStack) { // If we are parsing chunks in a chunk, check current length.
@@ -666,6 +740,7 @@ Bool DataChunkInput::parse( void *userData )
 		}
 
 		// find a registered parser for this chunk
+		Bool handled = false;
 		for( parser=m_parserList; parser; parser=parser->next )
 		{
 			// chunk labels must match
@@ -679,6 +754,15 @@ Bool DataChunkInput::parse( void *userData )
 
 				if (scopeOK)
 				{
+					// BFME: a version newer than the registered parser knows is not read as the old layout.
+					if (parser->maxVersion != DATA_CHUNK_VERSION_ANY && ver > parser->maxVersion)
+					{
+						const Int dataSize = (Int)getChunkDataSize();
+						logChunkLine("[chunk] %s v%u is newer than known v%u (size %d)",
+							label.str(), (unsigned)ver, (unsigned)parser->maxVersion, dataSize);
+						throw ERROR_CORRUPT_FILE_FORMAT;
+					}
+
 					// m_tmp_file out the chunk info and call the user parser
 					info.label = label;
 					info.parentLabel = parentLabel;
@@ -686,15 +770,41 @@ Bool DataChunkInput::parse( void *userData )
 					info.dataSize = getChunkDataSize();
 
 					if (parser->parser( *this, &info, userData ) == false)
+					{
+						if (knownSkipped > 0)
+							logChunkLine("[chunk] skipped %d known", knownSkipped);
 						return false;
+					}
+					handled = true;
 					break;
 				}
+			}
+		}
+
+		// BFME: no matching parser. closeDataChunk still skips the bytes.
+		// Line-log only a name that mapChunkVersionCeiling does not know.
+		// A known name is counted here and written once, after this pass.
+		if (!handled)
+		{
+			if (mapChunkVersionCeiling(label.str()) == DATA_CHUNK_VERSION_ANY)
+			{
+				const Int dataSize = (Int)getChunkDataSize();
+				++m_skippedChunkCount;
+				logChunkLine("[chunk] skipped %s v%u size %d count %d",
+					label.str(), (unsigned)ver, dataSize, m_skippedChunkCount);
+			}
+			else
+			{
+				++knownSkipped;
 			}
 		}
 
 		// close chunk (and skip to end if need be)
 		closeDataChunk();
 	}
+
+	if (knownSkipped > 0)
+		logChunkLine("[chunk] skipped %d known", knownSkipped);
 
 	return true;
 }
@@ -718,6 +828,7 @@ void DataChunkInput::reset()
 {
 	clearChunkStack();
 	m_file->absoluteSeek( m_fileposOfFirstChunk );
+	m_skippedChunkCount = 0;	// BFME: the same file parsed again is a new pass over the map
 }
 
 // Checks if the file has our initial tag word.

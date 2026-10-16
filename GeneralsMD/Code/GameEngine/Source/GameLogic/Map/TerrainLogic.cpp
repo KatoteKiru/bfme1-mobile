@@ -1269,7 +1269,8 @@ Bool TerrainLogic::loadMap( AsciiString filename, Bool query )
 		DataChunkInput file( pStrm );
 		if (file.isValidFileType()) {	// Backwards compatible files aren't valid data chunk files.
 			// Read the waypoints.
-			file.registerParser( "WaypointsList", AsciiString::TheEmptyString, parseWaypointDataChunk );
+			// BFME: WaypointsList v1 is the newest layout this parser reads.
+			file.registerParser( "WaypointsList", AsciiString::TheEmptyString, parseWaypointDataChunk, nullptr, DataChunkInput::mapChunkVersionCeiling("WaypointsList") );
 			if (!file.parse(this)) {
 				DEBUG_CRASH(("Unable to read waypoint info."));
 				return false;

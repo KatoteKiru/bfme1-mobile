@@ -55,6 +55,8 @@
 #define K_OBJECTS_VERSION_3			3	// includes dict
 #define K_MAP_OBJECT_VERSION_1	1
 #define K_WAYPOINTS_VERSION_1		1
+#define K_SIDES_DATA_VERSION_MAX 3	// BFME: Zero Hour writer version. Not the map-load ceiling.
+#define K_SIDES_DATA_VERSION_6 6	// BFME: #59. Highest SidesList in the maps.big / _patch222maps.big scan. The load ceiling uses this.
 #define K_PLAYERLIST_VERSION_1	1
 #define K_TRIGGERS_VERSION_1 1
 #define K_TRIGGERS_VERSION_2 2		// Added m_isWaterArea
