@@ -864,10 +864,18 @@ void DataChunkInput::decrementDataLeft( Int size )
 	// The sizes of the parent chunks on the stack are adjusted in closeDataChunk.
 }
 
+// BFME: a short read used to return stack garbage and keep going. A side or
+// build count taken from that garbage loops until the timeout. Refuse it.
+static void bfmeNeedChunkBytes(InputChunk* chunk, Int n)
+{
+	if (chunk == nullptr || n < 0 || chunk->dataLeft < n)
+		throw ERROR_CORRUPT_FILE_FORMAT;
+}
+
 Real DataChunkInput::readReal()
 {
 	Real r;
-	DEBUG_ASSERTCRASH(m_chunkStack->dataLeft>=sizeof(Real), ("Read past end of chunk."));
+	bfmeNeedChunkBytes(m_chunkStack, sizeof(Real));
 	m_file->read( (char *)&r, sizeof(Real) );
 	decrementDataLeft( sizeof(Real) );
 	return r;
@@ -876,7 +884,7 @@ Real DataChunkInput::readReal()
 Int DataChunkInput::readInt()
 {
 	Int i;
-	DEBUG_ASSERTCRASH(m_chunkStack->dataLeft>=sizeof(Int), ("Read past end of chunk."));
+	bfmeNeedChunkBytes(m_chunkStack, sizeof(Int));
 	m_file->read( (char *)&i, sizeof(Int) );
 	decrementDataLeft( sizeof(Int) );
 	return i;
@@ -885,7 +893,7 @@ Int DataChunkInput::readInt()
 Byte DataChunkInput::readByte()
 {
 	Byte b;
-	DEBUG_ASSERTCRASH(m_chunkStack->dataLeft>=sizeof(Byte), ("Read past end of chunk."));
+	bfmeNeedChunkBytes(m_chunkStack, sizeof(Byte));
 	m_file->read( (char *)&b, sizeof(Byte) );
 	decrementDataLeft( sizeof(Byte) );
 	return b;
@@ -893,7 +901,7 @@ Byte DataChunkInput::readByte()
 
 void DataChunkInput::readArrayOfBytes(char *ptr, Int len)
 {
-	DEBUG_ASSERTCRASH(m_chunkStack->dataLeft>=len, ("Read past end of chunk."));
+	bfmeNeedChunkBytes(m_chunkStack, len);
 	m_file->read( ptr, len );
 	decrementDataLeft( len );
 }
@@ -915,10 +923,13 @@ NameKeyType DataChunkInput::readNameKey()
 Dict DataChunkInput::readDict()
 {
 	UnsignedShort len;
-	DEBUG_ASSERTCRASH(m_chunkStack->dataLeft>=sizeof(UnsignedShort), ("Read past end of chunk."));
+	// BFME: each pair is an int key plus at least one value byte. A garbage
+	// length (up to 65535) otherwise allocates that many pairs and loops.
+	bfmeNeedChunkBytes(m_chunkStack, sizeof(UnsignedShort));
 	m_file->read( &len, sizeof(UnsignedShort) );
 	decrementDataLeft( sizeof(UnsignedShort) );
-	DEBUG_ASSERTCRASH(m_chunkStack->dataLeft>=len, ("Read past end of chunk."));
+	if ((long long)len * 5 > (long long)m_chunkStack->dataLeft)
+		throw ERROR_CORRUPT_FILE_FORMAT;
 
 	Dict d(len);
 
@@ -960,10 +971,11 @@ Dict DataChunkInput::readDict()
 AsciiString DataChunkInput::readAsciiString()
 {
 	UnsignedShort len;
-	DEBUG_ASSERTCRASH(m_chunkStack->dataLeft>=sizeof(UnsignedShort), ("Read past end of chunk."));
+	bfmeNeedChunkBytes(m_chunkStack, sizeof(UnsignedShort));
 	m_file->read( &len, sizeof(UnsignedShort) );
 	decrementDataLeft( sizeof(UnsignedShort) );
-	DEBUG_ASSERTCRASH(m_chunkStack->dataLeft>=len, ("Read past end of chunk."));
+	// BFME: do not allocate `len` bytes when the chunk cannot hold them.
+	bfmeNeedChunkBytes(m_chunkStack, (Int)len);
 	AsciiString theString;
 	if (len>0) {
 		char *str = theString.getBufferForRead(len);
@@ -982,11 +994,12 @@ UnicodeString DataChunkInput::readUnicodeString()
 	// On Linux sizeof(WideChar)==4; reading len*sizeof(WideChar) bytes over-consumed file data,
 	// corrupting chunk dataLeft and preventing PlayerScriptsList from being parsed (no scripts/camera).
 	UnsignedShort len;
-	DEBUG_ASSERTCRASH(m_chunkStack->dataLeft>=sizeof(UnsignedShort), ("Read past end of chunk."));
+	bfmeNeedChunkBytes(m_chunkStack, sizeof(UnsignedShort));
 	m_file->read( &len, sizeof(UnsignedShort) );
 	decrementDataLeft( sizeof(UnsignedShort) );
 	const Int bytesInFile = (Int)len * (Int)sizeof(UnsignedShort);  // always 2 bytes/char in file
-	DEBUG_ASSERTCRASH(m_chunkStack->dataLeft>=bytesInFile, ("Read past end of chunk."));
+	// BFME: same bound as ascii. A garbage char count must not allocate.
+	bfmeNeedChunkBytes(m_chunkStack, bytesInFile);
 	UnicodeString theString;
 	if (len>0) {
 		WideChar *str = theString.getBufferForRead(len);

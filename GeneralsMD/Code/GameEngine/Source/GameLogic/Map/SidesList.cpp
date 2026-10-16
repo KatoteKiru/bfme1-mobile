@@ -45,9 +45,13 @@
 
 #include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
 
+#include <stdio.h>	// BFME: fprintf for an unsupported SidesList version.
+
 #include "Common/DataChunk.h"
+#include "Common/GlobalData.h"	// BFME: map name for the sides-over-cap line.
 #include "Common/GameState.h"
 #include "Common/PlayerTemplate.h"
+#include "Common/UnicodeString.h"	// BFME: playerName may be stored as unicode.
 #include "Common/WellKnownKeys.h"
 #include "Common/Xfer.h"
 #include "GameLogic/AI.h"
@@ -57,6 +61,9 @@
 static const Int K_SIDES_DATA_VERSION_1 = 1;
 static const Int K_SIDES_DATA_VERSION_2 = 2;	// includes Team list.
 static const Int K_SIDES_DATA_VERSION_3 = 3;	// includes Team list.
+// BFME: BFME1 SidesList. One leading byte, then sides and build lists.
+// Teams and PlayerScriptsList are top-level chunks, not nested here.
+static const Int K_SIDES_DATA_VERSION_6 = 6;
 
 /* ********* SidesInfo class ****************************/
 /**
@@ -235,6 +242,140 @@ void SidesList::clear()
 
 
 
+// BFME: the engine reads playerName as ascii. A v6 dict may store that value as
+// unicode, or under a key that differs only by case. Copy it onto TheKey_playerName
+// so an empty ascii slot is not mistaken for the neutral player. An ascii value
+// that is already present is left alone, including the empty neutral marker.
+// playerDisplayName is a different field (Fords of Isen stores "Neutral" there)
+// and is never copied onto playerName.
+static void bfmeAdoptPlayerName(Dict& d)
+{
+	Bool asciiExists = false;
+	d.getAsciiString(TheKey_playerName, &asciiExists);
+	if (asciiExists)
+		return;
+
+	Bool unicodeExists = false;
+	UnicodeString unicodeName = d.getUnicodeString(TheKey_playerName, &unicodeExists);
+	if (unicodeExists)
+	{
+		AsciiString converted;
+		converted.translate(unicodeName);
+		d.setAsciiString(TheKey_playerName, converted);
+		return;
+	}
+
+	for (Int n = 0; n < d.getPairCount(); ++n)
+	{
+		AsciiString keyName = TheNameKeyGenerator->keyToName(d.getNthKey(n));
+		if (keyName.compareNoCase("playerName") != 0)
+			continue;
+		if (d.getNthType(n) == Dict::DICT_ASCIISTRING)
+			d.setAsciiString(TheKey_playerName, d.getNthAsciiString(n));
+		else if (d.getNthType(n) == Dict::DICT_UNICODESTRING)
+		{
+			AsciiString converted;
+			converted.translate(d.getNthUnicodeString(n));
+			d.setAsciiString(TheKey_playerName, converted);
+		}
+		return;
+	}
+}
+
+// BFME: one build-list record, the same fields as Zero Hour v3. OpenSAGE reads an
+// extra boolean after initiallyBuilt only when the map has an AssetList chunk.
+// BFME1 maps are v6 and have no AssetList, so that byte is not part of the record.
+// Reading it shifted the next int; a garbage build count then looped until the
+// test timed out. Sides past MAX_PLAYER_COUNT are read the same way and dropped.
+static BuildListInfo* bfmeReadBuildEntry(DataChunkInput& file, Int version, Bool keep)
+{
+	AsciiString building = file.readAsciiString();
+	AsciiString templ = file.readAsciiString();
+	Coord3D loc;
+	loc.x = file.readReal();
+	loc.y = file.readReal();
+	loc.z = file.readReal();
+	loc.z = 0;
+	const Real angle = file.readReal();
+	const Byte built = file.readByte();
+	const Int rebuilds = file.readInt();
+	AsciiString script;
+	Int health = 0;
+	Byte whiner = 0, unsellable = 0, repairable = 0;
+	if (version >= K_SIDES_DATA_VERSION_3)
+	{
+		script = file.readAsciiString();
+		health = file.readInt();
+		whiner = file.readByte();
+		unsellable = file.readByte();
+		repairable = file.readByte();
+	}
+	if (!keep)
+		return nullptr;
+	BuildListInfo* entry = newInstance(BuildListInfo);
+	entry->setBuildingName(building);
+	entry->setTemplateName(templ);
+	entry->setLocation(loc);
+	entry->setAngle(angle);
+	entry->setInitiallyBuilt(built);
+	entry->setNumRebuilds(rebuilds);
+	if (version >= K_SIDES_DATA_VERSION_3)
+	{
+		entry->setScript(script);
+		entry->setHealth(health);
+		entry->setWhiner(whiner);
+		entry->setUnsellable(unsellable);
+		entry->setRepairable(repairable);
+	}
+	return entry;
+}
+
+// BFME: smallest side is an empty dict (2 bytes) plus a build count (4).
+// Smallest v3 build entry is two empty ascii strings, four floats, the built
+// byte, the rebuild int, an empty script, health and three flag bytes (34).
+// v1-v2 stop before the script. A count that cannot fit in the bytes still in
+// the chunk is garbage from a shifted read, not a real list.
+static const Int K_BFME_MIN_SIDE_BYTES = 6;
+static const Int K_BFME_MIN_BUILD_BYTES_V3 = 34;
+static const Int K_BFME_MIN_BUILD_BYTES_V1 = 25;
+
+static Int bfmeBytesLeft(DataChunkInput& file)
+{
+	const UnsignedInt left = file.getChunkDataSizeLeft();
+	const UnsignedInt size = file.getChunkDataSize();
+	// dataLeft is signed. The unsigned getter wraps once a read passes the end.
+	if (left > size)
+		throw ERROR_CORRUPT_FILE_FORMAT;
+	return (Int)left;
+}
+
+static void bfmeRequireCount(Int count, Int minBytes, Int dataLeft)
+{
+	if (count < 0 || minBytes < 1 || dataLeft < 0)
+		throw ERROR_CORRUPT_FILE_FORMAT;
+	if ((long long)count * (long long)minBytes > (long long)dataLeft)
+		throw ERROR_CORRUPT_FILE_FORMAT;
+}
+
+static const char* s_bfmeParseMap = nullptr;
+static Int s_bfmeChunkSides = 0;
+static Int s_bfmeChunkBuilds = 0;
+
+void SidesList::setParseMapName(const char* mapName)
+{
+	s_bfmeParseMap = mapName;
+}
+
+Int SidesList::lastChunkSideCount()
+{
+	return s_bfmeChunkSides;
+}
+
+Int SidesList::lastChunkBuildCount()
+{
+	return s_bfmeChunkBuilds;
+}
+
 /**
 * SidesList::ParseSidesDataChunk - read a Sides chunk.
 * Format is the newer CHUNKY format.
@@ -249,71 +390,109 @@ Bool SidesList::ParseSidesDataChunk(DataChunkInput &file, DataChunkInfo *info, v
 	if (TheSidesList==nullptr)
 		return false;
 
-	TheSidesList->clear();
-	Int count = file.readInt();
-	Int i, j;
-	TheSidesList->emptySides();
-	for (i=0; i<count; i++)
+	// BFME: v7+ is not a known layout. Reject before clear() so a bad chunk
+	// does not wipe a list that was already loaded. v1–v5 stay Zero Hour.
+	if (info->version > K_SIDES_DATA_VERSION_6)
 	{
-		if (i >= MAX_PLAYER_COUNT) break;
-		Dict d =  file.readDict();
-		TheSidesList->addSide(&d);
-		BuildListInfo* pBuildList;
-		Int count = file.readInt();
-		for (j=0; j<count; j++)
-		{
-			pBuildList = newInstance( BuildListInfo );
-			pBuildList->setBuildingName(file.readAsciiString());
-			pBuildList->setTemplateName(file.readAsciiString());
-			Coord3D loc;
-			loc.x = file.readReal();
-			loc.y = file.readReal();
-			loc.z = file.readReal();
-			loc.z = 0; // force to ground level
-			pBuildList->setLocation(loc);
-			pBuildList->setAngle(file.readReal());
-			pBuildList->setInitiallyBuilt(file.readByte());
-			pBuildList->setNumRebuilds(file.readInt());
-			if (info->version >= K_SIDES_DATA_VERSION_3)
-			{
-				pBuildList->setScript(file.readAsciiString());
-				pBuildList->setHealth(file.readInt());
-				pBuildList->setWhiner(file.readByte());
-				pBuildList->setUnsellable(file.readByte());
-				pBuildList->setRepairable(file.readByte());
-			}
-			TheSidesList->getSideInfo(i)->addToBuildList(pBuildList, j);
-		}
-	}
-	if (info->version >= K_SIDES_DATA_VERSION_2)
-	{
-		count = file.readInt();
-		TheSidesList->emptyTeams();
-		for (i=0; i<count; i++)
-		{
-			Dict d =  file.readDict();
-			TheSidesList->addTeam(&d);
-		}
+		DEBUG_LOG(("SidesList: unsupported version v%d (supported v1-v6)", info->version));
+		fprintf(stderr, "SidesList: unsupported version v%d (supported v1-v6)\n", info->version);
+		throw ERROR_CORRUPT_FILE_FORMAT;
 	}
 
-	file.registerParser( "PlayerScriptsList", info->label, ScriptList::ParseScriptsDataChunk );
-	if (!file.parse(nullptr)) {
-		throw(ERROR_CORRUPT_FILE_FORMAT);
-	}
-	ScriptList *scripts[MAX_PLAYER_COUNT];
-	count = ScriptList::getReadScripts(scripts);
-	for (i=0; i<count; i++) {
-		if (i<TheSidesList->getNumSides()) {
-			deleteInstance(TheSidesList->getSideInfo(i)->getScriptList());
-			TheSidesList->getSideInfo(i)->setScriptList(scripts[i]);
-			scripts[i] = nullptr;
-		} else {
-			// Read in more players worth than we have.
-			deleteInstance(scripts[i]);
-			scripts[i] = nullptr;
+	TheSidesList->clear();
+	s_bfmeChunkSides = 0;
+	s_bfmeChunkBuilds = 0;
+	// BFME: v6 stores one byte in front of the side count. On Fords of Isen the
+	// first bytes are 01 0a 00 00 00 (byte 1, count 10). readInt() of 01 0a 00 00
+	// is 2561, and the following dict starts one byte late.
+	if (info->version >= K_SIDES_DATA_VERSION_6)
+		file.readByte();
+	Int count = file.readInt();
+	bfmeRequireCount(count, K_BFME_MIN_SIDE_BYTES, bfmeBytesLeft(file));
+	s_bfmeChunkSides = count;
+	Int i, j;
+	TheSidesList->emptySides();
+	const Int minBuild = (info->version >= K_SIDES_DATA_VERSION_3)
+		? K_BFME_MIN_BUILD_BYTES_V3 : K_BFME_MIN_BUILD_BYTES_V1;
+	for (i=0; i<count; i++)
+	{
+		// BFME: keep reading past MAX_PLAYER_COUNT. Stopping here left the rest
+		// of the chunk (198 bytes on map sps evil belfalas) unparsed.
+		Dict d = file.readDict();
+		const Bool keep = i < MAX_PLAYER_COUNT;
+		if (keep)
+		{
+			if (info->version >= K_SIDES_DATA_VERSION_6)
+				bfmeAdoptPlayerName(d);
+			TheSidesList->addSide(&d);
+		}
+		const Int builds = file.readInt();
+		bfmeRequireCount(builds, minBuild, bfmeBytesLeft(file));
+		s_bfmeChunkBuilds += builds;
+		// addToBuildList(entry, j) walks j nodes. A long list, or a count that
+		// used to be a shifted int, made that walk quadratic and the test hung.
+		BuildListInfo* tail = nullptr;
+		for (j=0; j<builds; j++)
+		{
+			BuildListInfo* entry = bfmeReadBuildEntry(file, info->version, keep);
+			if (entry == nullptr)
+				continue;
+			if (tail == nullptr)
+				TheSidesList->getSideInfo(i)->addToBuildList(entry, 0);
+			else
+				tail->setNextBuildList(entry);
+			tail = entry;
 		}
 	}
-	TheSidesList->validateSides();
+	if (count > MAX_PLAYER_COUNT)
+	{
+		// BFME: one line. The map path is already in TheGlobalData when the chunk loads.
+		const char* mapName = "?";
+		if (TheGlobalData != nullptr && TheGlobalData->m_mapName.isEmpty() == false)
+			mapName = TheGlobalData->m_mapName.str();
+		const Int dropped = count - MAX_PLAYER_COUNT;
+		DEBUG_LOG(("SidesList: map '%s' has %d sides, stored %d, dropped %d", mapName, count, MAX_PLAYER_COUNT, dropped));
+		fprintf(stderr, "SidesList: map '%s' has %d sides, stored %d, dropped %d\n", mapName, count, MAX_PLAYER_COUNT, dropped);
+	}
+	// BFME: v6 does not nest teams or PlayerScriptsList, and validateSides()
+	// is not run. Fords side 0 already has an empty playerName (the neutral
+	// marker) and "Neutral" in playerDisplayName. validateSides would not add
+	// a side for that, but it would invent default teams before the Teams
+	// chunk is read. v1-v5 keep the old tail.
+	if (info->version < K_SIDES_DATA_VERSION_6)
+	{
+		if (info->version >= K_SIDES_DATA_VERSION_2)
+		{
+			count = file.readInt();
+			// BFME: same bound as the side count. An empty team dict is 2 bytes.
+			bfmeRequireCount(count, 2, bfmeBytesLeft(file));
+			TheSidesList->emptyTeams();
+			for (i=0; i<count; i++)
+			{
+				Dict d =  file.readDict();
+				TheSidesList->addTeam(&d);
+			}
+		}
+
+		file.registerParser( "PlayerScriptsList", info->label, ScriptList::ParseScriptsDataChunk );
+		if (!file.parse(nullptr)) {
+			throw(ERROR_CORRUPT_FILE_FORMAT);
+		}
+		ScriptList *scripts[MAX_PLAYER_COUNT];
+		count = ScriptList::getReadScripts(scripts);
+		for (i=0; i<count; i++) {
+			if (i<TheSidesList->getNumSides()) {
+				deleteInstance(TheSidesList->getSideInfo(i)->getScriptList());
+				TheSidesList->getSideInfo(i)->setScriptList(scripts[i]);
+				scripts[i] = nullptr;
+			} else {
+				// Read in more players worth than we have.
+				deleteInstance(scripts[i]);
+				scripts[i] = nullptr;
+			}
+		}
+		TheSidesList->validateSides();
+	}
 
 	DEBUG_ASSERTCRASH(file.atEndOfChunk(), ("Incorrect data file length."));
 	return true;
