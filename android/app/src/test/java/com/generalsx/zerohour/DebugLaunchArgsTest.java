@@ -57,7 +57,7 @@ public class DebugLaunchArgsTest {
         while (ok.length() < DebugLaunchArgs.MAX_CHARS) ok.append('a');
         assertEquals(1, DebugLaunchArgs.resolve(ok.toString(), true, log).size());
         assertEquals(Collections.emptyList(), DebugLaunchArgs.resolve(ok + "a", true, log));
-        assertTrue(logs.get(1).startsWith("W "));
+        assertTrue(logs.size() == 1 && logs.get(0).startsWith("W "));
     }
 
     @Test public void resolveGate() {
@@ -66,6 +66,21 @@ public class DebugLaunchArgsTest {
         assertTrue(logs.get(0).startsWith("W "));
         assertEquals(l("-noshellmap", "-file", "maps\\foo\\foo.map"),
             DebugLaunchArgs.resolve("-noshellmap -file maps\\foo\\foo.map", true, log));
-        assertTrue(logs.get(1).startsWith("I "));
+        assertEquals("success is not logged (the caller logs the final argv)", 1, logs.size());
+    }
+
+    @Test public void quotedAtLimit() {
+        StringBuilder inner = new StringBuilder();
+        while (inner.length() < DebugLaunchArgs.MAX_CHARS - 2) inner.append(inner.length() % 7 == 3 ? ' ' : 'x');
+        String atLimit = "\"" + inner + "\"";
+        assertEquals(DebugLaunchArgs.MAX_CHARS, atLimit.length());
+        assertEquals(l(inner.toString()), DebugLaunchArgs.resolve(atLimit, true, log));
+        assertTrue(logs.isEmpty());
+
+        String over = "\"" + inner + "x\"";
+        assertEquals(DebugLaunchArgs.MAX_CHARS + 1, over.length());
+        assertEquals(Collections.emptyList(), DebugLaunchArgs.resolve(over, true, log));
+        assertEquals(1, logs.size());
+        assertTrue(logs.get(0), logs.get(0).startsWith("W ") && logs.get(0).contains("longer than"));
     }
 }

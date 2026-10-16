@@ -22,3 +22,11 @@ adb logcat -s BFME-args
 - `BuildConfig.BFME_DEV_ARGS`, по умолчанию `true` (текущие тестовые сборки).
 - Сборка для друзей: `BFME_DEV_ARGS=0 tools/build-apk.sh` (передаёт Gradle `-PbfmeDevArgs=false`). Тогда extra игнорируется целиком, в logcat одно предупреждение `args extra ignored: built with bfmeDevArgs=false`.
 - В журнале `build-apk.sh` есть строка `BFME_DEV_ARGS: <значение>`.
+
+## Юнит-тесты без сборки APK
+
+```
+BFME_DOCKER="sudo docker" BFME_CACHE=/workspace/bfme-mobile/cache tools/android-unit-tests.sh
+```
+
+`:app:testDebugUnitTest` компилирует основной код, а он зависит от Java-обвязки SDL3 (`org.libsdl.app`), которую обычно кладёт в `android/app/src/main/java-sdl/` (в `.gitignore`) `package-android-zh.sh`. Скрипт кладёт её сам: из `build/android-vulkan/_deps/sdl3-src`, если нативная сборка уже была, иначе из закреплённого архива SDL3 (версия и SHA-256 из `cmake/sdl3.cmake`, проверяются), и накладывает `android/patches/*.patch`. Если обвязка уже лежит на месте, она не трогается. Затем Gradle запускается в образе сборки с фиктивным путём к keystore (тесты ничего не подписывают). В конце печатается сумма по `test-results/*.xml`.

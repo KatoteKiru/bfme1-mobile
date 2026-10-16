@@ -52,6 +52,7 @@ final class DebugLaunchArgs {
     /**
      * Extra arguments to append after the defaults. raw == null (no extra): nothing, no log.
      * Disabled build, empty/blank, too long or unbalanced input: one warning, nothing.
+     * Accepted input: no log (the caller logs the final argv).
      */
     static List<String> resolve(String raw, boolean enabled, Logger log) {
         if (raw == null) return Collections.emptyList();
@@ -72,7 +73,7 @@ final class DebugLaunchArgs {
             log.log(true, "args extra has unbalanced quotes; launching without extra arguments: " + raw);
             return Collections.emptyList();
         }
-        log.log(false, "extra args " + t);
+        // Success is not logged here: GeneralsZHActivity logs the final argv once (tag BFME-args).
         return t;
     }
 }
