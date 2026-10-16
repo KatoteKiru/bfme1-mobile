@@ -342,7 +342,8 @@ void ToggleQuitMenu()
 			if(!noSaveLoadQuitMenuLayout)
 				noSaveLoadQuitMenuLayout = TheWindowManager->winCreateLayout( "Menus/QuitNoSave.wnd" );
 			quitMenuLayout = noSaveLoadQuitMenuLayout;
-			initGadgetsNoSaveQuit();
+			if (quitMenuLayout)	// BFME: E1-39, BFME has no Zero Hour quit menu layouts
+				initGadgetsNoSaveQuit();
 			TheTransitionHandler->remove("QuitNoSave");
 			TheTransitionHandler->setGroup("QuitNoSave");
 		}
@@ -351,7 +352,8 @@ void ToggleQuitMenu()
 			if(!fullQuitMenuLayout)
 				fullQuitMenuLayout= TheWindowManager->winCreateLayout( "Menus/QuitMenu.wnd" );
 			quitMenuLayout = fullQuitMenuLayout;
-			initGadgetsFullQuit();
+			if (quitMenuLayout)	// BFME: E1-39, BFME has no Zero Hour quit menu layouts
+				initGadgetsFullQuit();
 			TheTransitionHandler->remove("QuitFull");
 			TheTransitionHandler->setGroup("QuitFull");
 		}

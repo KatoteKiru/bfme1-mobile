@@ -42,6 +42,8 @@ set(GAMEENGINE_SRC
 #    Include/Common/GameAudio.h
 #    Include/Common/GameCommon.h
 #    Include/Common/GameDefines.h
+    Include/Common/BfmeLaunch.h
+    Include/Common/BfmeMapPath.h
     Include/Common/GameEngine.h
     Include/Common/GameLOD.h
 #    Include/Common/GameMemory.h
@@ -568,6 +570,7 @@ set(GAMEENGINE_SRC
     Source/Common/DamageFX.cpp
     Source/Common/Dict.cpp
     Source/Common/DiscreteCircle.cpp
+    Source/Common/BfmeLaunch.cpp
     Source/Common/GameEngine.cpp
     Source/Common/GameLOD.cpp
     Source/Common/GameMain.cpp

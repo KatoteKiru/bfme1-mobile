@@ -217,6 +217,9 @@ void ShowDiplomacy( Bool immediate )
 	else
 	{
 		theLayout = TheWindowManager->winCreateLayout( "Diplomacy.wnd" );
+		// BFME: E1-39. Diplomacy.wnd is Zero Hour-only.
+		if (theLayout == nullptr)
+			return;
 		theWindow = theLayout->getFirstWindow();
 		theLayout->setUpdate(updateFunc);
 		theAnimateWindowManager = NEW AnimateWindowManager;

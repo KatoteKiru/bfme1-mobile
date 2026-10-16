@@ -48,6 +48,7 @@
 #include "Common/GXReplayCheck.h"
 #include "Common/INI.h"
 #include "Common/INILenient.h"	// BFME: E1-23a
+#include "Common/BfmeLaunch.h"	// BFME: E1-39
 #include "Common/INIException.h"
 #include "Common/MessageStream.h"
 #include "Common/ThingFactory.h"
@@ -951,8 +952,19 @@ void GameEngine::init()
 			m_quitting = TRUE;
 		}
 
+		// BFME: E1-39. BFME has no Zero Hour shell (no Menus/MainMenu.wnd), so without -file a BFME run
+		// starts straight in a small official 2-player map. Headless and replay runs keep the old path.
+		if (INILenient::isEnabled() && TheGlobalData->m_initialFile.isEmpty()
+			&& !TheGlobalData->m_headless && TheGlobalData->m_simulateReplays.empty())
+		{
+			TheWritableGlobalData->m_initialFile = BfmeDefaultMapPath();
+			fprintf(stderr, "[launch] BFME: E1-39 no -file given, starting default map '%s'\n", TheGlobalData->m_initialFile.str());
+		}
+
 		// load the initial shell screen
-		TheShell->push( "Menus/MainMenu.wnd" );
+		// BFME: E1-39. Not when a BFME map starts directly: the layout does not exist.
+		if (!(INILenient::isEnabled() && TheGlobalData->m_initialFile.endsWithNoCase(".map")))
+			TheShell->push( "Menus/MainMenu.wnd" );
 
 		// This allows us to run a map from the command line
 		if (TheGlobalData->m_initialFile.isEmpty() == FALSE)
@@ -969,12 +981,20 @@ void GameEngine::init()
 				// shutdown the top, but do not pop it off the stack
 	//			TheShell->hideShell();
 
+				// BFME: E1-39. Same path as the skirmish menu (TheSkirmishGameInfo + GAME_SKIRMISH).
+				if (INILenient::isEnabled())
+				{
+					BfmeStartSkirmish(TheGlobalData->m_initialFile);
+				}
+				else
+				{
 				// send a message to the logic for a new game
 				GameMessage *msg = TheMessageStream->appendMessage( GameMessage::MSG_NEW_GAME );
 				msg->appendIntegerArgument(GAME_SINGLE_PLAYER);
 				msg->appendIntegerArgument(DIFFICULTY_NORMAL);
 				msg->appendIntegerArgument(0);
 				InitRandom(0);
+				}
 			}
 		}
 

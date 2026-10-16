@@ -27,6 +27,7 @@
 
 #include "Common/ArchiveFileSystem.h"
 #include "Common/CommandLine.h"
+#include "Common/BfmeMapPath.h"	// BFME: E1-39
 #include "Common/GXReplayCheck.h"
 #include "Common/GXSafeArea.h"
 #include "Common/CRCDebug.h"
@@ -730,22 +731,27 @@ Int parsePreload( char *args[], int num )
 #endif
 
 
+// BFME: E1-39. -file is a release option too: BFME starts maps directly (no Zero Hour shell) and
+// the Android launcher passes "-file <map>" (#54).
+Int parseFile(char *args[], int num)
+{
+	if (num > 1)
+	{
+		TheWritableGlobalData->m_initialFile = args[1];
+		// BFME: E1-39. A full archive path ("maps\<name>\<name>.map", e.g. BfmeDefaultMapPath()) is
+		// kept; only the short form "maps\<name>.map" is expanded (it would double the folder).
+		if (!BfmeIsLongMapPath(TheWritableGlobalData->m_initialFile.str()))
+			ConvertShortMapPathToLongMapPath(TheWritableGlobalData->m_initialFile);
+	}
+	return 2;
+}
+
 #if defined(RTS_DEBUG)
 Int parseDisplayDebug(char *args[], int)
 {
 	TheWritableGlobalData->m_displayDebug = TRUE;
 
 	return 1;
-}
-
-Int parseFile(char *args[], int num)
-{
-	if (num > 1)
-	{
-		TheWritableGlobalData->m_initialFile = args[1];
-		ConvertShortMapPathToLongMapPath(TheWritableGlobalData->m_initialFile);
-	}
-	return 2;
 }
 
 
@@ -1225,6 +1231,7 @@ static CommandLineParam paramsForStartup[] =
 // These Params are parsed during Engine Init before INI data is loaded
 static CommandLineParam paramsForEngineInit[] =
 {
+	{ "-file", parseFile },	// BFME: E1-39, was RTS_DEBUG only
 	{ "-nologo", parseNoLogo }, // TheSuperHackers @tweak Is now available in Release builds.
 	{ "-noshellmap", parseNoShellMap },
 	{ "-noShellAnim", parseNoWindowAnimation }, // TheSuperHackers @tweak Is now available in Release builds.
@@ -1332,7 +1339,6 @@ static CommandLineParam paramsForEngineInit[] =
 	{ "-jabber", parseJabber },
 	{ "-munkee", parseMunkee },
 	{ "-displayDebug", parseDisplayDebug },
-	{ "-file", parseFile },
 
 //	{ "-preload", parsePreload },
 

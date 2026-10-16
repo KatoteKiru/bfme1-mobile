@@ -192,5 +192,17 @@ endforeach()
 add_test(NAME ini.registry_complete COMMAND ${CMAKE_COMMAND}
     -DBIN=$<TARGET_FILE:bfme_ini_mode_tests> "-DEXPECTED=${BFME_INI_MODE_TESTS}" -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_registry.cmake)
 
+# BFME: E1-39 -file map paths (header-only, no engine sources).
+add_executable(bfme_launch_tests vfs/TestMain.cpp launch/TestMapPath.cpp)
+target_include_directories(bfme_launch_tests PRIVATE ${R}/GeneralsMD/Code/GameEngine/Include)
+target_compile_features(bfme_launch_tests PRIVATE cxx_std_17)
+set(BFME_LAUNCH_TESTS default_map_is_long_path long_paths_detected short_and_bad_paths_not_long)
+foreach(t IN LISTS BFME_LAUNCH_TESTS)
+    add_test(NAME launch.${t} COMMAND bfme_launch_tests ${t})
+    set_tests_properties(launch.${t} PROPERTIES LABELS "unit")
+endforeach()
+add_test(NAME launch.registry_complete COMMAND ${CMAKE_COMMAND}
+    -DBIN=$<TARGET_FILE:bfme_launch_tests> "-DEXPECTED=${BFME_LAUNCH_TESTS}" -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_registry.cmake)
+
 # Line rules (tests/ini also builds on its own, without the engine sources).
 add_subdirectory(ini)

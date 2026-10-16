@@ -451,7 +451,9 @@ void GameClient::init()
 
 	TheDisplayStringManager->postProcessLoad();
 
-	TheSnowManager = createSnowManager();
+	// BFME: E1-39. Headless has no graphics device; W3DSnowManager::ReAcquireResources (W3DSnow.cpp:101)
+	// creates index buffers and crashes. Every use below already checks for null.
+	TheSnowManager = TheGlobalData->m_headless ? nullptr : createSnowManager();
 	if (TheSnowManager)
 	{
 		TheSnowManager->init();

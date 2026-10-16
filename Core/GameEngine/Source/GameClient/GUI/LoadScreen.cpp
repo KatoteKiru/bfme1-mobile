@@ -48,6 +48,7 @@
 // SYSTEM INCLUDES ////////////////////////////////////////////////////////////
 //-----------------------------------------------------------------------------
 #include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
+#include "Common/INILenient.h"	// BFME: E1-39
 #include "GXTrace.h"
 
 //-----------------------------------------------------------------------------
@@ -1236,16 +1237,28 @@ void ShellGameLoadScreen::init( GameInfo *game )
 	// create the layout of the load screen
 	m_loadScreen = TheWindowManager->winCreateFromScript( "Menus/ShellGameLoadScreen.wnd" );
 	DEBUG_ASSERTCRASH(m_loadScreen, ("Can't initialize the ShellGame loadscreen"));
+	// BFME: E1-39. No layout or no progress bar: load without a load screen instead of crashing.
+	if (m_loadScreen == nullptr)
+	{
+		fprintf(stderr, "[launch] BFME: E1-39 Menus/ShellGameLoadScreen.wnd not loaded, no load screen\n");
+		m_progressBar = nullptr;
+		return;
+	}
 	m_loadScreen->winHide(FALSE);
 	m_loadScreen->winBringToTop();
 
 	// Store the pointer to the progress bar on the loadscreen
 	m_progressBar = TheWindowManager->winGetWindowFromId( m_loadScreen,TheNameKeyGenerator->nameToKey( "ShellGameLoadScreen.wnd:ProgressLoad" ));
 	DEBUG_ASSERTCRASH(m_progressBar, ("Can't initialize the progressbar for the single player loadscreen"));
-	GadgetProgressBarSetProgress(m_progressBar, 0 );
-	m_progressBar->winHide(TRUE);
+	if (m_progressBar)
+	{
+		GadgetProgressBarSetProgress(m_progressBar, 0 );
+		m_progressBar->winHide(TRUE);
+	}
 
-	if(m_loadScreen && firstLoad && TheGameLODManager && TheGameLODManager->didMemPass())
+	// BFME: E1-39. The Zero Hour "TitleScreen" image is not in BFME data and was drawn as a
+	// full-screen magenta placeholder (Pixel run 4); keep the layout's own background.
+	if(m_loadScreen && firstLoad && !INILenient::isEnabled() && TheGameLODManager && TheGameLODManager->didMemPass())
 	{
 		m_loadScreen->winSetEnabledImage(0, TheMappedImageCollection->findImageByName("TitleScreen"));
 		TheWritableGlobalData->m_breakTheMovie = FALSE;
@@ -1255,7 +1268,8 @@ void ShellGameLoadScreen::init( GameInfo *game )
 			win->winHide(FALSE);
 		firstLoad = FALSE;
 	}
-	m_progressBar->winHide(FALSE);
+	if (m_progressBar)
+		m_progressBar->winHide(FALSE);
 }
 
 void ShellGameLoadScreen::reset()
@@ -1267,7 +1281,8 @@ void ShellGameLoadScreen::reset()
 void ShellGameLoadScreen::update( Int percent )
 {
 	TheMouse->setCursorTooltip(UnicodeString::TheEmptyString);
-	GadgetProgressBarSetProgress(m_progressBar, percent);
+	if (m_progressBar)	// BFME: E1-39
+		GadgetProgressBarSetProgress(m_progressBar, percent);
 
 	// Do this last!
 	LoadScreen::update( percent );

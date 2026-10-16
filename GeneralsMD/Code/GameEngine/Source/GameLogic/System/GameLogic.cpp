@@ -85,6 +85,7 @@
 #include "GameClient/GUICallbacks.h"
 #include "GameClient/InGameUI.h"
 #include "GameClient/LoadScreen.h"
+#include "Common/INILenient.h"	// BFME: E1-39
 #include "GameClient/MapUtil.h"
 #include "GameClient/Mouse.h"
 #include "GameClient/ParticleSys.h"
@@ -700,6 +701,11 @@ static void placeNetworkBuildingsForPlayer(Int slotNum, const GameSlot *pSlot, P
 // ------------------------------------------------------------------------------------------------
 LoadScreen *GameLogic::getLoadScreen( Bool loadingSaveGame )
 {
+	// BFME: E1-39. BFME has only Menus/ShellGameLoadScreen.wnd; the single-player, multiplayer,
+	// challenge and GameSpy load screen layouts are Zero Hour-only.
+	if (INILenient::isEnabled())
+		return NEW ShellGameLoadScreen;
+
 	switch (m_gameMode)
 	{
 	case GAME_SHELL:
