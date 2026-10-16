@@ -58,6 +58,7 @@ endif()
 # chance to dlopen the stock libvulkan.so on its own.
 if(ANDROID)
     target_link_libraries(z_generals PRIVATE adrenotools)
+    target_link_libraries(z_generals PRIVATE log)  # BFME: E1-33a __android_log_print
 endif()
 
 # BFME: E1-17b Link d3d8gles whenever it is built, not only on Android.

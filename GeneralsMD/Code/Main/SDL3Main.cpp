@@ -61,6 +61,7 @@
 #include <dlfcn.h>
 #include <adrenotools/driver.h>
 #include <android/api-level.h>
+#include <android/log.h>  // BFME: E1-33a
 #endif
 // BFME: E1-17b The picker is part of the GLES backend. Android still
 // compiles this header (SAGE_USE_D3D8GLES is ON there).
@@ -826,6 +827,32 @@ int main(int argc, char* argv[])
 		}
 		if (!didChdir) {
 			fprintf(stderr, "WARNING: could not enter game data directory (external storage unavailable?)\n");
+		}
+
+		// BFME: E1-33a. This app only runs BFME data, so whenever a game data directory was
+		// entered above, hand its absolute path (getcwd) to the engine as BFME_GAMEDATA:
+		// createArchiveFileSystem() then picks BfmeBIGFileSystem and INILenient is enabled.
+		// Unconditional (not gated on import-state.json) so adb-pushed or hand-copied data works
+		// too. The external-files fallback is not a GameData dir and is skipped.
+		// User data (Options.ini, saves) moves out of /storage/emulated/<u>/Generals (EACCES
+		// without MANAGE_EXTERNAL_STORAGE) into <parent of GameData>/UserData/BFME, which is the
+		// app-specific external dir; GlobalData.cpp creates it via GENERALSX_USERDATA_DIR.
+		if (didChdir) {
+			char cwd[1024];
+			if (getcwd(cwd, sizeof(cwd)) != nullptr
+			    && (externalPath == nullptr || strcmp(cwd, externalPath) != 0)) {
+				setenv("BFME_GAMEDATA", cwd, 1);
+				fprintf(stderr, "INFO: BFME: E1-33a BFME_GAMEDATA=%s\n", cwd);
+				__android_log_print(ANDROID_LOG_INFO, "BFME", "E1-33a BFME_GAMEDATA=%s", cwd);
+				std::filesystem::path userDir = std::filesystem::path(cwd).parent_path() / "UserData" / "BFME";
+				std::error_code udEc;
+				std::filesystem::create_directories(userDir, udEc);
+				setenv("GENERALSX_USERDATA_DIR", userDir.c_str(), 1);
+				fprintf(stderr, "INFO: BFME: E1-33a GENERALSX_USERDATA_DIR=%s (mkdir ec=%d)\n", userDir.c_str(), udEc.value());
+				__android_log_print(ANDROID_LOG_INFO, "BFME", "E1-33a GENERALSX_USERDATA_DIR=%s", userDir.c_str());
+			} else {
+				fprintf(stderr, "WARNING: BFME: E1-33a no GameData dir, BFME_GAMEDATA not set\n");
+			}
 		}
 
 		// GeneralsX @feature Android port 06/09/2026 Optional second folder:
