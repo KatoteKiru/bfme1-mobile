@@ -71,6 +71,8 @@ typedef enum
 	FILE_TYPE_W3D,
 	FILE_TYPE_TGA,
 	FILE_TYPE_DDS,
+	FILE_TYPE_JPG,	// BFME: E1-44
+	FILE_TYPE_PNG,	// BFME: E1-44
 } GameFileType;
 
 //-------------------------------------------------------------------------------------------------
@@ -121,9 +123,34 @@ char const * GameFileClass::File_Name() const
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
+// BFME: E1-44 BFME mode = BFME_GAMEDATA set, the same switch WW3D2's textureloader.cpp and
+// missingtexture.cpp read. It must be the same switch: a .tga request resolved here to a .jpg
+// must only happen when the texture loader sniffs JPEG/PNG, or Targa would parse a JPEG.
+static Bool isBfmeImageMode()
+{
+	static const Bool on = []() {
+		const char *data = getenv("BFME_GAMEDATA");
+		return (Bool)(data != nullptr && *data != '\0');
+	}();
+	return on;
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 inline static Bool isImageFileType( GameFileType fileType )
 {
+	if (fileType == FILE_TYPE_JPG || fileType == FILE_TYPE_PNG)
+		return isBfmeImageMode();	// BFME: E1-44 looked up in the texture dirs like .tga/.dds
 	return (fileType == FILE_TYPE_TGA || fileType == FILE_TYPE_DDS);
+}
+
+//-------------------------------------------------------------------------------------------------
+/** BFME: E1-44 BFME keeps localized textures in lang\<language>\art\textures\ (lang/english.big),
+	not Data/<language>/Art/Textures/. Writes Lang/<language>/Art/Textures/<filename> to out. */
+//-------------------------------------------------------------------------------------------------
+static void buildBfmeLangTexturePath( char *out, size_t outSize, const char *filename )
+{
+	snprintf(out, outSize, "Lang/%s/Art/Textures/%s", GetRegistryLanguage().str(), filename);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -139,6 +166,10 @@ static GameFileType getFileType( char const *filename )
 			return FILE_TYPE_TGA;
 		else if( stricmp( extension, ".dds" ) == 0 )
 			return FILE_TYPE_DDS;
+		else if( stricmp( extension, ".jpg" ) == 0 )
+			return FILE_TYPE_JPG;	// BFME: E1-44
+		else if( stricmp( extension, ".png" ) == 0 )
+			return FILE_TYPE_PNG;	// BFME: E1-44
 	}
 
 	return FILE_TYPE_COMPLETELY_UNKNOWN;  // MBL FILE_TYPE_UNKNOWN change due to compile error
@@ -192,6 +223,13 @@ char const * GameFileClass::Set_Name( char const *filename )
 
 	// see if the file exists
 	m_fileExists = TheFileSystem->doesFileExist( m_filePath );
+
+	// BFME: E1-44 then BFME's own localized texture dir (lang/<language>.big)
+	if( m_fileExists == FALSE && isImageFileType(fileType) && isBfmeImageMode() )
+	{
+		buildBfmeLangTexturePath(m_filePath, ARRAY_SIZE(m_filePath), filename);
+		m_fileExists = TheFileSystem->doesFileExist( m_filePath );
+	}
 
 
 	// Now try the main lookup of hitting local files and big files
@@ -322,30 +360,44 @@ char const * GameFileClass::Set_Name( char const *filename )
 	// Some regional game installs (e.g. Brazilian Steam) store textures with a different
 	// extension than what the W3D/INI data requests (.tga vs .dds or vice versa).
 	// If all lookups above failed, retry with the alternate extension so both cases work.
-	if( m_fileExists == FALSE && isImageFileType(fileType) )
+	// BFME: E1-44 in BFME mode then also .jpg and .png: textures.big of 2.22 holds 303 .jpg and
+	// 202 .png that INI/W3D name as .tga (often <name>.jpg + <name>.png alpha). The texture
+	// loader sniffs the magic bytes of what is opened here. Each extension replays the localized
+	// dirs then Art/Textures; the first hit becomes m_filename, so File_Name() names the real
+	// file (DDSFileClass and Targa reopen by the requested name and land here again).
+	if( m_fileExists == FALSE && (fileType == FILE_TYPE_TGA || fileType == FILE_TYPE_DDS) )
 	{
-		// Build alternate filename with swapped extension
-		char altFilename[_MAX_PATH];
-		strlcpy(altFilename, filename, ARRAY_SIZE(altFilename));
-		char *ext = strrchr(altFilename, '.');
-		if (ext)
+		const char *altExtensions[3];
+		Int altCount = 0;
+		altExtensions[altCount++] = (fileType == FILE_TYPE_DDS) ? "tga" : "dds";
+		if (isBfmeImageMode())
 		{
-			if (fileType == FILE_TYPE_DDS)
-			{
-				// Requested .dds but not found — try .tga
-				ext[1]='t'; ext[2]='g'; ext[3]='a'; ext[4]='\0';
-			}
-			else // FILE_TYPE_TGA
-			{
-				// Requested .tga but not found — try .dds
-				ext[1]='d'; ext[2]='d'; ext[3]='s'; ext[4]='\0';
-			}
+			altExtensions[altCount++] = "jpg";
+			altExtensions[altCount++] = "png";
+		}
+
+		for (Int a = 0; a < altCount && m_fileExists == FALSE; ++a)
+		{
+			// Build alternate filename with swapped extension
+			char altFilename[_MAX_PATH];
+			strlcpy(altFilename, filename, ARRAY_SIZE(altFilename));
+			char *ext = strrchr(altFilename, '.');
+			if (!ext)
+				break;
+			ext[1] = '\0';
+			strlcat(altFilename, altExtensions[a], ARRAY_SIZE(altFilename));
 
 			// Replay lookup chain with alternate extension (localized path first)
 			static const char *localizedPathFormat = "Data/%s/Art/Textures/";
 			sprintf(m_filePath, localizedPathFormat, GetRegistryLanguage().str());
 			strlcat(m_filePath, altFilename, ARRAY_SIZE(m_filePath));
 			m_fileExists = TheFileSystem->doesFileExist(m_filePath);
+
+			if( m_fileExists == FALSE && isBfmeImageMode() )
+			{
+				buildBfmeLangTexturePath(m_filePath, ARRAY_SIZE(m_filePath), altFilename);
+				m_fileExists = TheFileSystem->doesFileExist(m_filePath);
+			}
 
 			if( m_fileExists == FALSE )
 			{
@@ -362,6 +414,14 @@ char const * GameFileClass::Set_Name( char const *filename )
 				strlcpy(m_filename, altFilename, _MAX_PATH);
 			}
 		}
+	}
+
+	// BFME: E1-44 a .jpg/.png asked for by path (not a bare texture name) is not under the
+	// texture dirs; look it up as given, as any other file type would be.
+	if( m_fileExists == FALSE && (fileType == FILE_TYPE_JPG || fileType == FILE_TYPE_PNG) )
+	{
+		strlcpy(m_filePath, filename, ARRAY_SIZE(m_filePath));
+		m_fileExists = TheFileSystem->doesFileExist( m_filePath );
 	}
 
 	return m_filename;
