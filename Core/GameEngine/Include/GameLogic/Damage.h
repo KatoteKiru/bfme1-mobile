@@ -93,6 +93,32 @@ enum DamageType CPP_11(: Int)
 	DAMAGE_KILL_GARRISONED				/*= 36*/, ///< Kills Passengers up to the number specified in Damage
 	DAMAGE_STATUS									/*= 37*/, ///< Damage that gives a status condition, not that does hitpoint damage
 
+	// BFME: E2-03. BFME1 damage types (Armor.ini, Weapon.ini DamageNugget), in the order of
+	// OpenSAGE DamageType.cs. Appended after the Zero Hour ones so every ZH index stays the same.
+	DAMAGE_SLASH,
+	DAMAGE_PIERCE,
+	DAMAGE_URUK,
+	DAMAGE_HERO,
+	DAMAGE_HERO_RANGED,
+	DAMAGE_SIEGE,
+	DAMAGE_SPECIALIST,
+	DAMAGE_MAGIC,
+	DAMAGE_STRUCTURAL,
+	DAMAGE_CHOP,
+	DAMAGE_FORCE,
+	DAMAGE_FLY_INTO,
+	DAMAGE_GOOD_ARROW_PIERCE,
+	DAMAGE_EVIL_ARROW_PIERCE,
+	DAMAGE_SWORD_SLASH,
+	DAMAGE_WITCH_KING_MORGUL_BLADE,
+	DAMAGE_REFLECTED,
+	DAMAGE_BALROG_SWORD,
+	DAMAGE_BALROG_WHIP,
+	DAMAGE_ELECTRIC,
+	DAMAGE_GIMLI_LEAP,
+	DAMAGE_BIG_ROCK,
+	DAMAGE_CLUBBING,
+
 	// Please note: There is a string array DamageTypeFlags::s_bitNameList[]
 
 	DAMAGE_NUM_TYPES
@@ -199,6 +225,13 @@ enum DeathType CPP_11(: Int)
 	DEATH_EXTRA_8		= 19,
 	DEATH_POISONED_GAMMA = 20,
 
+	// BFME: E2-03. BFME1 death types (DamageNugget DeathType, DieModule DeathTypes), appended.
+	DEATH_FADED,
+	DEATH_KNOCKBACK,
+	DEATH_SUPERNATURAL,
+	DEATH_SLAUGHTERED,
+	DEATH_EXTRA_1,
+
 	DEATH_NUM_TYPES
 };
 
@@ -226,6 +259,11 @@ static const char *const TheDeathNames[] =
 	"EXTRA_7",
 	"EXTRA_8",
 	"POISONED_GAMMA",
+	"FADED",				// BFME: E2-03
+	"KNOCKBACK",
+	"SUPERNATURAL",
+	"SLAUGHTERED",
+	"EXTRA_1",
 
 	nullptr
 };

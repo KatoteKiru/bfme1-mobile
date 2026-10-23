@@ -327,6 +327,12 @@ void ModuleFactory::init()
 	addModule( BridgeTowerBehavior );
 	addModule( CountermeasuresBehavior );
 	addModule( DumbProjectileBehavior );
+	// BFME: E2-03. BFME1 projectiles (arrows, rocks) use BezierProjectileBehavior: the same Bezier arc
+	// as Zero Hour's DumbProjectileBehavior (same FirstHeight/SecondHeight/...PercentIndent fields,
+	// OpenSAGE parses both with one class). BFME-only fields (BounceCount, GroundHitFX, ...) are
+	// skipped by the lenient INI mode.
+	addModuleInternal( DumbProjectileBehavior::friend_newModuleInstance, DumbProjectileBehavior::friend_newModuleData,
+		DumbProjectileBehavior::getModuleType(), AsciiString( "BezierProjectileBehavior" ), DumbProjectileBehavior::getInterfaceMask() );
 	addModule( PhysicsBehavior );
 	addModule( InstantDeathBehavior );
 	addModule( SlowDeathBehavior );

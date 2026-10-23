@@ -34,6 +34,7 @@
 #include "Common/GameCommon.h"
 
 #include "GameLogic/Damage.h"
+#include "GameLogic/BfmeWeaponNuggets.h"	// BFME: E2-03
 
 #include "WWMath/matrix3d.h"
 
@@ -473,10 +474,21 @@ public:
 
 	void postProcessLoad();
 
+	// BFME: E2-03. Nuggets of a BFME1 weapon (empty for Zero Hour weapons).
+	const BfmeWeaponNuggets& getBfmeNuggets() const { return m_bfme; }
+
 protected:
 
 	// actually deal out the damage.
 	void dealDamageInternal(ObjectID sourceID, ObjectID victimID, const Coord3D *pos, const WeaponBonus& bonus, Bool isProjectileDetonation) const;
+
+	// BFME: E2-03. Nugget damage instead of PrimaryDamage/SecondaryDamage. onlyNugget < 0: every
+	// nugget (DelayTime ones are queued); else one nugget, index over m_damage then m_metaImpact.
+	void applyBfmeFold();
+	void dealBfmeNuggets(ObjectID sourceID, ObjectID victimID, const Coord3D *pos, const WeaponBonus& bonus, Int onlyNugget) const;
+	void dealBfmeDamageNugget(const BfmeDamageNugget& n, Object *source, Object *primaryVictim, const Coord3D *pos, const WeaponBonus& bonus) const;
+	void applyBfmeMetaImpactNugget(const BfmeMetaImpactNugget& n, Object *source, Object *primaryVictim, const Coord3D *pos) const;
+	Bool bfmeRadiusAffects(const Object *source, const Object *victim) const;
 	void trimOldHistoricDamage() const;
 	void trimTriggeredHistoricDamage() const;
 	void processHistoricDamage(const Object* source, const Coord3D* pos) const;
@@ -562,6 +574,7 @@ private:
 	ObjectStatusTypes m_damageStatusType;		///< If our damage is Status damage, the status we apply
 	UnsignedInt m_suspendFXDelay;						///< The fx can be suspended for any delay, in frames, then they will execute as normal
 	Bool m_dieOnDetonate;
+	BfmeWeaponNuggets m_bfme;								///< BFME: E2-03. DamageNugget / MetaImpactNugget / ProjectileNugget
 
 	mutable HistoricWeaponDamageList m_historicDamage;
 	mutable UnsignedInt m_historicDamageTriggerId;
@@ -865,7 +878,7 @@ protected:
 
 	void deleteAllDelayedDamage();
 	void resetWeaponTemplates();
-	void setDelayedDamage(const WeaponTemplate *weapon, const Coord3D* pos, UnsignedInt whichFrame, ObjectID sourceID, ObjectID victimID, const WeaponBonus& bonus);
+	void setDelayedDamage(const WeaponTemplate *weapon, const Coord3D* pos, UnsignedInt whichFrame, ObjectID sourceID, ObjectID victimID, const WeaponBonus& bonus, Int bfmeNuggetIndex = -1);
 
 private:
 
@@ -884,6 +897,7 @@ private:
 		ObjectID m_delaySourceID;										///< who dealt the damage (by ID since it might be dead due to delay)
 		ObjectID m_delayIntendedVictimID;						///< who the damage was intended for (or zero if no specific target)
 		WeaponBonus m_bonus;												///< the weapon bonus to use
+		Int m_bfmeNuggetIndex;											///< BFME: E2-03. >= 0: only this nugget (DelayTime), see WeaponTemplate::dealBfmeNuggets
 	};
 
 	std::vector<WeaponTemplate*> m_weaponTemplateVector;

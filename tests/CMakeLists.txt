@@ -192,6 +192,46 @@ endforeach()
 add_test(NAME ini.registry_complete COMMAND ${CMAKE_COMMAND}
     -DBIN=$<TARGET_FILE:bfme_ini_mode_tests> "-DEXPECTED=${BFME_INI_MODE_TESTS}" -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_registry.cmake)
 
+# BFME: E2-03. BFME1 weapon nuggets, damage/death types and armor: the real INI.cpp, Damage.cpp,
+# KindOf.cpp, Armor.cpp and BfmeWeaponNuggets.cpp on synthetic INI text.
+set(GMD ${R}/GeneralsMD/Code/GameEngine/Source)
+add_executable(bfme_combat_tests
+    ${BFME_ENGINE_VFS_SOURCES}
+    ${R}/Core/GameEngine/Source/Common/INI/INI.cpp
+    ${R}/Core/GameEngine/Source/Common/INI/INILenientRules.cpp
+    ${R}/Core/GameEngine/Source/Common/INI/INIAudioEventInfo.cpp
+    ${R}/Core/GameEngine/Source/GameLogic/System/Damage.cpp
+    ${GMD}/Common/System/KindOf.cpp
+    ${GMD}/Common/System/Trig.cpp
+    ${GMD}/Common/NameKeyGenerator.cpp
+    ${GMD}/GameLogic/Object/Armor.cpp
+    ${GMD}/GameLogic/Object/BfmeWeaponNuggets.cpp
+    vfs/TestMain.cpp
+    vfs/GlobalDataStub.cpp
+    ini/IniEngineStubs.cpp
+    vfs/EngineFixture.cpp
+    combat/TestCombat.cpp
+)
+target_link_libraries(bfme_combat_tests PRIVATE bfme_formats_vfs_core liblzhl ${BFME_TEST_ZLIB})
+target_compile_definitions(bfme_combat_tests PRIVATE ${_vfs_defs} BFME_COMBAT_TESTS)
+target_include_directories(bfme_combat_tests PRIVATE ${_vfs_incs})
+target_compile_options(bfme_combat_tests PRIVATE ${_vfs_opts})
+set(BFME_COMBAT_TESTS
+    zh_damage_type_indices_unchanged bfme_damage_type_names_resolve
+    parse_damage_nugget_fields parse_meta_impact_nugget parse_projectile_nugget_and_warhead
+    zh_mode_parses_nuggets_too bfme_mode_skips_bfme2_nugget_fields
+    filter_any_with_kinds_and_relationship filter_all_and_none
+    damage_nugget_radius_filter_and_scalar damage_nugget_arc_and_max_height
+    meta_impact_push_taper_and_hero_resist fold_gives_zero_hour_fields
+    bfme_armor_types_and_damage_scalar
+)
+foreach(t IN LISTS BFME_COMBAT_TESTS)
+    add_test(NAME combat.${t} COMMAND bfme_combat_tests ${t})
+    set_tests_properties(combat.${t} PROPERTIES LABELS "unit")
+endforeach()
+add_test(NAME combat.registry_complete COMMAND ${CMAKE_COMMAND}
+    -DBIN=$<TARGET_FILE:bfme_combat_tests> "-DEXPECTED=${BFME_COMBAT_TESTS}" -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_registry.cmake)
+
 # BFME: E1-39 -file map paths (header-only, no engine sources).
 add_executable(bfme_launch_tests vfs/TestMain.cpp launch/TestMapPath.cpp)
 target_include_directories(bfme_launch_tests PRIVATE ${R}/GeneralsMD/Code/GameEngine/Include)

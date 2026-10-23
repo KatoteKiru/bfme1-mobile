@@ -239,6 +239,10 @@ const FieldParse WeaponTemplate::TheWeaponTemplateFieldParseTable[] =
 	{ "ContinueAttackRange",			INI::parseReal,													nullptr,							offsetof(WeaponTemplate, m_continueAttackRange) },
 	{ "SuspendFXDelay",						INI::parseDurationUnsignedInt,					nullptr,							offsetof(WeaponTemplate, m_suspendFXDelay) },
 	{ "MissileCallsOnDie",			INI::parseBool,													nullptr,							offsetof(WeaponTemplate, m_dieOnDetonate) },
+	// BFME: E2-03. BFME1 weapon nuggets (GameLogic/BfmeWeaponNuggets.h).
+	{ "DamageNugget",							BfmeWeaponNuggets::parseDamageNugget,			nullptr,				offsetof(WeaponTemplate, m_bfme) },
+	{ "MetaImpactNugget",					BfmeWeaponNuggets::parseMetaImpactNugget,	nullptr,				offsetof(WeaponTemplate, m_bfme) },
+	{ "ProjectileNugget",					BfmeWeaponNuggets::parseProjectileNugget,	nullptr,				offsetof(WeaponTemplate, m_bfme) },
 	{ nullptr,												nullptr,																		nullptr,							0 }
 
 };
@@ -420,6 +424,26 @@ void WeaponTemplate::postProcessLoad()
 	{
 		m_projectileTmpl = TheThingFactory->findTemplate(m_projectileName);
 		DEBUG_ASSERTCRASH(m_projectileTmpl, ("projectile %s not found!",m_projectileName.str()));
+	}
+
+	// BFME: E2-03. A ProjectileNugget weapon deals its warhead's nuggets on impact. Its own
+	// estimate (AI target choice, isDamageWeapon) is the warhead's when it has no DamageNugget.
+	m_bfme.m_warheadTmpl = nullptr;
+	if (!m_bfme.m_projectile.empty() && !m_bfme.m_projectile[0].m_warheadName.isEmpty())
+	{
+		const WeaponTemplate* warhead = TheWeaponStore->findWeaponTemplate(m_bfme.m_projectile[0].m_warheadName);
+		DEBUG_ASSERTCRASH(warhead, ("warhead %s not found!", m_bfme.m_projectile[0].m_warheadName.str()));
+		if (warhead != this)
+			m_bfme.m_warheadTmpl = warhead;
+		if (warhead && warhead != this && m_bfme.m_damage.empty())
+		{
+			m_primaryDamage = warhead->m_primaryDamage;
+			m_primaryDamageRadius = warhead->m_primaryDamageRadius;
+			m_secondaryDamage = warhead->m_secondaryDamage;
+			m_secondaryDamageRadius = warhead->m_secondaryDamageRadius;
+			m_damageType = warhead->m_damageType;
+			m_deathType = warhead->m_deathType;
+		}
 	}
 
 	for (Int i = LEVEL_FIRST; i <= LEVEL_LAST; ++i)
@@ -1365,9 +1389,23 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 	if (victimID == 0 && pos == nullptr)	// must have some sort of destination
 		return;
 
+	// BFME: E2-03. A ProjectileNugget weapon hits with its warhead (a weapon of its own).
+	if (m_bfme.m_warheadTmpl != nullptr)
+	{
+		m_bfme.m_warheadTmpl->dealDamageInternal(sourceID, victimID, pos, bonus, isProjectileDetonation);
+		return;
+	}
+
 	Object *source = TheGameLogic->findObjectByID(sourceID);	// might be null...
 
 	processHistoricDamage(source, pos);
+
+	// BFME: E2-03. Damage/MetaImpact nuggets replace PrimaryDamage/SecondaryDamage.
+	if (m_bfme.hasEffects())
+	{
+		dealBfmeNuggets(sourceID, victimID, pos, bonus, -1);
+		return;
+	}
 
 //DEBUG_LOG(("WeaponTemplate::dealDamageInternal: dealing damage %s at frame %d",m_name.str(),TheGameLogic->getFrame()));
 
@@ -1599,6 +1637,259 @@ void WeaponTemplate::dealDamageInternal(ObjectID sourceID, ObjectID victimID, co
 }
 
 //-------------------------------------------------------------------------------------------------
+// BFME: E2-03. Zero Hour fields of a BFME1 weapon from its nuggets (BfmeWeaponNuggets::fold).
+void WeaponTemplate::applyBfmeFold()
+{
+	BfmeWeaponNuggets::Fold f;
+	f.damageType = m_damageType;
+	f.deathType = m_deathType;
+	if (!m_bfme.fold(f))
+		return;
+
+	if (!m_bfme.m_damage.empty())
+	{
+		m_primaryDamage = f.primaryDamage;
+		m_primaryDamageRadius = f.primaryDamageRadius;
+		m_secondaryDamage = 0.0f;
+		m_secondaryDamageRadius = 0.0f;
+		m_damageType = f.damageType;
+		m_deathType = f.deathType;
+	}
+	if (m_projectileName.isEmpty() && !f.projectileName.isEmpty() && !f.projectileName.isNone())
+		m_projectileName = f.projectileName;
+}
+
+//-------------------------------------------------------------------------------------------------
+// BFME: E2-03. The Zero Hour "who does radius damage hit" rules of dealDamageInternal for a victim
+// that is not the weapon's direct target.
+Bool WeaponTemplate::bfmeRadiusAffects(const Object *source, const Object *victim) const
+{
+	if (source == nullptr)
+		return TRUE;
+
+	const Int affects = getAffectsMask();
+	if ((affects & WEAPON_AFFECTS_SELF) == 0)
+	{
+		if (source == victim || source->getProducerID() == victim->getID())
+			return FALSE;
+	}
+	if ((affects & WEAPON_DOESNT_AFFECT_SIMILAR) != 0 &&
+			source->getTemplate()->isEquivalentTo(victim->getTemplate()) && source->getRelationship(victim) == ALLIES)
+		return FALSE;
+	if ((affects & WEAPON_DOESNT_AFFECT_AIRBORNE) != 0 && victim->isSignificantlyAboveTerrain())
+		return FALSE;
+
+	const Relationship r = victim->getRelationship(source);
+	Int requiredMask;
+	if (r == ALLIES)
+		requiredMask = WEAPON_AFFECTS_ALLIES;
+	else if (r == ENEMIES)
+		requiredMask = WEAPON_AFFECTS_ENEMIES;
+	else
+		requiredMask = WEAPON_AFFECTS_NEUTRALS;
+	return (affects & requiredMask) != 0;
+}
+
+//-------------------------------------------------------------------------------------------------
+static BfmeObjectFilter::Subject bfmeSubject(const Object *victim, const Object *source)
+{
+	BfmeObjectFilter::Subject s;
+	s.kinds = victim->getTemplate()->getKindOfMask();
+	s.templateName = victim->getTemplate()->getName();
+	s.hasSource = source != nullptr;
+	s.relationshipToSource = source ? victim->getRelationship(source) : NEUTRAL;
+	return s;
+}
+
+//-------------------------------------------------------------------------------------------------
+// cos of the angle between the attacker's facing and the attacker->victim direction (1 without an attacker).
+static Real bfmeCosToVictim(const Object *source, const Object *victim)
+{
+	if (source == nullptr || source == victim)
+		return 1.0f;
+	Vector3 facing = source->getTransformMatrix()->Get_X_Vector();
+	Vector3 toVictim(victim->getPosition()->x - source->getPosition()->x,
+		victim->getPosition()->y - source->getPosition()->y, 0.0f);
+	facing.Z = 0.0f;
+	if (toVictim.Length2() < WWMATH_EPSILON || facing.Length2() < WWMATH_EPSILON)
+		return 1.0f;
+	facing.Normalize();
+	toVictim.Normalize();
+	return Vector3::Dot_Product(facing, toVictim);
+}
+
+//-------------------------------------------------------------------------------------------------
+static void bfmeAttemptDamage(const WeaponTemplate *weapon, const BfmeDamageNugget& n, const DamageInfoInput& in, Object *victim,
+	const Object *source, Bool isPrimary, Real distSqr, const Coord3D *pos, Real bonusDamage, Real bonusRadius)
+{
+	const Real amount = n.damageFor(bfmeSubject(victim, source), isPrimary, distSqr,
+		victim->getPosition()->z - pos->z, bonusDamage, bonusRadius);
+	if (amount < 0.0f)
+		return;
+	DamageInfo damageInfo;
+	damageInfo.in = in;
+	damageInfo.in.m_amount = amount;
+	victim->attemptDamage(&damageInfo);
+
+	// Trace for device logs: the first hits of a game, then every 500th (logic only, no effect on play).
+	static UnsignedInt s_hits = 0;
+	++s_hits;
+	if (s_hits <= 40 || s_hits % 500 == 0)
+	{
+		const BodyModuleInterface *body = victim->getBodyModule();
+		fprintf(stderr, "[combat] hit #%u frame %u %s: %s -> %s %s %.1f dealt %.1f hp %.0f/%.0f\n",
+			s_hits, TheGameLogic->getFrame(), weapon->getName().str(),
+			source ? source->getTemplate()->getName().str() : "?", victim->getTemplate()->getName().str(),
+			DamageTypeFlags::getNameFromSingleBit(n.m_damageType) ? DamageTypeFlags::getNameFromSingleBit(n.m_damageType) : "?",
+			amount, damageInfo.out.m_actualDamageDealt,
+			body ? body->getHealth() : 0.0f, body ? body->getMaxHealth() : 0.0f);
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+void WeaponTemplate::dealBfmeNuggets(ObjectID sourceID, ObjectID victimID, const Coord3D *pos, const WeaponBonus& bonus, Int onlyNugget) const
+{
+	Object *source = TheGameLogic->findObjectByID(sourceID);	// might be null...
+	Object *primaryVictim = victimID ? TheGameLogic->findObjectByID(victimID) : nullptr;
+	if (primaryVictim)
+		pos = primaryVictim->getPosition();
+	if (pos == nullptr)
+		return;
+
+	const Int numDamage = (Int)m_bfme.m_damage.size();
+	const Int numMeta = (Int)m_bfme.m_metaImpact.size();
+	for (Int i = 0; i < numDamage + numMeta; ++i)
+	{
+		if (onlyNugget >= 0 && i != onlyNugget)
+			continue;
+
+		const UnsignedInt delay = i < numDamage ? m_bfme.m_damage[i].m_delayFrames : m_bfme.m_metaImpact[i - numDamage].m_delayFrames;
+		if (onlyNugget < 0 && delay > 0)
+		{
+			if (TheWeaponStore)
+				TheWeaponStore->setDelayedDamage(this, pos, TheGameLogic->getFrame() + delay, sourceID, victimID, bonus, i);
+			continue;
+		}
+
+		if (i < numDamage)
+			dealBfmeDamageNugget(m_bfme.m_damage[i], source, primaryVictim, pos, bonus);
+		else
+			applyBfmeMetaImpactNugget(m_bfme.m_metaImpact[i - numDamage], source, primaryVictim, pos);
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+void WeaponTemplate::dealBfmeDamageNugget(const BfmeDamageNugget& n, Object *source, Object *primaryVictim, const Coord3D *pos, const WeaponBonus& bonus) const
+{
+	const Real bonusDamage = bonus.getField(WeaponBonus::DAMAGE);
+	const Real bonusRadius = bonus.getField(WeaponBonus::RADIUS);
+	const Real radius = n.m_radius * bonusRadius;
+
+	// if the damage-dealer is a projectile, designate the damage as done by its launcher (as Zero Hour does).
+	ObjectID creditID = source ? source->getID() : INVALID_ID;
+	if (source && source->isKindOf(KINDOF_PROJECTILE))
+	{
+		for (BehaviorModule** u = source->getBehaviorModules(); *u; ++u)
+		{
+			ProjectileUpdateInterface* pui = (*u)->getProjectileUpdateInterface();
+			if (pui != nullptr)
+			{
+				creditID = pui->projectileGetLauncherID();
+				break;
+			}
+		}
+	}
+
+	DamageInfoInput in;
+	in.m_damageType = n.m_damageType;
+	in.m_deathType = n.m_deathType;
+	in.m_damageFXOverride = n.m_damageFXType;
+	in.m_sourceID = creditID;
+	in.m_sourcePlayerMask = 0;
+	in.m_damageStatusType = getDamageStatusType();
+	if (source && source->getControllingPlayer())
+		in.m_sourcePlayerMask = source->getControllingPlayer()->getPlayerMask();
+
+	// The direct target is always hit (Radius 0 hits only it), the rest of the radius by the
+	// Zero Hour RadiusDamageAffects rules, DamageArc and the nugget's filters.
+	if (primaryVictim)
+		bfmeAttemptDamage(this, n, in, primaryVictim, source, TRUE, 0.0f, pos, bonusDamage, bonusRadius);
+
+	if (radius > 0.0f)
+	{
+		SimpleObjectIterator *iter = ThePartitionManager->iterateObjectsInRange(pos, radius, DAMAGE_RANGE_CALC_TYPE);
+		MemoryPoolObjectHolder hold(iter);
+		Real curVictimDistSqr = 0.0f;
+		for (Object *curVictim = iter->firstWithNumeric(&curVictimDistSqr); curVictim != nullptr; curVictim = iter->nextWithNumeric(&curVictimDistSqr))
+		{
+			if (curVictim == primaryVictim)
+				continue;
+			if (!bfmeRadiusAffects(source, curVictim) || !n.arcAllows(bfmeCosToVictim(source, curVictim)))
+				continue;
+			bfmeAttemptDamage(this, n, in, curVictim, source, FALSE, curVictimDistSqr, pos, bonusDamage, bonusRadius);
+		}
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+void WeaponTemplate::applyBfmeMetaImpactNugget(const BfmeMetaImpactNugget& n, Object *source, Object *primaryVictim, const Coord3D *pos) const
+{
+	if (n.m_shockWaveAmount <= 0.0f || n.m_shockWaveRadius <= 0.0f)
+		return;
+
+	// Push away from the attacker when there is one (melee knockback), else from the impact point.
+	const Coord3D *center = source ? source->getPosition() : pos;
+
+	SimpleObjectIterator *iter = ThePartitionManager->iterateObjectsInRange(pos, n.m_shockWaveRadius, DAMAGE_RANGE_CALC_TYPE);
+	MemoryPoolObjectHolder hold(iter);
+	Real distSqr = 0.0f;
+	for (Object *victim = iter->firstWithNumeric(&distSqr); victim != nullptr; victim = iter->nextWithNumeric(&distSqr))
+	{
+		if (victim == source)
+			continue;
+		if (victim != primaryVictim && !bfmeRadiusAffects(source, victim))
+			continue;
+		if (!n.m_filter.matches(bfmeSubject(victim, source)))
+			continue;
+		if (n.m_shockWaveArc > 0.0f && n.m_shockWaveArc < 2.0f * PI && bfmeCosToVictim(source, victim) < Cos(n.m_shockWaveArc * 0.5f))
+			continue;
+
+		// Same immunities as the Zero Hour shockwave in Object::attemptDamage.
+		PhysicsBehavior *physics = victim->getPhysics();
+		if (physics == nullptr || victim->isAirborneTarget() || victim->isKindOf(KINDOF_PROJECTILE))
+			continue;
+
+		const Real push = n.pushFor(sqrtf(distSqr), victim->isKindOf(KINDOF_HERO));
+		if (push <= 0.0f)
+			continue;
+
+		Coord3D dir;
+		dir.set(victim->getPosition()->x - center->x, victim->getPosition()->y - center->y, 0.0f);
+		if (dir.length() < WWMATH_EPSILON)
+		{
+			if (source == nullptr)
+				continue;
+			const Vector3 facing = source->getTransformMatrix()->Get_X_Vector();
+			dir.set(facing.X, facing.Y, 0.0f);
+			if (dir.length() < WWMATH_EPSILON)
+				continue;
+		}
+		dir.normalize();
+		if (n.m_invertShockWave)
+			dir.scale(-1.0f);
+
+		Coord3D force = dir;
+		force.scale(push);
+		force.z = push * n.m_shockWaveZMult;
+
+		physics->applyShock(&force);
+		physics->applyRandomRotation();
+		physics->setStunned(true);
+		victim->setModelConditionState(MODELCONDITION_STUNNED_FLAILING);
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 WeaponStore::WeaponStore()
@@ -1738,7 +2029,10 @@ void WeaponStore::update()
 		{
 			// we never do projectile-detonation-damage via this code path.
 			const Bool isProjectileDetonation = false;
-			ddi->m_delayedWeapon->dealDamageInternal(ddi->m_delaySourceID, ddi->m_delayIntendedVictimID, &ddi->m_delayDamagePos, ddi->m_bonus, isProjectileDetonation);
+			if (ddi->m_bfmeNuggetIndex >= 0)	// BFME: E2-03. One nugget's DelayTime is up.
+				ddi->m_delayedWeapon->dealBfmeNuggets(ddi->m_delaySourceID, ddi->m_delayIntendedVictimID, &ddi->m_delayDamagePos, ddi->m_bonus, ddi->m_bfmeNuggetIndex);
+			else
+				ddi->m_delayedWeapon->dealDamageInternal(ddi->m_delaySourceID, ddi->m_delayIntendedVictimID, &ddi->m_delayDamagePos, ddi->m_bonus, isProjectileDetonation);
 			ddi = m_weaponDDI.erase(ddi);
 		}
 		else
@@ -1786,7 +2080,7 @@ void WeaponStore::reset()
 }
 
 //-------------------------------------------------------------------------------------------------
-void WeaponStore::setDelayedDamage(const WeaponTemplate *weapon, const Coord3D* pos, UnsignedInt whichFrame, ObjectID sourceID, ObjectID victimID, const WeaponBonus& bonus)
+void WeaponStore::setDelayedDamage(const WeaponTemplate *weapon, const Coord3D* pos, UnsignedInt whichFrame, ObjectID sourceID, ObjectID victimID, const WeaponBonus& bonus, Int bfmeNuggetIndex)
 {
 	WeaponDelayedDamageInfo wi;
 	wi.m_delayedWeapon = weapon;
@@ -1795,6 +2089,7 @@ void WeaponStore::setDelayedDamage(const WeaponTemplate *weapon, const Coord3D* 
 	wi.m_delaySourceID = sourceID;
 	wi.m_delayIntendedVictimID = victimID;
 	wi.m_bonus = bonus;
+	wi.m_bfmeNuggetIndex = bfmeNuggetIndex;	// BFME: E2-03
 	m_weaponDDI.push_back(wi);
 }
 
@@ -1813,6 +2108,29 @@ void WeaponStore::postProcessLoad()
 		if (wt)
 			wt->postProcessLoad();
 	}
+
+	// BFME: E2-03. One line for device logs: how many weapons the nuggets turned into real ones.
+	Int nuggetWeapons = 0, withDamage = 0, withProjectile = 0, warheadsMissing = 0, projectilesMissing = 0;
+	for (size_t i = 0; i < m_weaponTemplateVector.size(); i++)
+	{
+		const WeaponTemplate* wt = m_weaponTemplateVector[i];
+		if (wt == nullptr || !wt->m_bfme.hasAny())
+			continue;
+		++nuggetWeapons;
+		if (wt->m_primaryDamage > 0.0f)
+			++withDamage;
+		if (!wt->m_bfme.m_projectile.empty())
+		{
+			++withProjectile;
+			if (wt->m_bfme.m_warheadTmpl == nullptr)
+				++warheadsMissing;
+			if (wt->m_projectileTmpl == nullptr)
+				++projectilesMissing;
+		}
+	}
+	if (nuggetWeapons > 0)
+		fprintf(stderr, "[combat] %d of %d weapons use BFME nuggets: %d with damage, %d with ProjectileNugget (%d warheads, %d projectile objects not found)\n",
+			nuggetWeapons, (Int)m_weaponTemplateVector.size(), withDamage, withProjectile, warheadsMissing, projectilesMissing);
 
 }
 
@@ -1844,8 +2162,17 @@ void WeaponStore::postProcessLoad()
 		weapon = TheWeaponStore->newWeaponTemplate(name);
 	}
 
+	// BFME: E2-03. An override that lists nuggets replaces the inherited ones instead of adding to them.
+	BfmeWeaponNuggets inheritedNuggets = weapon->m_bfme;
+	weapon->m_bfme = BfmeWeaponNuggets();
+
 	// parse the ini weapon definition
 	ini->initFromINI(weapon, weapon->getFieldParse());
+
+	if (!weapon->m_bfme.hasAny())
+		weapon->m_bfme = inheritedNuggets;
+	else
+		weapon->applyBfmeFold();
 
 	if (weapon->m_projectileName.isNone())
 		weapon->m_projectileName.clear();

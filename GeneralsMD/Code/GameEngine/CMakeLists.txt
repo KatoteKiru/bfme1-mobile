@@ -242,6 +242,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/AIStateMachine.h
     Include/GameLogic/AITNGuard.h
     Include/GameLogic/Armor.h
+    Include/GameLogic/BfmeWeaponNuggets.h
     Include/GameLogic/ArmorSet.h
 #    Include/GameLogic/CaveSystem.h
 #    Include/GameLogic/CrateSystem.h
@@ -850,6 +851,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Map/BfmeMapChunks.cpp # BFME: E1-52
     Source/GameLogic/Map/TerrainLogic.cpp
     Source/GameLogic/Object/Armor.cpp
+    Source/GameLogic/Object/BfmeWeaponNuggets.cpp
     Source/GameLogic/Object/Behavior/AutoHealBehavior.cpp
     Source/GameLogic/Object/Behavior/BattleBusSlowDeathBehavior.cpp
     Source/GameLogic/Object/Behavior/BehaviorModule.cpp
