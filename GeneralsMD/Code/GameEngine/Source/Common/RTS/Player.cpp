@@ -56,6 +56,7 @@
 #include "Common/MiscAudio.h"
 #include "Common/PerfTimer.h"
 #include "Common/Player.h"
+#include "Common/INILenient.h"	// BFME: E1-40c
 #include "Common/StatsExporter.h"
 #include "Common/PlayerList.h"
 #include "Common/PlayerTemplate.h"
@@ -903,16 +904,31 @@ void Player::initFromDict(const Dict* d)
 		{
 			DEBUG_CRASH(("Could not find skirmish player for side %s", mySide.str()));
 		} else {
-			m_playerName = qualTemplatePlayerName;
+			// BFME: E1-40c. Without skirmish scripts/teams (BFME) keep the slot name, so setDefaultTeam()
+			// finds "team<player>" (the qualified name has no team).
+			const Bool bfmeNoSkirmishScripts = INILenient::isEnabled() && TheSidesList->getSkirmishSideInfo(skirmishNdx)->getScriptList() == nullptr;
+			if (!bfmeNoSkirmishScripts)
+				m_playerName = qualTemplatePlayerName;
 			AsciiString qualifier;
 			qualifier.format("%d", m_mpStartIndex);
-			ScriptList *scripts = TheSidesList->getSkirmishSideInfo(skirmishNdx)->getScriptList()->duplicateAndQualify(
-						qualifier, qualTemplatePlayerName, pname);
+			// BFME: E1-40c. BFME1 has no Data\Scripts\SkirmishScripts.scb (its skirmish AI is AIData.ini),
+			// so a skirmish side can have no script list; ZH dereferenced it. Use an empty list.
+			ScriptList *srcScripts = TheSidesList->getSkirmishSideInfo(skirmishNdx)->getScriptList();
+			ScriptList *scripts = srcScripts ? srcScripts->duplicateAndQualify(qualifier, qualTemplatePlayerName, pname)
+				: newInstance(ScriptList);
 
 			deleteInstance(TheSidesList->getSideInfo(getPlayerIndex())->getScriptList());
 			TheSidesList->getSideInfo(getPlayerIndex())->setScriptList(scripts);
 
 			for (i=0; i<TheSidesList->getNumTeams(); i++) {
+				// BFME: E1-40c. Without SkirmishScripts.scb no skirmish teams are added below, so keep the
+				// player's default team ("team<player>"); removing it left AI players with no team and
+				// their start castle neutral.
+				AsciiString defaultTeam;
+				defaultTeam.format("team%s", pname.str());
+				if (srcScripts == nullptr && INILenient::isEnabled()
+					&& TheSidesList->getTeamInfo(i)->getDict()->getAsciiString(TheKey_teamName) == defaultTeam)
+					continue;
 				if (TheSidesList->getTeamInfo(i)->getDict()->getAsciiString(TheKey_teamOwner) == pname)
 				{
 					// Remove any teams in this player.

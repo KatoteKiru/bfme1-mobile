@@ -145,6 +145,7 @@ DECLARE_PERF_TIMER(SleepyMaintenance)
 
 #include "Common/UnitTimings.h" //Contains the DO_UNIT_TIMINGS define jba.
 #include "Common/DataChunk.h"	// BFME: E1-40b
+#include "Common/ScoreKeeper.h"	// BFME: E1-40c
 #include "GameLogic/Module/CastleBehavior.h"	// BFME: E1-40b
 // If defined, the game times various units.
 #ifdef DO_UNIT_TIMINGS
@@ -1398,6 +1399,70 @@ void GameLogic::startNewGame( Bool loadingSaveGame )
 		if (m_quitToDesktopAfterMatch && TheGameEngine)
 		{
 			TheGameEngine->setQuitting(TRUE);
+		}
+	}
+}
+
+// BFME: E1-40c. [ai] status every 900 logic frames (30 s): per playing player money, structures,
+// units, built/destroyed/lost (ScoreKeeper), income since the last line; and one line when a
+// player is defeated or a victory is reached.
+static void bfmeLogAi(UnsignedInt frame)
+{
+	static UnsignedInt s_lastEarned[MAX_PLAYER_COUNT];
+	static Bool s_defeated[MAX_PLAYER_COUNT];
+	static Bool s_over = FALSE;
+	if (frame <= 1)
+	{
+		for (Int i = 0; i < MAX_PLAYER_COUNT; ++i) { s_lastEarned[i] = 0; s_defeated[i] = FALSE; }
+		s_over = FALSE;
+	}
+	if (ThePlayerList == nullptr)
+		return;
+	const Bool status = frame % 900 == 0;
+	for (Int i = 0; i < ThePlayerList->getPlayerCount() && i < MAX_PLAYER_COUNT; ++i)
+	{
+		Player *p = ThePlayerList->getNthPlayer(i);
+		const PlayerTemplate *pt = p ? p->getPlayerTemplate() : nullptr;
+		if (pt == nullptr || !pt->isPlayableSide())
+			continue;
+		const char *name = TheNameKeyGenerator->keyToName(p->getPlayerNameKey()).str();
+		if (TheVictoryConditions && !s_defeated[i] && TheVictoryConditions->hasSinglePlayerBeenDefeated(p))
+		{
+			s_defeated[i] = TRUE;
+			fprintf(stderr, "[ai] BFME: E1-40c frame %u player %d '%s' (%s) DEFEATED\n", frame, i, name, p->getSide().str());
+		}
+		if (!status)
+			continue;
+		unsigned structures = 0, units = 0;
+		for (Object *o = TheGameLogic->getFirstObject(); o; o = o->getNextObject())
+		{
+			if (o->getControllingPlayer() != p || o->isEffectivelyDead())
+				continue;
+			if (o->isKindOf(KINDOF_STRUCTURE))
+				++structures;
+			else if (o->getAIUpdateInterface() != nullptr && !o->isKindOf(KINDOF_IMMOBILE))
+				++units;
+		}
+		ScoreKeeper *sk = p->getScoreKeeper();
+		const UnsignedInt earned = (UnsignedInt)sk->getTotalMoneyEarned();
+		fprintf(stderr, "[ai] BFME: E1-40c frame %u player %d '%s' (%s %s): money %u, structures %u, units %u, "
+			"built %d/%d (bld/unit), destroyed %d/%d, lost %d/%d, income %u (total %u), spent %d\n",
+			frame, i, name, p->getSide().str(), p->getPlayerType() == PLAYER_COMPUTER ? "AI" : "human",
+			p->getMoney() ? (unsigned)p->getMoney()->countMoney() : 0u, structures, units,
+			sk->getTotalBuildingsBuilt(), sk->getTotalUnitsBuilt(), sk->getTotalBuildingsDestroyed(), sk->getTotalUnitsDestroyed(),
+			sk->getTotalBuildingsLost(), sk->getTotalUnitsLost(), earned - s_lastEarned[i], earned, sk->getTotalMoneySpent());
+		s_lastEarned[i] = earned;
+	}
+	if (TheVictoryConditions && !s_over && TheVictoryConditions->getEndFrame() != 0)
+	{
+		s_over = TRUE;
+		fprintf(stderr, "[ai] BFME: E1-40c game over at frame %u (end frame %u)\n", frame, TheVictoryConditions->getEndFrame());
+		for (Int i = 0; i < ThePlayerList->getPlayerCount(); ++i)
+		{
+			Player *p = ThePlayerList->getNthPlayer(i);
+			if (p && p->getPlayerTemplate() && p->getPlayerTemplate()->isPlayableSide() && TheVictoryConditions->hasAchievedVictory(p))
+				fprintf(stderr, "[ai] BFME: E1-40c VICTORY player %d '%s' (%s)\n", i,
+					TheNameKeyGenerator->keyToName(p->getPlayerNameKey()).str(), p->getSide().str());
 		}
 	}
 }
@@ -4750,6 +4815,8 @@ void GameLogic::update()
 		// BFME: E1-39b. Heartbeat every 10 s of game time (300 frames at 30 Hz).
 		if (INILenient::isEnabled() && m_frame % 300 == 0)
 			fprintf(stderr, "[launch] BFME: E1-39b logic frame %u, objects %u\n", (unsigned)m_frame, (unsigned)getObjectCount());
+		if (INILenient::isEnabled())
+			bfmeLogAi(m_frame);	// BFME: E1-40c
 		m_hasUpdated = TRUE;
 #if defined(GENERALS_ONLINE_HIGH_FPS_SERVER)
 		if (m_frame % 2 == 0)
