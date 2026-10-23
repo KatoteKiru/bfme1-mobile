@@ -62,6 +62,14 @@
 #include <cstdio>
 #include "bitmaphandler.h"
 #include "wwprofile.h"
+#include "bfmeimagedecode.h" // BFME: E1-44
+#include <atomic>
+#include <cstdlib>
+#include <cstring>
+#include <mutex>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 bool TextureLoader::TextureLoadSuspended;
 int TextureLoader::TextureInactiveOverrideTime = 0;
@@ -240,6 +248,151 @@ public:
 
 	virtual void Thread_Function() override;
 } _TextureLoadThread;
+
+
+// ----------------------------------------------------------------------------
+//
+// BFME: E1-44 JPEG/PNG textures. BFME1 2.22 keeps 303 .jpg and 202 .png in textures.big, often
+// as a pair (<name>.jpg colour + <name>.png alpha), while INI/W3D ask for <name>.tga. In BFME
+// mode GameFileClass::Set_Name resolves such a request to the .jpg/.png (W3DFileSystem.cpp);
+// here every uncompressed load sniffs the magic bytes first and, for FF D8 FF / 89 50 4E 47,
+// decodes with BfmeImage (stb_image) instead of Targa. The decoded image is top-down
+// A8R8G8B8, i.e. exactly what the Targa path holds after its TGAIDF_YORIGIN flip, and goes
+// through the same BitmapHandlerClass::Copy_Image conversion/mip path. Zero Hour mode (no
+// BFME_GAMEDATA) never sniffs, so its Targa path is unchanged.
+//
+// ----------------------------------------------------------------------------
+static bool Bfme_Image_Mode()
+{
+	static const bool on = []() {
+		const char *data = getenv("BFME_GAMEDATA");
+		return data != nullptr && *data != '\0';
+	}();
+	return on;
+}
+
+// Reads the file the factory resolves `name` to. Fills `data` with the whole file only when it
+// starts with a JPEG/PNG signature; returns its kind (KIND_UNKNOWN for Targa, missing files...).
+// real_name gets FileClass::File_Name(), which GameFileClass rewrites to the file it found.
+static BfmeImage::Kind Bfme_Read_Image_File(const char *name, std::vector<unsigned char> &data, std::string *real_name)
+{
+	data.clear();
+	if (name == nullptr || *name == '\0' || _TheFileFactory == nullptr)
+		return BfmeImage::KIND_UNKNOWN;
+
+	file_auto_ptr file(_TheFileFactory, name);
+	if (!file->Is_Available() || !file->Open())
+		return BfmeImage::KIND_UNKNOWN;
+
+	unsigned char magic[4] = {};
+	const int got = file->Read(magic, sizeof(magic));
+	const BfmeImage::Kind kind = BfmeImage::Sniff(magic, got > 0 ? (size_t)got : 0);
+	const int size = file->Size();
+	if (kind == BfmeImage::KIND_UNKNOWN || size < got)
+	{
+		file->Close();
+		return BfmeImage::KIND_UNKNOWN;
+	}
+
+	data.resize((size_t)size);
+	memcpy(data.data(), magic, (size_t)got);
+	const int rest = size - got;
+	const int read = rest > 0 ? file->Read(data.data() + got, rest) : 0;
+	if (real_name && file->File_Name())
+		*real_name = file->File_Name();
+	file->Close();
+	if (read != rest)
+	{
+		data.clear();
+		return BfmeImage::KIND_UNKNOWN;
+	}
+	return kind;
+}
+
+// Header-only probe for Get_Texture_Information. 1 = JPEG/PNG with valid header, 0 = not a
+// JPEG/PNG (use Targa), -1 = JPEG/PNG signature but broken header.
+static int Bfme_Probe_Image(const char *name, unsigned &width, unsigned &height)
+{
+	if (!Bfme_Image_Mode())
+		return 0;
+	std::vector<unsigned char> data;
+	if (Bfme_Read_Image_File(name, data, nullptr) == BfmeImage::KIND_UNKNOWN)
+		return 0;
+	return BfmeImage::Get_Info(data.data(), data.size(), width, height) ? 1 : -1;
+}
+
+enum BfmeImageLoad
+{
+	BFME_IMAGE_NOT_JPG_PNG,	///< not a JPEG/PNG (or not BFME mode): caller uses Targa
+	BFME_IMAGE_LOADED,
+	BFME_IMAGE_FAILED,		///< JPEG/PNG signature but undecodable
+};
+
+// Full decode for the mip/surface loaders. A JPEG takes the alpha of <name>.png when the archive
+// has one with the same dimensions (looked up by name through the same file factory).
+static BfmeImageLoad Bfme_Load_Image(const char *name, BfmeImage::Image &img)
+{
+	if (!Bfme_Image_Mode())
+		return BFME_IMAGE_NOT_JPG_PNG;
+
+	std::vector<unsigned char> data;
+	std::string real_name(name ? name : "");
+	const BfmeImage::Kind kind = Bfme_Read_Image_File(name, data, &real_name);
+	if (kind == BfmeImage::KIND_UNKNOWN)
+		return BFME_IMAGE_NOT_JPG_PNG;
+
+	std::vector<unsigned char> sibling;
+	std::string sibling_name;
+	if (kind == BfmeImage::KIND_JPEG)
+	{
+		sibling_name = real_name;
+		const size_t dot = sibling_name.find_last_of('.');
+		const size_t slash = sibling_name.find_last_of("/\\");
+		if (dot != std::string::npos && (slash == std::string::npos || dot > slash))
+			sibling_name.erase(dot);
+		sibling_name += ".png";
+		if (Bfme_Read_Image_File(sibling_name.c_str(), sibling, nullptr) != BfmeImage::KIND_PNG)
+			sibling.clear();
+	}
+
+	const char *error = nullptr;
+	if (!BfmeImage::Decode_BGRA(data.data(), data.size(), sibling.empty() ? nullptr : sibling.data(), sibling.size(), img, &error))
+	{
+		static std::atomic<int> s_fail_logs(0);
+		if (s_fail_logs.fetch_add(1) < 40)
+			fprintf(stderr, "[gxjpg] decode failed %s (%s): %s\n", name, real_name.c_str(), error ? error : "?");
+		return BFME_IMAGE_FAILED;
+	}
+
+	if (img.alpha == BfmeImage::ALPHA_SIBLING_MISMATCH || img.alpha == BfmeImage::ALPHA_SIBLING_UNREADABLE)
+	{
+		// once per texture: a texture can be loaded again (reduction change, device reset)
+		static std::mutex s_mutex;
+		static std::unordered_set<std::string> s_noted;
+		bool first = false;
+		{
+			std::lock_guard<std::mutex> lock(s_mutex);
+			first = s_noted.size() < 4096 && s_noted.insert(real_name).second;
+		}
+		if (first)
+		{
+			if (img.alpha == BfmeImage::ALPHA_SIBLING_MISMATCH)
+				fprintf(stderr, "[gxjpg] %s: %s is %ux%u, jpg is %ux%u; alpha ignored (opaque)\n",
+					real_name.c_str(), sibling_name.c_str(), img.siblingWidth, img.siblingHeight, img.width, img.height);
+			else
+				fprintf(stderr, "[gxjpg] %s: %s unreadable; alpha ignored (opaque)\n",
+					real_name.c_str(), sibling_name.c_str());
+		}
+	}
+
+	static std::atomic<int> s_logs(0);
+	const int n = s_logs.fetch_add(1);
+	if (n < 40)
+		fprintf(stderr, "[gxjpg] loaded %s %ux%u (%s)\n", real_name.c_str(), img.width, img.height, BfmeImage::Describe(img));
+	else if (n == 40)
+		fprintf(stderr, "[gxjpg] further JPEG/PNG loads not logged\n");
+	return BFME_IMAGE_LOADED;
+}
 
 
 // TODO: Legacy - remove this call!
@@ -577,6 +730,39 @@ IDirect3DSurface8* TextureLoader::Load_Surface_Immediate(
 			IDirect3DSurface8* d3d_surface=nullptr;
 			DX8_ErrorCode(comp_tex->GetSurfaceLevel(0,&d3d_surface));
 			comp_tex->Release();
+			return d3d_surface;
+		}
+	}
+
+	// BFME: E1-44 a .jpg/.png behind the requested name: decode it instead of Targa.
+	{
+		BfmeImage::Image bfme_image;
+		const BfmeImageLoad bfme_load = Bfme_Load_Image(filename, bfme_image);
+		if (bfme_load == BFME_IMAGE_FAILED) return MissingTexture::_Create_Missing_Surface();
+		if (bfme_load == BFME_IMAGE_LOADED)
+		{
+			const WW3DFormat dest_format = texture_format != WW3D_FORMAT_UNKNOWN
+				? texture_format : Get_Valid_Texture_Format(WW3D_FORMAT_A8R8G8B8, false);
+			IDirect3DSurface8* d3d_surface = DX8Wrapper::_Create_DX8_Surface(bfme_image.width, bfme_image.height, dest_format);
+			WWASSERT(d3d_surface);
+			if (d3d_surface == nullptr) return MissingTexture::_Create_Missing_Surface();
+			D3DLOCKED_RECT locked_rect;
+			DX8_ErrorCode(d3d_surface->LockRect(&locked_rect, nullptr, 0));
+			BitmapHandlerClass::Copy_Image(
+				(unsigned char*)locked_rect.pBits,
+				bfme_image.width,
+				bfme_image.height,
+				locked_rect.Pitch,
+				dest_format,
+				bfme_image.bgra.data(),
+				bfme_image.width,
+				bfme_image.height,
+				bfme_image.width*4,
+				WW3D_FORMAT_A8R8G8B8,
+				nullptr,
+				0,
+				false);	// No mipmap
+			DX8_ErrorCode(d3d_surface->UnlockRect());
 			return d3d_surface;
 		}
 	}
@@ -1486,6 +1672,32 @@ static bool	Get_Texture_Information
 			return true;
 		}
 
+		// BFME: E1-44 a .jpg/.png behind the requested name (BFME mode): its header gives the
+		// size; the loaders decode it to A8R8G8B8, so report that format and a full mip chain.
+		{
+			unsigned image_w = 0, image_h = 0;
+			const int probe = Bfme_Probe_Image(filename, image_w, image_h);
+			if (probe < 0)
+			{
+				static std::atomic<int> s_logs(0);
+				if (s_logs.fetch_add(1) < 40)
+					fprintf(stderr, "[gxmiss] reason: jpg/png header unreadable: %s\n", filename);
+				return false;
+			}
+			if (probe > 0)
+			{
+				format = WW3D_FORMAT_A8R8G8B8;
+				mip_count = 0;
+				for (unsigned i = image_w, j = image_h; i > 0 && j > 0; i >>= 1, j >>= 1)
+					mip_count++;
+				w = image_w;
+				h = image_h;
+				d = 1;
+				reduction = Get_Requested_Reduction(w, h, mip_count);
+				return true;
+			}
+		}
+
 		Targa targa;
 		if (TARGA_ERROR_HANDLER(targa.Open(filename, TGA_READMODE), filename))
 		{
@@ -1878,36 +2090,62 @@ bool TextureLoadTaskClass::Load_Uncompressed_Mipmap()
 		return false;
 	}
 
-	Targa targa;
-	if (TARGA_ERROR_HANDLER(targa.Open(Texture->Get_Full_Path(), TGA_READMODE), Texture->Get_Full_Path())) {
+	// BFME: E1-44 a .jpg/.png behind the requested name is decoded to top-down A8R8G8B8 (the
+	// same layout Targa yields after the YORIGIN flip below) and then takes the TGA path.
+	BfmeImage::Image bfme_image;
+	const BfmeImageLoad bfme_load = Bfme_Load_Image(Texture->Get_Full_Path(), bfme_image);
+	if (bfme_load == BFME_IMAGE_FAILED) {
 		return false;
 	}
 
-	// DX8 uses image upside down compared to TGA
-	targa.Header.ImageDescriptor ^= TGAIDF_YORIGIN;
-
+	Targa targa;
+	char palette[256*4];
 	WW3DFormat src_format;
 	WW3DFormat dest_format;
 	unsigned int src_bpp = 0;
-	Get_WW3D_Format(dest_format,src_format,src_bpp,targa);
-	if (src_format==WW3D_FORMAT_UNKNOWN) return false;
+	unsigned int src_width	= 0;
+	unsigned int src_height	= 0;
+	unsigned char * src_surface			= nullptr;
+	unsigned char * src_palette			= nullptr;
+	unsigned int src_palette_bpp		= 0;
+
+	if (bfme_load == BFME_IMAGE_LOADED) {
+		src_format	= WW3D_FORMAT_A8R8G8B8;
+		src_bpp		= 4;
+		src_width	= bfme_image.width;
+		src_height	= bfme_image.height;
+		src_surface	= bfme_image.bgra.data();
+	} else {
+		if (TARGA_ERROR_HANDLER(targa.Open(Texture->Get_Full_Path(), TGA_READMODE), Texture->Get_Full_Path())) {
+			return false;
+		}
+
+		// DX8 uses image upside down compared to TGA
+		targa.Header.ImageDescriptor ^= TGAIDF_YORIGIN;
+
+		Get_WW3D_Format(dest_format,src_format,src_bpp,targa);
+		if (src_format==WW3D_FORMAT_UNKNOWN) return false;
+
+		targa.SetPalette(palette);
+
+		src_width	= targa.Header.Width;
+		src_height	= targa.Header.Height;
+
+		// NOTE: We load the palette but we do not yet support paletted textures!
+		if (TARGA_ERROR_HANDLER(targa.Load(Texture->Get_Full_Path(), TGAF_IMAGE, false), Texture->Get_Full_Path())) {
+			return false;
+		}
+
+		src_surface		= (unsigned char*)targa.GetImage();
+		src_palette		= (unsigned char*)targa.GetPalette();
+		src_palette_bpp	= targa.Header.CMapDepth>>3;
+	}
 
 	dest_format = Get_Format();	// Texture can be requested in different format than the most obvious from the TGA
 
-	char palette[256*4];
-	targa.SetPalette(palette);
-
-	unsigned int src_width	= targa.Header.Width;
-	unsigned int src_height	= targa.Header.Height;
 	unsigned int width		= Get_Width();
 	unsigned int height		= Get_Height();
 
-	// NOTE: We load the palette but we do not yet support paletted textures!
-	if (TARGA_ERROR_HANDLER(targa.Load(Texture->Get_Full_Path(), TGAF_IMAGE, false), Texture->Get_Full_Path())) {
-		return false;
-	}
-
-	unsigned char * src_surface			= (unsigned char*)targa.GetImage();
 	unsigned char * converted_surface	= nullptr;
 
 	// No paletted format allowed when generating mipmaps
@@ -1934,8 +2172,8 @@ bool TextureLoadTaskClass::Load_Uncompressed_Mipmap()
 			src_height,
 			src_width*src_bpp,
 			src_format,
-			(unsigned char*)targa.GetPalette(),
-			targa.Header.CMapDepth>>3,
+			src_palette,
+			src_palette_bpp,
 			false,
 			hsv_shift);
 		hsv_shift=Vector3(0.0f,0.0f,0.0f);
