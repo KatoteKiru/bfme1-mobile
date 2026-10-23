@@ -111,6 +111,7 @@ BFME_INI_BLOCK_STUB(parseMultiplayerStartingMoneyChoiceDefinition)
 BFME_INI_BLOCK_STUB(parseObjectCreationListDefinition)
 BFME_INI_BLOCK_STUB(parseObjectDefinition)
 BFME_INI_BLOCK_STUB(parseObjectReskinDefinition)
+BFME_INI_BLOCK_STUB(parseChildObjectDefinition)	// BFME: E1-40
 BFME_INI_BLOCK_STUB(parseOnlineChatColorDefinition)
 BFME_INI_BLOCK_STUB(parseParticleSystemDefinition)
 BFME_INI_BLOCK_STUB(parsePlayerTemplateDefinition)

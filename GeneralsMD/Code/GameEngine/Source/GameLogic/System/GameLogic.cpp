@@ -2110,13 +2110,27 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 			// BFME: E1-40. BFME maps store the owner as "<player>/<team>" (e.g.
 			// "PlyrCivilian/teamPlyrCivilian"); Zero Hour stores just the team name, so every BFME map
 			// object fell back to the neutral team. Use the team part.
+			// A team the map does not define (the start-position teams "Player_<N>_Inherit" of castle
+			// flags) falls back to the player's default team.
+			Team *team = nullptr;
 			if (INILenient::isEnabled())
 			{
 				const char *slash = strrchr(originalOwner.str(), '/');
 				if (slash != nullptr && slash[1] != '\0')
+				{
+					AsciiString ownerPlayer;
+					ownerPlayer.set(originalOwner.str(), (Int)(slash - originalOwner.str()));
 					originalOwner = AsciiString(slash + 1);
+					if (TheTeamFactory->findTeam(originalOwner) == nullptr)
+					{
+						Player *pl = ThePlayerList->findPlayerWithNameKey(TheNameKeyGenerator->nameToKey(ownerPlayer));
+						if (pl != nullptr)
+							team = pl->getDefaultTeam();
+					}
+				}
 			}
-			Team *team = ThePlayerList->validateTeam(originalOwner);
+			if (team == nullptr)
+				team = ThePlayerList->validateTeam(originalOwner);
 
 			// create new object in the world
 			Object *obj = TheThingFactory->newObject( thingTemplate, team ); //, OBJECT_STATUS_LOADING_FROM_MAP );
@@ -2604,6 +2618,28 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 			TheGlobalData->m_mapName.str(), (unsigned)m_frame,
 			ThePlayerList ? ThePlayerList->getPlayerCount() : 0, (unsigned)getObjectCount());
 	MapLoadTrace::endPhase();	// BFME: E1-43
+	// BFME: E1-40. Who owns what at the start: objects per player, plus every castle flag.
+	if (INILenient::isEnabled() && ThePlayerList)
+	{
+		for (Int i = 0; i < ThePlayerList->getPlayerCount(); ++i)
+		{
+			Player *p = ThePlayerList->getNthPlayer(i);
+			unsigned n = 0;
+			for (Object *o = getFirstObject(); o; o = o->getNextObject())
+				if (o->getControllingPlayer() == p)
+					++n;
+			fprintf(stderr, "[launch] BFME: E1-40 player %d '%s' side '%s': %u objects\n", i,
+				TheNameKeyGenerator->keyToName(p->getPlayerNameKey()).str(), p->getSide().str(), n);
+		}
+		for (Object *o = getFirstObject(); o; o = o->getNextObject())
+			if (o->getTemplate()->getName().startsWith("CastleFlag"))
+			{
+				const Player *p = o->getControllingPlayer();
+				fprintf(stderr, "[launch] BFME: E1-40 %s id %u team '%s' player '%s'\n", o->getTemplate()->getName().str(),
+					(unsigned)o->getID(), o->getTeam() ? o->getTeam()->getName().str() : "-",
+					p ? TheNameKeyGenerator->keyToName(p->getPlayerNameKey()).str() : "-");
+			}
+	}
 
 	// if we're in a gamespy game, mark us as playing
 	if (TheGameSpyBuddyMessageQueue && TheGameSpyGame && isInInternetGame())
