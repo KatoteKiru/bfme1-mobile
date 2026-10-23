@@ -67,6 +67,8 @@
 #include "WW3D2/mesh.h"
 #include "WW3D2/meshmdl.h"
 #include "Common/BitFlagsIO.h"
+#include "Common/INILenient.h"	// BFME: E1-46
+#include <cstdio>
 
 
 //-------------------------------------------------------------------------------------------------
@@ -1193,9 +1195,34 @@ static void parseAsciiStringLC( INI* ini, void * /*instance*/, void *store, cons
 }
 
 //-------------------------------------------------------------------------------------------------
+// BFME: E1-46. BFME1 draw modules (W3DScriptedModelDraw and friends, mapped onto W3DModelDraw in
+// W3DModuleFactory) name their states DefaultModelConditionState / ModelConditionState. Their
+// TransitionState and the Animation sub-blocks use a different, block syntax (named states with
+// nested "Animation = Tag ... AnimationName = ... End"); the Zero Hour parsers would read the tag as
+// an animation name and the nested End would close the state early, so in BFME mode those are
+// skipped as whole sub-blocks instead. AnimationState / IdleAnimationState stay unknown fields
+// (the lenient INI skips them), so models are drawn static for now.
+static void parseBfmeRejectBlock( INI* ini, void * /*instance*/, void * /*store*/, const void* userData )
+{
+	INILenient::rejectBlock(ini, (const char *)userData, "BFME block syntax not parsed yet (E1-46)");
+	throw INI_INVALID_DATA;	// not reached in lenient mode; keeps strict mode from parsing garbage
+}
+
+//-------------------------------------------------------------------------------------------------
 void W3DModelDrawModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   ModuleData::buildFieldParse(p);
+
+	// BFME: E1-46. Searched before the Zero Hour table, so these entries win (TransitionState).
+	static const FieldParse bfmeFieldParse[] =
+	{
+		{ "DefaultModelConditionState", W3DModelDrawModuleData::parseConditionState, (void*)PARSE_DEFAULT, 0 },
+		{ "ModelConditionState", W3DModelDrawModuleData::parseConditionState, (void*)PARSE_NORMAL, 0 },
+		{ "TransitionState", parseBfmeRejectBlock, (const void*)"TransitionState", 0 },
+		{ nullptr, nullptr, nullptr, 0 }
+	};
+	if (INILenient::isEnabled())
+		p.add(bfmeFieldParse);
 
 	static const FieldParse dataFieldParse[] =
 	{
@@ -1634,6 +1661,22 @@ void W3DModelDrawModuleData::parseConditionState(INI* ini, void *instance, void 
 		break;
 	}
 
+	// BFME: E1-46. In BFME mode "Animation = Tag" opens a sub-block (AnimationName/AnimationMode/End);
+	// skip it whole instead of reading the tag as a Zero Hour animation name.
+	static const FieldParse bfmeStateFieldParse[] =
+	{
+		{ "Animation", parseBfmeRejectBlock, (const void*)"Animation", 0 },
+		{ "IdleAnimation", parseBfmeRejectBlock, (const void*)"IdleAnimation", 0 },
+		{ nullptr, nullptr, nullptr, 0 }
+	};
+	if (INILenient::isEnabled())
+	{
+		MultiIniFieldParse stateParse;
+		stateParse.add(bfmeStateFieldParse);
+		stateParse.add(myFieldParse);
+		ini->initFromINIMulti(&info, stateParse);
+	}
+	else
 	ini->initFromINI(&info, myFieldParse);
 
 	if (info.m_modelName.isEmpty())
@@ -1752,6 +1795,23 @@ W3DModelDraw::W3DModelDraw(Thing *thing, const ModuleData* moduleData) : DrawMod
 
 	ModelConditionFlags emptyFlags;
 	const ModelConditionInfo* info = findBestInfo(emptyFlags);
+	// BFME: E1-46. A BFME draw module whose states did not parse (no DefaultModelConditionState,
+	// unknown condition flags, ...) has no idle state. Throwing here would abort Drawable creation
+	// for the whole object; draw nothing instead (an empty model, like "Model = None").
+	if (!info && INILenient::isEnabled())
+	{
+		static ModelConditionInfo s_bfmeEmptyState;
+		static int s_bfmeNoStateLogs = 0;
+		if (s_bfmeNoStateLogs < 40)
+		{
+			++s_bfmeNoStateLogs;
+			const Drawable* d = getDrawable();
+			fprintf(stderr, "[bfmedraw] no idle state, drawing nothing: %s%s\n",
+				d && d->getTemplate() ? d->getTemplate()->getName().str() : "?",
+				s_bfmeNoStateLogs == 40 ? " (further ones not logged)" : "");
+		}
+		info = &s_bfmeEmptyState;
+	}
 	if (!info)
 	{
 		DEBUG_CRASH(("*** ASSET ERROR: all draw modules must have an IDLE state"));
@@ -3028,6 +3088,23 @@ void W3DModelDraw::setModelState(const ModelConditionInfo* newState)
 		{
 			m_renderObject = W3DDisplay::m_assetManager->Create_Render_Obj(newState->m_modelName.str(), draw->getScale(), m_hexColor);
 			DEBUG_ASSERTCRASH(m_renderObject, ("*** ASSET ERROR: Model %s not found!",newState->m_modelName.str()));
+			// BFME: E1-46. Settle on the device whether BFME1 .w3d models load: the first failures by
+			// name, and a running ok/fail count at powers of two.
+			if (INILenient::isEnabled())
+			{
+				static unsigned s_bfmeRobjOk = 0, s_bfmeRobjFail = 0;
+				unsigned &n = m_renderObject ? s_bfmeRobjOk : s_bfmeRobjFail;
+				++n;
+				if (!m_renderObject && s_bfmeRobjFail <= 40)
+					fprintf(stderr, "[bfmedraw] render object NOT created: model '%s' (%s)\n",
+						newState->m_modelName.str(), draw->getTemplate() ? draw->getTemplate()->getName().str() : "?");
+				else if (m_renderObject && s_bfmeRobjOk <= 5)
+					fprintf(stderr, "[bfmedraw] render object created: model '%s' class=%d (%s)\n",
+						newState->m_modelName.str(), m_renderObject->Class_ID(),
+						draw->getTemplate() ? draw->getTemplate()->getName().str() : "?");
+				if ((n & (n - 1)) == 0)
+					fprintf(stderr, "[bfmedraw] render objects: created=%u failed=%u\n", s_bfmeRobjOk, s_bfmeRobjFail);
+			}
 		}
 
 		//BONEPOS_LOG(("validateStuff() from within W3DModelDraw::setModelState()"));

@@ -49,6 +49,7 @@ class WeatherSetting : public Overridable
 		Real	m_snowVelocity;			///<used to set speed at which snow falls (world units/sec).
 		Bool    m_usePointSprites;		///<used to disable hardware point-sprite support.
 		Bool	m_snowEnabled;			///<enable/disable snow on the map.
+		Bool	m_bfmeIsSnowing;		///< BFME: E1-46. BFME1 Weather.ini "IsSnowing": snow is set up (SnowEnabled) but not falling.
 
 	public:
 		WeatherSetting()
@@ -64,6 +65,7 @@ class WeatherSetting : public Overridable
 			m_snowVelocity=4;
 			m_usePointSprites=TRUE;
 			m_snowEnabled=FALSE;
+			m_bfmeIsSnowing=TRUE;
 			m_snowMaxPointSize=64.0f;
 			m_snowMinPointSize=0.0f;
 		}
