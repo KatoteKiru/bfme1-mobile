@@ -16,3 +16,14 @@ in the INI and map loaders, and are fixed here (lenient mode only):
 Headless rohan: 1700 objects at frame 0 (1623 before), heartbeat to frame 2400
 in 90 s, no new errors. The castle itself (CastleBehavior, `.bse` unpack) and
 the start money are the next step.
+
+### 50 maps crashed at start: InitialHealth
+
+The 406-map run had 50 maps (edoras, helms deep, isengard, minas tirith,
+shellmap1, ...) crash with SIGSEGV in `Pathfinder::internal_classifyObjectFootprint`. A BFME
+body usually sets only `MaxHealth` (`GondorCastleUpgrade` in gondorbuildings.ini: `MaxHealth =
+GONDOR_CASTLE_WALL_UPGRADE_HEALTH`, no `InitialHealth`). Zero Hour's default is 0, so the
+object was born as rubble and told the pathfinder before `newMap()` had built its grid. In
+the original (and OpenSAGE) `InitialHealth` defaults to `MaxHealth`; lenient mode now does
+the same. The pathfinder also ignores footprint changes until its grid exists. The edoras,
+helms deep, isengard, minas tirith and "Minas Tirith Evil - 7 Rings" maps now reach frame 300.

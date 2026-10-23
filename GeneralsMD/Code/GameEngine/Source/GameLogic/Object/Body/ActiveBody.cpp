@@ -59,6 +59,7 @@
 #include "GameLogic/Module/ContainModule.h"
 #include "GameLogic/Module/DamageModule.h"
 #include "GameLogic/Module/DieModule.h"
+#include "Common/INILenient.h"	// BFME: E1-40
 
 
 
@@ -128,6 +129,7 @@ ActiveBodyModuleData::ActiveBodyModuleData()
 {
 	m_maxHealth = 0;
 	m_initialHealth = 0;
+	m_initialHealthSet = FALSE;	// BFME: E1-40
 	m_subdualDamageCap = 0;
 	m_subdualDamageHealRate = 0;
 	m_subdualDamageHealAmount = 0;
@@ -135,14 +137,32 @@ ActiveBodyModuleData::ActiveBodyModuleData()
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
+// BFME: E1-40. BFME bodies usually give only MaxHealth (e.g. GondorCastleUpgrade in
+// gondorbuildings.ini); the original then starts at MaxHealth (OpenSAGE ActiveBody: InitialHealth
+// defaults to MaxHealth). Zero Hour started such an object at 0 health, as rubble, before the
+// pathfinder existed (SIGSEGV in internal_classifyObjectFootprint on 50 maps). Lenient mode only.
+static void parseMaxHealthBfme(INI* ini, void* instance, void* store, const void* userData)
+{
+	INI::parseReal(ini, instance, store, userData);
+	ActiveBodyModuleData* d = static_cast<ActiveBodyModuleData*>(instance);
+	if (INILenient::isEnabled() && !d->m_initialHealthSet)
+		d->m_initialHealth = d->m_maxHealth;
+}
+
+static void parseInitialHealthBfme(INI* ini, void* instance, void* store, const void* userData)
+{
+	INI::parseReal(ini, instance, store, userData);
+	static_cast<ActiveBodyModuleData*>(instance)->m_initialHealthSet = TRUE;
+}
+
 void ActiveBodyModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   ModuleData::buildFieldParse(p);
 
 	static const FieldParse dataFieldParse[] =
 	{
-		{ "MaxHealth",						INI::parseReal,						nullptr,		offsetof( ActiveBodyModuleData, m_maxHealth ) },
-		{ "InitialHealth",				INI::parseReal,						nullptr,		offsetof( ActiveBodyModuleData, m_initialHealth ) },
+		{ "MaxHealth",						parseMaxHealthBfme,				nullptr,		offsetof( ActiveBodyModuleData, m_maxHealth ) },	// BFME: E1-40
+		{ "InitialHealth",				parseInitialHealthBfme,						nullptr,		offsetof( ActiveBodyModuleData, m_initialHealth ) },
 
 		{ "SubdualDamageCap",					INI::parseReal,									nullptr,		offsetof( ActiveBodyModuleData, m_subdualDamageCap ) },
 		{ "SubdualDamageHealRate",		INI::parseDurationUnsignedInt,	nullptr,		offsetof( ActiveBodyModuleData, m_subdualDamageHealRate ) },

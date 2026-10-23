@@ -50,6 +50,7 @@ class ActiveBodyModuleData : public BodyModuleData
 public:
 	Real m_maxHealth;
 	Real m_initialHealth;
+	Bool m_initialHealthSet;	///< BFME: E1-40 InitialHealth given explicitly (else MaxHealth in lenient mode)
 
 	Real m_subdualDamageCap;								///< Subdual damage will never accumulate past this
 	UnsignedInt m_subdualDamageHealRate;		///< Every this often, we drop subdual damage...
