@@ -50,6 +50,8 @@
 #include "GameClient/GameText.h"
 #include "Common/Language.h"
 #include "Common/Registry.h"
+#include "Common/INILenient.h"	// BFME: E1-45
+#include "Common/FileSystem.h"
 #include "GameClient/LanguageFilter.h"
 #include "Common/Debug.h"
 #include "Common/UnicodeString.h"
@@ -361,6 +363,15 @@ void GameTextManager::init()
 
 	AsciiString csfFile;
 	csfFile.format(g_csfFile, textLanguage.str());
+	// BFME: E1-45 BFME keeps its strings in lang\<language>\lotr.csf (lang/english.big), not
+	// data\<language>\generals.csf; without this the String Manager failed to initialize.
+	if (INILenient::isEnabled() && TheFileSystem && !TheFileSystem->doesFileExist(csfFile.str()))
+	{
+		AsciiString bfmeCsf;
+		bfmeCsf.format("lang\\%s\\lotr.csf", textLanguage.str());
+		fprintf(stderr, "[CSF] BFME: %s not found, using %s\n", csfFile.str(), bfmeCsf.str());
+		csfFile = bfmeCsf;
+	}
 
 	// GeneralsX @feature Android port 09/09/2026 The .str path may now be per-language.
 	//
