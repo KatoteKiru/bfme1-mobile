@@ -190,6 +190,7 @@ set(GAMEENGINE_SRC
 #    Include/GameClient/GameWindowID.h
 #    Include/GameClient/GameWindowManager.h
     Include/GameClient/GameWindowTransitions.h
+    Include/GameClient/GameWindowTransitionsData.h
     Include/GameClient/GlobalLanguage.h
     Include/GameClient/GraphDraw.h
 #    Include/GameClient/GUICallbacks.h
@@ -747,6 +748,7 @@ set(GAMEENGINE_SRC
 #    Source/GameClient/GUI/GameWindowManager.cpp
 #    Source/GameClient/GUI/GameWindowManagerScript.cpp
     Source/GameClient/GUI/GameWindowTransitions.cpp
+    Source/GameClient/GUI/GameWindowTransitionsData.cpp
 #    Source/GameClient/GUI/GameWindowTransitionsStyles.cpp
     Source/GameClient/GUI/GUICallbacks/ControlBarCallback.cpp
     Source/GameClient/GUI/GUICallbacks/ControlBarPopupDescription.cpp

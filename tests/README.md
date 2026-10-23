@@ -21,6 +21,7 @@
 - `tests/terrain/` — модель высот 16 бит (E1-25) без данных игры.
 - `tests/ini/` — правила мягкого режима INI (E1-23a), `cmake -S tests/ini -B build/tests-ini && cmake --build build/tests-ini && ctest --test-dir build/tests-ini`.
 - `ini.*` в общем дереве `tests` (`bfme_ini_mode_tests`, E1-23a/E1-26b): настоящий `INI.cpp` на синтетических файлах — в режиме ZH (по умолчанию) неизвестный блок, неверное значение списка индексов и отсутствующий `End` по-прежнему бросают исключение, неизвестное поле молча пропускается, как в upstream; в режиме BFME всё это логируется и пропускается.
+- `ini.transitions_*` (`bfme_ini_mode_tests`, E1-43): блок `Window` из `WindowTransitions.ini` настоящей таблицей `GameWindowTransitionsData.cpp` — форма ZH (`Style = ...`) и форма BFME (под-блок `Transition = <СТИЛЬ> ... End`, схема OpenSAGE), стили только BFME, неизвестный стиль; переход без окна заменяется «паузой» той же длины, которая завершается.
 - `tests/vfs/` — VFS BIG4/BIGF и порядок монтирования (E1-21, владелец кода: Форматы и данные), см. ниже.
 - `tests/thread/` — id потока `ThreadClass::_Get_Current_Thread_ID` (E1-32): два потока, стабильный id главного. `Is_DX8_Thread`: до `DX8Wrapper::Init` (записанный id 0) — true, после Init с чужого потока — false. Сборка: `cmake -S tests/thread -B build/tests-thread && cmake --build build/tests-thread && ctest --test-dir build/tests-thread`.
 - `tests/atlas/` — атлас тайлов террейна (E1-51): 4096×2048 и страницы 2048, синтетика без данных игры.

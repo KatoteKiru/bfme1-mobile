@@ -72,7 +72,8 @@ void AudioEventRTS::setEventName(AsciiString) {}
 // E1-37: INIAudioEventInfo.cpp is linked for its real field table; its block parsers are never reached.
 void AudioManager::addTrackName(const AsciiString &) {}
 
-// Block parsers of INI.cpp's theTypeTable, except Terrain (TestIniMode.cpp).
+// Block parsers of INI.cpp's theTypeTable, except Terrain (TestIniMode.cpp) and WindowTransition
+// (TestWindowTransitions.cpp).
 #define BFME_INI_BLOCK_STUB(name) void INI::name(INI *) {}
 BFME_INI_BLOCK_STUB(parseAIDataDefinition)
 BFME_INI_BLOCK_STUB(parseAnim2DDefinition)
@@ -128,7 +129,6 @@ BFME_INI_BLOCK_STUB(parseWaterTransparencyDefinition)
 BFME_INI_BLOCK_STUB(parseWeaponTemplateDefinition)
 BFME_INI_BLOCK_STUB(parseWeatherDefinition)
 BFME_INI_BLOCK_STUB(parseWebpageURLDefinition)
-BFME_INI_BLOCK_STUB(parseWindowTransitions)
 #undef BFME_INI_BLOCK_STUB
 
 void ScriptEngine::parseScriptAction(INI *) {}

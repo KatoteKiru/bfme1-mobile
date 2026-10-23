@@ -174,7 +174,27 @@ Bool TransitionWindow::init()
 //		return FALSE;
 
 	delete m_transition;
-	m_transition = getTransitionForStyle( m_style );
+	// BFME: E1-43 a style that needs a window and has none (FLASH never finished, FULLFADE
+	// dereferenced it), a BFME-only style and an unknown style run as a hold of the same length.
+	const Int style = resolveStyle( m_win != nullptr );
+	if( style == TRANSITION_HOLD )
+	{
+		Int fallbackFrames = 1;
+		if( m_style >= 0 && m_style < SOUND_FADE_TRANSITION )
+		{
+			Transition *standIn = getTransitionForStyle( m_style );
+			if( standIn )
+				fallbackFrames = standIn->getFrameLength();
+			delete standIn;
+		}
+		m_transition = newHoldTransition( getHoldFrames( fallbackFrames ) );
+	}
+	else
+	{
+		m_transition = getTransitionForStyle( style );
+		if( m_transition == nullptr )
+			m_transition = newHoldTransition( 1 );
+	}
 	m_transition->init(m_win);
 
 	// TheSuperHackers @fix Mauller 15/05/2025 Link TransitionWindow to the GameWindow so the GameWindow can unlink itself when it is destroyed
@@ -605,15 +625,9 @@ TransitionGroup *GameWindowTransitionsHandler::findGroup( AsciiString groupName 
 
 void GameWindowTransitionsHandler::parseWindow( INI* ini, void *instance, void *store, const void *userData )
 {
-	static const FieldParse myFieldParse[] =
-		{
-			{ "WinName",				INI::parseAsciiString,		nullptr,									offsetof( TransitionWindow, m_winName ) },
-      { "Style",					INI::parseLookupList,			TransitionStyleNames,	offsetof( TransitionWindow, m_style ) },
-			{ "FrameDelay",			INI::parseInt,						nullptr,									offsetof( TransitionWindow, m_frameDelay ) },
-			{ nullptr,							nullptr,											nullptr, 0 }
-		};
+	// BFME: E1-43 the table (with the BFME Transition sub-block) is TransitionWindowData's.
 	TransitionWindow *transWin = NEW TransitionWindow;
-	ini->initFromINI(transWin, myFieldParse);
+	ini->initFromINI(static_cast<TransitionWindowData *>(transWin), TransitionWindowData::getFieldParse());
 	((TransitionGroup*)instance)->addWindow(transWin);
 }
 
