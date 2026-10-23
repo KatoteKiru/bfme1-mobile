@@ -275,6 +275,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/Module/BridgeBehavior.h
     Include/GameLogic/Module/BridgeScaffoldBehavior.h
     Include/GameLogic/Module/BridgeTowerBehavior.h
+    Include/GameLogic/Module/CastleBehavior.h
     Include/GameLogic/Module/BunkerBusterBehavior.h
     Include/GameLogic/Module/CashBountyPower.h
     Include/GameLogic/Module/CashHackSpecialPower.h
@@ -856,6 +857,7 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Object/Behavior/BridgeBehavior.cpp
     Source/GameLogic/Object/Behavior/BridgeScaffoldBehavior.cpp
     Source/GameLogic/Object/Behavior/BridgeTowerBehavior.cpp
+    Source/GameLogic/Object/Behavior/CastleBehavior.cpp
     Source/GameLogic/Object/Behavior/BunkerBusterBehavior.cpp
     Source/GameLogic/Object/Behavior/CountermeasuresBehavior.cpp
     Source/GameLogic/Object/Behavior/DumbProjectileBehavior.cpp
