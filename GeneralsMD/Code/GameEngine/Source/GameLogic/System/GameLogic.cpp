@@ -636,7 +636,7 @@ static Object * placeObjectAtPosition(Int slotNum, AsciiString objectTemplateNam
 // (CastleToUnpackForFaction <side> <base> <cost>, civilianbuildings.ini CastleFlag) from
 // bases\<base>\<base>.bse, instantly and free. As OpenSAGE Scene3D.CreateSkirmishPlayerStartingBuilding
 // and CastleBehavior.Unpack: every CastleTemplates entry (TemplateName, Offset, Angle) is placed at
-// flag position + Offset rotated by the flag's PlacementViewAngle, angle = view angle + Angle.
+// flag position + Offset rotated by the flag's map angle, angle = flag angle + Angle.
 static std::vector< std::pair<ObjectID, Int> > s_bfmeInheritFlags;
 
 struct BfmeCastleTemplate
@@ -723,7 +723,8 @@ static Bool bfmeUnpackStartCastles(Int slotNum, Int startPos1, Player *pPlayer, 
 		std::vector<BfmeCastleTemplate> parts;
 		if (!bfmeLoadCastleTemplates(c->m_base, parts))
 			continue;
-		const Real viewAngle = flag->getTemplate()->getPlacementViewAngle();
+		// The map sets the flag's angle; the base turns with it (OpenSAGE CastleBehavior.Unpack uses the flag's rotation).
+		const Real viewAngle = flag->getOrientation();
 		const Real cs = Cos(viewAngle), sn = Sin(viewAngle);
 		const Coord3D *fp = flag->getPosition();
 		UnsignedInt placed = 0;
@@ -782,31 +783,36 @@ static void placeNetworkBuildingsForPlayer(Int slotNum, const GameSlot *pSlot, P
 	pos.z = TheTerrainLogic->getGroundHeight( pos.x, pos.y );
 
 	AsciiString buildingTemplateName = pTemplate->getStartingBuilding();
+	Real startRadius;	// starting units go around pos, between 0.7 and 1.3 of this
 	// BFME: E1-40b. BFME1 factions have no StartingBuilding; the start is the castle flag's base.
+	// The StartingUnit<N> entries below still apply, around the start (or rally) waypoint.
 	if (INILenient::isEnabled() && buildingTemplateName.isEmpty())
 	{
 		if (!bfmeUnpackStartCastles(slotNum, startPos + 1, pPlayer, pTemplate))
 			fprintf(stderr, "[castle] BFME: E1-40b no castle flag for start position %d\n", startPos + 1);
-		return;
+		startRadius = 60.0f;
 	}
+	else
+	{
+		DEBUG_ASSERTCRASH(!buildingTemplateName.isEmpty(), ("no starting building type for player %d (playertemplate %ls)",
+			slotNum, pTemplate->getDisplayName().str()));
+		if (buildingTemplateName.isEmpty())
+			return;
 
-	DEBUG_ASSERTCRASH(!buildingTemplateName.isEmpty(), ("no starting building type for player %d (playertemplate %ls)",
-		slotNum, pTemplate->getDisplayName().str()));
-	if (buildingTemplateName.isEmpty())
-		return;
+		DEBUG_LOG(("Placing starting building at waypoint %s", waypointName.str()));
+		Object *conYard = placeObjectAtPosition(slotNum, buildingTemplateName, pos, pPlayer, pTemplate);
 
-	DEBUG_LOG(("Placing starting building at waypoint %s", waypointName.str()));
-	Object *conYard = placeObjectAtPosition(slotNum, buildingTemplateName, pos, pPlayer, pTemplate);
+		if (!conYard)
+			return;
 
-	if (!conYard)
-		return;
+		pPlayer->onStructureCreated(nullptr, conYard);
+		pPlayer->onStructureConstructionComplete(nullptr, conYard, FALSE);
 
-	pPlayer->onStructureCreated(nullptr, conYard);
-	pPlayer->onStructureConstructionComplete(nullptr, conYard, FALSE);
-
-	//pos.x -= conYard->getGeometryInfo().getBoundingSphereRadius()/2;
-	pos.y -= conYard->getGeometryInfo().getBoundingSphereRadius()/2;
-	pos.z = TheTerrainLogic->getGroundHeight( pos.x, pos.y );
+		startRadius = conYard->getGeometryInfo().getBoundingSphereRadius();
+		//pos.x -= startRadius/2;
+		pos.y -= startRadius/2;
+		pos.z = TheTerrainLogic->getGroundHeight( pos.x, pos.y );
+	}
 
 	if (rallyWaypoint)
 	{
@@ -821,8 +827,8 @@ static void placeNetworkBuildingsForPlayer(Int slotNum, const GameSlot *pSlot, P
 		{
 			Coord3D objPos = pos;
 			FindPositionOptions options;
-			options.minRadius = conYard->getGeometryInfo().getBoundingSphereRadius() * 0.7f;
-			options.maxRadius = conYard->getGeometryInfo().getBoundingSphereRadius() * 1.3f;
+			options.minRadius = startRadius * 0.7f;
+			options.maxRadius = startRadius * 1.3f;
 			DEBUG_LOG(("Placing starting object %d (%s)", i, objName.str()));
 			ThePartitionManager->update();
 			Bool foundPos = ThePartitionManager->findPositionAround(&pos, &options, &objPos);
