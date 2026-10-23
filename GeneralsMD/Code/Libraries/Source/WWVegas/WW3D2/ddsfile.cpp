@@ -25,6 +25,7 @@
 #include "dx8wrapper.h"
 #include "bitmaphandler.h"
 #include "colorspace.h"
+#include <cstring> // BFME: E1-44 memcmp
 
 // GeneralsX @build fbraz 10/02/2026 DirectDraw header Windows-only
 // Linux: Define DDS constants locally (fighter19 pattern)
@@ -82,6 +83,13 @@ DDSFileClass::DDSFileClass(const char* name,unsigned reduction_factor)
 	if (!read_bytes)
 	{
 		WWASSERT("File loading failed trying to read header");
+		return;
+	}
+	// BFME: E1-44 in BFME mode GameFileClass::Set_Name may resolve a missing <name>.dds to the
+	// <name>.jpg/.png that BFME ships instead; that is not a DDS, so stay unavailable
+	// (Is_Available() false) and let the uncompressed loader decode it.
+	if (read_bytes != 4 || memcmp(header, "DDS ", 4) != 0)
+	{
 		return;
 	}
 	// Now, we read DDSURFACEDESC2 defining the compressed data
