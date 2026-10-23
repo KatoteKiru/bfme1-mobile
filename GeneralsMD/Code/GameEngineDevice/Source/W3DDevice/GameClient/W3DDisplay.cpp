@@ -55,6 +55,7 @@ static void drawFramerateBar();
 #include "Common/FramePacer.h"
 #include "Common/ThingFactory.h"
 #include "Common/GlobalData.h"
+#include "Common/MapLoadTrace.h"	// BFME: E1-43
 #include "Common/PerfTimer.h"
 #include "Common/FileSystem.h"
 #include "Common/LocalFileSystem.h"
@@ -2255,11 +2256,21 @@ void W3DDisplay::draw()
 
 	extern HWND ApplicationHWnd;
 	if (ApplicationHWnd && ::IsIconic(ApplicationHWnd)) {
+		MapLoadTrace::renderSkipped("IsIconic");	// BFME: E1-43
 		return;
 	}
 
 	if (TheGlobalData->m_headless)
 		return;
+
+	// BFME: E1-43 count every draw; once the map load trace has started, trace the steps of
+	// the first 60 load screen draws and of the first 3 game draws after them.
+	MapLoadTrace::drawCalled();
+	static Int s_loadDrawsTraced = 0;
+	static Int s_gameDrawsTraced = 0;
+	const bool traceDraw = MapLoadTrace::g_firstTraceMs != 0.0
+		&& (TheGlobalData->m_loadScreenRender ? s_loadDrawsTraced++ < 60 : s_gameDrawsTraced++ < 3);
+	MapLoadTrace::Step traceWhole("W3DDisplay::draw", TheGlobalData->m_loadScreenRender ? 1 : 0, traceDraw);
 
 	updateAverageFPS();
 	if (TheGlobalData->m_enableDynamicLOD && TheGameLogic->getShowDynamicLOD())
@@ -2274,6 +2285,7 @@ void W3DDisplay::draw()
 
 	if (TheGlobalData->m_terrainLOD == TERRAIN_LOD_AUTOMATIC && TheTerrainRenderObject)
 	{
+		MapLoadTrace::Step t("calculateTerrainLOD", -1, traceDraw);	// BFME: E1-43
 		calculateTerrainLOD();
 	}
 #ifdef EXTENDED_STATS
@@ -2366,6 +2378,7 @@ AGAIN:
 			{
 				if (TheTerrainRenderObject->getShroud())
 				{
+					MapLoadTrace::Step t("W3DShroud::render", -1, traceDraw);	// BFME: E1-43
 					TheTerrainRenderObject->getShroud()->render(primaryW3DView->get3DCamera());
 				}
 			}
@@ -2399,7 +2412,12 @@ AGAIN:
 		{	//Checking if we have the device before updating views because the heightmap crashes otherwise while
 			//trying to refresh the visible terrain geometry.
 //			if(TheGlobalData->m_loadScreenRender != TRUE)
+			{
+				MapLoadTrace::Step t("updateViews", -1, traceDraw);	// BFME: E1-43
 				updateViews();
+			}
+			{
+			MapLoadTrace::Step t("ParticleSystemManager::update", -1, traceDraw);	// BFME: E1-43
      		TheParticleSystemManager->update();//LORENZEN AND WILCZYNSKI MOVED THIS FROM ITS NATIVE POSITION, ABOVE
                                            //FOR THE PURPOSE OF LETTING THE PARTICLE SYSTEM LOOK UP THE RENDER OBJECT"S
                                            //TRANSFORM MATRIX, WHILE IT IS STILL VALID (HAVING DONE ITS CLIENT TRANSFORMS
@@ -2409,15 +2427,23 @@ AGAIN:
                                            //REVOLUTIONARY!
                                            //-LORENZEN
 
+			}
+
 			if (gxPerfTrace) gxdT1 = std::chrono::steady_clock::now();
 
 			if (TheWaterRenderObj && TheGlobalData->m_waterType == 2)
+			{
+				MapLoadTrace::Step t("water updateRenderTargetTextures", -1, traceDraw);	// BFME: E1-43
 				TheWaterRenderObj->updateRenderTargetTextures(primaryW3DView->get3DCamera());	//do a render into each texture
+			}
 
 			//Can't render into textures while rendering to screen so these textures need to be updated
 			//before we enter main rendering loop.
 			if (TheW3DProjectedShadowManager)
+			{
+				MapLoadTrace::Step t("shadow updateRenderTargetTextures", -1, traceDraw);	// BFME: E1-43
 				TheW3DProjectedShadowManager->updateRenderTargetTextures();
+			}
 		}
 
 		if (gxPerfTrace) gxdT2 = std::chrono::steady_clock::now();
@@ -2445,10 +2471,17 @@ AGAIN:
 
 				if(TheGlobalData->m_loadScreenRender == TRUE)
 				{
-					TheInGameUI->draw();
+					{
+						MapLoadTrace::Step t("InGameUI::draw (load screen)", -1, traceDraw);	// BFME: E1-43
+						TheInGameUI->draw();
+					}
 					if( TheMouse )
 						TheMouse->draw();	//keep applying the current cursor style so it remains hidden if needed.
-					WW3D::End_Render();
+					{
+						MapLoadTrace::Step t("End_Render (load screen)", -1, traceDraw);	// BFME: E1-43
+						WW3D::End_Render();
+					}
+					MapLoadTrace::presented(true);	// BFME: E1-43
 					continue;
 				}
 				couldRender = true;
@@ -2487,7 +2520,10 @@ AGAIN:
 
 				// draw all views of the world
 				if (!skipViewsForOpaqueShellScreen)
+				{
+					MapLoadTrace::Step t("drawViews", -1, traceDraw);	// BFME: E1-43
 					drawViews();
+				}
 
 				if (gxPerfTrace) gxdT3 = std::chrono::steady_clock::now();
 
@@ -2511,7 +2547,10 @@ AGAIN:
 				// DX8Wrapper::Pillarbox_Begin_UI();
 
 				// draw the user interface
-				TheInGameUI->DRAW();
+				{
+					MapLoadTrace::Step t("InGameUI::DRAW", -1, traceDraw);	// BFME: E1-43
+					TheInGameUI->DRAW();
+				}
 
 				// GeneralsX @build Android port ANGLE experiment - split off
 				// uiPresent's dominant cost: TheInGameUI->DRAW() -> winRepaint()
@@ -2635,7 +2674,11 @@ AGAIN:
 				}
 #endif
 				// render is all done!
-				WW3D::End_Render();
+				{
+					MapLoadTrace::Step t("End_Render", -1, traceDraw);	// BFME: E1-43
+					WW3D::End_Render();
+				}
+				MapLoadTrace::presented(false);	// BFME: E1-43
 
 				if (gxPerfTrace)
 				{
@@ -2650,6 +2693,9 @@ AGAIN:
 			}
 			else
 			{
+				// BFME: E1-43 nothing reaches the screen this frame; say why (rate-limited).
+				MapLoadTrace::renderSkipped(TheGlobalData->m_breakTheMovie ? "m_breakTheMovie"
+					: TheGlobalData->m_disableRender ? "m_disableRender" : "WW3D::Begin_Render failed");
 				if (couldRender)
 				{
 					couldRender = false;
