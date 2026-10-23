@@ -2424,8 +2424,27 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 	if(loadingSaveGame == FALSE && TheTransitionHandler != nullptr && m_loadScreen)
 	{
 		TheTransitionHandler->setGroup("FadeWholeScreen");
+		// BFME: E1-43 on the Pixel this loop never ended after a BFME skirmish load (the fade
+		// group never reported finished), so the game sat on the load screen forever. Give the
+		// fade a wall-clock budget and drop it when it runs out; a working fade takes ~1 s.
+		const double fadeStartMs = MapLoadTrace::nowMs();
+		fprintf(stderr, "[mapload] FadeWholeScreen: current group '%s', pending '%s', update fps %.1f, speed x%.2f\n",
+			TheTransitionHandler->getCurrentGroupName().str(), TheTransitionHandler->getPendingGroupName().str(),
+			TheFramePacer->getUpdateFps(), TheGlobalData->m_gameWindowTransitionSpeedMultiplier);
 		while(!TheTransitionHandler->isFinished())
 		{
+			if (MapLoadTrace::nowMs() - fadeStartMs > 5000.0)
+			{
+				fprintf(stderr, "[mapload] WARNING: FadeWholeScreen not finished after 5 s (current '%s', pending '%s'), skipping it\n",
+					TheTransitionHandler->getCurrentGroupName().str(), TheTransitionHandler->getPendingGroupName().str());
+				// remove() dereferences the current group when the name matches it, so only call it
+				// when the fade is actually current or pending; then drop whatever is still current.
+				if (TheTransitionHandler->getCurrentGroupName().compareNoCase("FadeWholeScreen") == 0
+					|| TheTransitionHandler->getPendingGroupName().compareNoCase("FadeWholeScreen") == 0)
+					TheTransitionHandler->remove("FadeWholeScreen", TRUE);
+				TheTransitionHandler->setGroup(AsciiString::TheEmptyString, TRUE);
+				break;
+			}
 			TheWindowManager->update();
 			if(!TheTransitionHandler->isFinished())
 			{
