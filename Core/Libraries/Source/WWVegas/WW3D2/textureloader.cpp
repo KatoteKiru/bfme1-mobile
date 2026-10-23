@@ -58,6 +58,8 @@
 #include "formconv.h"
 #include "texturethumbnail.h"
 #include "ddsfile.h"
+#include <chrono> // BFME: E1-42
+#include <cstdio>
 #include "bitmaphandler.h"
 #include "wwprofile.h"
 
@@ -840,6 +842,33 @@ void TextureLoader::Flush_Pending_Load_Tasks()
 	// want to set a bool that is checked by Update().
 	WWASSERT(Is_DX8_Thread());
 
+#ifdef _UNIX
+	// BFME: E1-42 ThreadClass::Execute is a no-op on _UNIX (WWLib/thread.cpp), so
+	// LoaderThreadClass never runs and nothing ever drains _BackgroundQueue. The loop
+	// below then spins forever (Switch_Thread is also a no-op): one core at 100%,
+	// no frames. Do the background step here on the calling thread instead.
+	{
+		int drained = 0;
+		const auto t0 = std::chrono::steady_clock::now();
+		for (;;) {
+			TextureLoadTaskClass *task;
+			{
+				FastCriticalSectionClass::LockClass background_lock(_BackgroundCriticalSection);
+				task = _BackgroundQueue.Pop_Front();
+			}
+			if (!task) break;
+			task->Load();
+			_ForegroundQueue.Push_Back(task);
+			drained++;
+		}
+		if (drained) {
+			fprintf(stderr, "[texloader] Flush_Pending_Load_Tasks: loaded %d background task(s) inline (no loader thread on UNIX), %lu ms\n",
+				drained, (unsigned long)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count());
+		}
+	}
+	unsigned long flushIterations = 0;
+#endif
+
 	for (;;) {
 		bool done = false;
 
@@ -867,6 +896,13 @@ void TextureLoader::Flush_Pending_Load_Tasks()
 
 		Update();
 		ThreadClass::Switch_Thread();
+#ifdef _UNIX
+		// BFME: E1-42 should never trigger now; report it instead of hanging silently.
+		if ((++flushIterations % 100000) == 0) {
+			fprintf(stderr, "[texloader] WARNING: Flush_Pending_Load_Tasks still waiting after %lu iterations (bg empty=%d fg empty=%d)\n",
+				flushIterations, (int)_BackgroundQueue.Is_Empty(), (int)_ForegroundQueue.Is_Empty());
+		}
+#endif
 	}
 }
 

@@ -46,6 +46,7 @@
 //         Includes
 //-----------------------------------------------------------------------------
 #include "W3DDevice/GameClient/HeightMap.h"
+#include "W3DDevice/GameClient/TerrainLoadTrace.h" // BFME: E1-42
 
 #ifndef USE_FLAT_HEIGHT_MAP // Flat height map uses flattened textures. jba. [3/20/2003]
 
@@ -1252,6 +1253,7 @@ shaders, and materials.*/
 //=============================================================================
 Int HeightMapRenderObjClass::initHeightData(Int x, Int y, WorldHeightMap *pMap, RefRenderObjListIterator *pLightsIterator, Bool updateExtraPassTiles)
 {
+	TerrainLoadTrace::Step traceInit("HeightMapRenderObjClass::initHeightData", x * 10000 + y);	// BFME: E1-42
 	BaseHeightMapRenderObjClass::initHeightData(x, y, pMap, pLightsIterator, updateExtraPassTiles);
 	Int i,j;
 //	Int	vertsPerRow=x*2-2;
@@ -1372,7 +1374,10 @@ Int HeightMapRenderObjClass::initHeightData(Int x, Int y, WorldHeightMap *pMap, 
 		//go with a preset material for now.
 	}
 
-	updateBlock(0,0,x-1,y-1,pMap,pLightsIterator);
+	{
+		TerrainLoadTrace::Step t("HeightMapRenderObjClass::updateBlock", m_numVertexBufferTiles);	// BFME: E1-42
+		updateBlock(0,0,x-1,y-1,pMap,pLightsIterator);
+	}
 
 	return 0;
 }

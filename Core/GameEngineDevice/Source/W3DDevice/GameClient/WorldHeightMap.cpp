@@ -51,6 +51,7 @@
 #include "W3DDevice/GameClient/TileData.h"
 #include "W3DDevice/GameClient/HeightMap.h"
 #include "W3DDevice/GameClient/TerrainTex.h"
+#include "W3DDevice/GameClient/TerrainLoadTrace.h" // BFME: E1-42
 #include "W3DDevice/GameClient/W3DShadow.h"
 
 #include "Common/file.h"
@@ -2702,8 +2703,16 @@ void WorldHeightMap::setTextureLOD(Int lod)
 TextureClass *WorldHeightMap::getTerrainTexture()
 {
 	if (m_terrainTex == nullptr) {
+		TerrainLoadTrace::Step traceAll("getTerrainTexture");	// BFME: E1-42
 		releaseAtlasPages();	// BFME: E1-51
-		updateTileTexturePositions(nullptr);
+		{
+			TerrainLoadTrace::Step t("updateTileTexturePositions");
+			updateTileTexturePositions(nullptr);
+		}
+		TERRAIN_TRACE("atlas base %dx%d pages %d tiles %d, edge %dx%d pages %d edgeTiles %d, blendTiles %d, map %dx%d",
+			baseAtlasWidth(), baseAtlasHeight(0), m_atlasStats.pageCount, m_numBitmapTiles,
+			edgeAtlasWidth(), edgeAtlasHeight(0), m_edgeAtlasStats.pageCount, m_numEdgeTiles,
+			m_numBlendedTiles, m_width, m_height);
 		// Full page, not a pow2 of the content. MIP_LEVELS_3: the GLES upload otherwise
 		// builds the whole chain (glGenerateMipmap, MAX_LEVEL 1000) and trilinear
 		// filtering mixes neighbouring tiles past the 4px border. Five 2048² A1R5G5B5
@@ -2712,13 +2721,17 @@ TextureClass *WorldHeightMap::getTerrainTexture()
 		const Int atlasH = baseAtlasHeight(0);
 		REF_PTR_RELEASE(m_terrainTex);
 		m_terrainTex = MSGNEW("WorldHeightMap_getTerrainTexture") TerrainTextureClass(atlasH, atlasW, MIP_LEVELS_3);
-		m_terrainTexHeight = m_terrainTex->update(this, 0);
+		{
+			TerrainLoadTrace::Step t("TerrainTextureClass::update", 0);
+			m_terrainTexHeight = m_terrainTex->update(this, 0);
+		}
 		const Int extra = m_atlasStats.pageCount > 1 ? m_atlasStats.pageCount - 1 : 0;
 		if (extra > 0) {
 			m_atlasExtraPages = MSGNEW("WorldHeightMap_getTerrainTexture") TerrainTextureClass*[extra]();
 			m_atlasExtraCount = extra;
 			for (Int p = 1; p < m_atlasStats.pageCount; p++) {
 				m_atlasExtraPages[p - 1] = MSGNEW("WorldHeightMap_getTerrainTexture") TerrainTextureClass(atlasH, atlasW, MIP_LEVELS_3);
+				TerrainLoadTrace::Step t("TerrainTextureClass::update", p);
 				m_atlasExtraPages[p - 1]->update(this, p);
 			}
 		}
@@ -2732,17 +2745,22 @@ TextureClass *WorldHeightMap::getTerrainTexture()
 		const Int edgeH = edgeAtlasHeight(0);
 		REF_PTR_RELEASE(m_alphaEdgeTex);
 		m_alphaEdgeTex = MSGNEW("WorldHeightMap_getTerrainTexture") AlphaEdgeTextureClass(edgeH, edgeW, MIP_LEVELS_3);
-		m_alphaEdgeHeight = m_alphaEdgeTex->update(this, 0);
+		{
+			TerrainLoadTrace::Step t("AlphaEdgeTextureClass::update", 0);
+			m_alphaEdgeHeight = m_alphaEdgeTex->update(this, 0);
+		}
 		const Int edgeExtra = m_edgeAtlasStats.pageCount > 1 ? m_edgeAtlasStats.pageCount - 1 : 0;
 		if (edgeExtra > 0) {
 			m_edgeExtraPages = MSGNEW("WorldHeightMap_getTerrainTexture") AlphaEdgeTextureClass*[edgeExtra]();
 			m_edgeExtraCount = edgeExtra;
 			for (Int p = 1; p < m_edgeAtlasStats.pageCount; p++) {
 				m_edgeExtraPages[p - 1] = MSGNEW("WorldHeightMap_getTerrainTexture") AlphaEdgeTextureClass(edgeH, edgeW, MIP_LEVELS_3);
+				TerrainLoadTrace::Step t("AlphaEdgeTextureClass::update", p);
 				m_edgeExtraPages[p - 1]->update(this, p);
 			}
 		}
 
+		TerrainLoadTrace::Step tFlip("cellFlipState", m_width * m_height);
 		//Generate lookup table for determining triangle order in each terrain cell.
 		//Not the best place to put this but getAlphaUVData() requires a valid terrain
 		//texture to return valid values.
