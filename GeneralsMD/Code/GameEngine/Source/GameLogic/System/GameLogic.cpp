@@ -2107,6 +2107,15 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 			// Get the team information
 			DEBUG_ASSERTCRASH(pMapObj->getProperties()->getType(TheKey_originalOwner) == Dict::DICT_ASCIISTRING, ("unit %s has no original owner specified (obsolete map file)",pMapObj->getName().str()));
 			AsciiString originalOwner = pMapObj->getProperties()->getAsciiString(TheKey_originalOwner);
+			// BFME: E1-40. BFME maps store the owner as "<player>/<team>" (e.g.
+			// "PlyrCivilian/teamPlyrCivilian"); Zero Hour stores just the team name, so every BFME map
+			// object fell back to the neutral team. Use the team part.
+			if (INILenient::isEnabled())
+			{
+				const char *slash = strrchr(originalOwner.str(), '/');
+				if (slash != nullptr && slash[1] != '\0')
+					originalOwner = AsciiString(slash + 1);
+			}
 			Team *team = ThePlayerList->validateTeam(originalOwner);
 
 			// create new object in the world

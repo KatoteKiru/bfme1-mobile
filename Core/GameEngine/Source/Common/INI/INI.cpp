@@ -392,6 +392,7 @@ static const BlockParse theTypeTable[] =
 	{ "Bridge",                         INI::parseTerrainBridgeDefinition },
 	{ "Campaign",                       INI::parseCampaignDefinition },
 	{ "ChallengeGenerals",              INI::parseChallengeModeDefinition },
+	{ "ChildObject",                    INI::parseChildObjectDefinition },	// BFME: E1-40
 	{ "CommandButton",                  INI::parseCommandButtonDefinition },
 	{ "CommandMap",                     INI::parseMetaMapDefinition },
 	{ "CommandSet",                     INI::parseCommandSetDefinition },
