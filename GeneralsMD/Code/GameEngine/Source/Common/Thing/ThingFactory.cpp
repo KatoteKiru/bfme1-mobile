@@ -424,7 +424,19 @@ AsciiString TheThingTemplateBeingParsedName;
 			thingTemplate->copyFrom(reskinTmpl);
 			thingTemplate->setCopiedFromDefault();
 			if (childObject)	// BFME: E1-40. a ChildObject is its own type, not a reskin of the parent
-				ini->initFromINI( thingTemplate, thingTemplate->getFieldParse() );
+			{
+				ThingTemplate::setParsingChildObject(TRUE);
+				try
+				{
+					ini->initFromINI( thingTemplate, thingTemplate->getFieldParse() );
+				}
+				catch (...)
+				{
+					ThingTemplate::setParsingChildObject(FALSE);
+					throw;
+				}
+				ThingTemplate::setParsingChildObject(FALSE);
+			}
 			else
 			{
 				thingTemplate->setReskinnedFrom(reskinTmpl);
