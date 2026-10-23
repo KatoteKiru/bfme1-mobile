@@ -24,6 +24,25 @@ int countOccurrences(const std::string& s, const std::string& what)
 	return n;
 }
 
+// DataChunkInput logs a skipped chunk that this loader does not register (WorldInfoDummy).
+// Those lines are not BlendTileData anomalies.
+std::string dropChunkSkipLines(const std::string& s)
+{
+	std::string out;
+	size_t i = 0;
+	while (i < s.size()) {
+		const size_t nl = s.find('\n', i);
+		const size_t end = nl == std::string::npos ? s.size() : nl;
+		if (s.compare(i, 8, "[chunk] ") != 0) {
+			out.append(s, i, end - i);
+			if (nl != std::string::npos) out.push_back('\n');
+		}
+		if (nl == std::string::npos) break;
+		i = nl + 1;
+	}
+	return out;
+}
+
 LoadedBlend load(const BlendSpec& s, int use3Way = 1)
 {
 	LoadOptions opt;
@@ -254,23 +273,37 @@ TEST(blend_anomaly_log_first_16_of_each_kind)
 		"out of range 18 (-> -1), direction bytes not 0/1 17, dangling blend/3-way/cliff 19/21/22; per-case lines: first 16 of each kind") !=
 		std::string::npos);
 	// lines = 7 kinds * 16 + the summary
-	REQUIRE_EQ(countOccurrences(log, "\n"), 7 * 16 + 1);
+	REQUIRE_EQ(countOccurrences(dropChunkSkipLines(log), "\n"), 7 * 16 + 1);
 }
 
-// Tables on the heap sized by the counts; NUM_SOURCE_TILES / NUM_BLEND_TILES / NUM_CLIFF_INFO
-// (4096 / 65536 / 131072) are the hard limits.
+// Tables on the heap sized by the counts. 4096 / 65536 / 131072 are no longer loader limits:
+// a count one past them loads when its records are in the chunk. A count whose records do not
+// fit, or a bitmap-tile count above BLEND_BITMAP_TILE_CEILING (262144), is corrupt. The log
+// line carries the three counters and dataLeft.
 TEST(blend_limits_heap_tables)
 {
 	{
-		const BlendSpec s = makeBlendSpec("max", 15, 4, 4, 0x3000u, 65536, 131072);
+		const BlendSpec s = makeBlendSpec("above-old-blend", 15, 4, 4, 0x3000u, 65537, 4);
 		const LoadedBlend b = load(s);
 		requireMatchesSpec(b, s);
+		REQUIRE_EQ(b.numBlendedTiles, 65537);
+	}
+	{
+		const BlendSpec s = makeBlendSpec("above-old-cliff", 15, 4, 4, 0x3001u, 4, 131073);
+		const LoadedBlend b = load(s);
+		requireMatchesSpec(b, s);
+		REQUIRE_EQ(b.numCliffInfo, 131073);
 	}
 	for (int which = 0; which < 2; ++which) {
-		BlendSpec s = makeBlendSpec("over", 15, 4, 4, 0x3001u, 64, 64);
-		if (which == 0) { s.numBlendedTiles = 65537; s.descs.resize(65536); }
-		else { s.numCliffInfo = 131073; s.cliffs.resize(131072); }
+		BlendSpec s = makeBlendSpec("nofit", 15, 4, 4, 0x3002u, 4, 4);
+		if (which == 0) s.numBlendedTiles = 1000000;	// three descriptions in the chunk, not 999999
+		else s.numCliffInfo = 1000000;
+		capturedLog().clear();
 		REQUIRE(!load(s).ok);
+		const std::string& log = capturedLog();
+		REQUIRE(log.find("counts out of range: numBitmapTiles ") != std::string::npos);
+		REQUIRE(log.find(which == 0 ? "numBlendedTiles 1000000" : "numCliffInfo 1000000") != std::string::npos);
+		REQUIRE(log.find("dataLeft ") != std::string::npos);
 	}
 	auto withClasses = [](std::vector<TexClassSpec> classes, int numBitmapTiles) {
 		BlendSpec s = makeBlendSpec("classes", 15, 8, 8, 0x3002u, 4, 4);
@@ -282,9 +315,10 @@ TEST(blend_limits_heap_tables)
 		return s;
 	};
 	{
-		const LoadedBlend b = load(withClasses({{0, 4096, 64, "big"}}, 4096));
+		// one past the old NUM_SOURCE_TILES; width 64 covers 4096 cells, numTiles the 4097th
+		const LoadedBlend b = load(withClasses({{0, 4097, 64, "big"}}, 4097));
 		REQUIRE(b.ok);
-		REQUIRE_EQ(b.tileCapacity, 4096);
+		REQUIRE_EQ(b.tileCapacity, 4097);
 	}
 	{
 		// width^2 beyond numTiles and numBitmapTiles: the table covers what updateTileTexturePositions touches
@@ -292,8 +326,15 @@ TEST(blend_limits_heap_tables)
 		REQUIRE(b.ok);
 		REQUIRE_EQ(b.tileCapacity, 17);
 	}
-	REQUIRE(!load(withClasses({{0, 4, 2, "a"}}, 4097)).ok);
-	REQUIRE(!load(withClasses({{4000, 100, 10, "a"}}, 100)).ok);
+	{
+		// class end past the old 4096 still loads; the ceiling is 262144
+		const LoadedBlend b = load(withClasses({{4000, 100, 10, "a"}}, 100));
+		REQUIRE(b.ok);
+		REQUIRE_EQ(b.tileCapacity, 4100);
+	}
+	REQUIRE(!load(withClasses({{0, 1, 1, "a"}}, 262145)).ok);
+	REQUIRE(capturedLog().find("numBitmapTiles 262145") != std::string::npos);
+	REQUIRE(!load(withClasses({{262100, 100, 10, "a"}}, 100)).ok);
 	REQUIRE(!load(withClasses({{-1, 4, 2, "a"}}, 4)).ok);
 	REQUIRE(!load(withClasses({{0, -4, 2, "a"}}, 4)).ok);
 	REQUIRE(!load(withClasses({{0, 4, 65, "a"}}, 4)).ok);

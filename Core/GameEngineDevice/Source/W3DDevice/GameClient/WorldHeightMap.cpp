@@ -438,6 +438,8 @@ void WorldHeightMap::freeListOfMapObjects()
 
 // BFME: E1-25 the tile / blend / cliff tables were fixed member arrays upstream (NUM_SOURCE_TILES,
 // NUM_BLEND_TILES, NUM_CLIFF_INFO); they are allocated per map from the BlendTileData counts.
+// Those three macros stay for WorldBuilder. The loader bounds a count by the chunk remainder
+// and by BLEND_*_CEILING.
 // Entries are zeroed like the old arrays of a fresh object; customBlendEdgeClass of the unused
 // blend entry 0 is -1 (alpha).
 void WorldHeightMap::freeTileTables()
@@ -1214,14 +1216,48 @@ static void readCellIndexArray(DataChunkInput &file, Int *dst, Int count, Bool w
 
 // BFME: E1-25 texture class header sanity (upstream only asserted the counts); also returns the number
 // of tile table entries the class touches: readTexClass writes up to numTiles tiles from firstTile,
-// updateTileTexturePositions up to width*width.
+// updateTileTexturePositions up to width*width. The bound is the loader ceiling, not NUM_SOURCE_TILES.
 static Bool textureClassEnd(const TXTextureClass &tc, Int *end)
 {
 	if (tc.firstTile < 0 || tc.numTiles < 0 || tc.width < 0 || tc.width > 64) return false;
 	Int n = MAX(tc.numTiles, tc.width*tc.width);
-	if (n > NUM_SOURCE_TILES || tc.firstTile > NUM_SOURCE_TILES - n) return false;
+	if (n > BLEND_BITMAP_TILE_CEILING || tc.firstTile > BLEND_BITMAP_TILE_CEILING - n) return false;
 	*end = tc.firstTile + n;
 	return true;
+}
+
+// BFME: bytes still in this chunk. dataLeft is signed; the unsigned getter wraps once a read
+// has already passed the end.
+static Int blendDataLeft(DataChunkInput &file)
+{
+	const UnsignedInt left = file.getChunkDataSizeLeft();
+	const UnsignedInt size = file.getChunkDataSize();
+	if (left > size || left > 0x7FFFFFFFu)
+		throw ERROR_CORRUPT_FILE_FORMAT;
+	return (Int)left;
+}
+
+// BFME: on-disk size of one blend description. Index 0 is not stored.
+static Int blendDescBytes(Int version)
+{
+	Int n = 4 + 5 + 4;	// blendNdx, five direction bytes, FLAG_VAL
+	if (version >= K_BLEND_TILE_VERSION_3) n += 1;	// longDiagonal
+	if (version >= K_BLEND_TILE_VERSION_4) n += 4;	// customBlendEdgeClass
+	return n;
+}
+
+// BFME: stored records are count-1. A negative count, a count above the garbage ceiling, or
+// records that cannot fit in dataLeft is corrupt. recordBytes 0 is a count with no chunk
+// records (bitmap tiles): only the ceiling applies. *needOut is the bytes those records take.
+static Bool blendCountOk(Int count, Int ceiling, Int recordBytes, Int dataLeft, long long *needOut)
+{
+	if (needOut) *needOut = 0;
+	if (count < 0 || count > ceiling || recordBytes < 0 || dataLeft < 0)
+		return false;
+	const long long records = count > 0 ? (long long)count - 1 : 0;
+	const long long need = records * (long long)recordBytes;
+	if (needOut) *needOut = need;
+	return need <= (long long)dataLeft;
 }
 
 // BFME: E1-25 review #10 BlendTileData anomaly log: a DEBUG_LOG line for each of the first
@@ -1348,21 +1384,33 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 		}
 	}
 	m_numBitmapTiles = file.readInt();
-	DEBUG_ASSERTCRASH(m_numBitmapTiles>0 && m_numBitmapTiles<=NUM_SOURCE_TILES, ("Unlikely numBitmapTiles."));
 	m_numBlendedTiles = file.readInt();
-	DEBUG_ASSERTCRASH(m_numBlendedTiles>0 && m_numBlendedTiles<NUM_BLEND_TILES+1, ("Unlikely numBlendedTiles."));
 	if (info->version >= K_BLEND_TILE_VERSION_5) {
 		m_numCliffInfo = file.readInt();
 	} else {
 		m_numCliffInfo = 1;	// cliffInfo[0] is the default info.
 	}
-	// BFME: E1-25 the counts size heap tables now, so they are checked in release builds too.
-	if (m_numBitmapTiles < 0 || m_numBitmapTiles > NUM_SOURCE_TILES ||
-			m_numBlendedTiles < 0 || m_numBlendedTiles > NUM_BLEND_TILES ||
-			m_numCliffInfo < 0 || m_numCliffInfo > NUM_CLIFF_INFO) {
-		DEBUG_LOG(("BlendTileData: counts out of range: numBitmapTiles %d, numBlendedTiles %d, numCliffInfo %d",
-			m_numBitmapTiles, m_numBlendedTiles, m_numCliffInfo));
-		throw ERROR_CORRUPT_FILE_FORMAT;
+	// BFME: the counts size heap tables. Reject a count above the garbage ceiling, or blend/cliff
+	// records that cannot fit in the bytes still in the chunk (texture classes are read next and
+	// also take space, so this is the minimum). NUM_SOURCE_TILES / NUM_BLEND_TILES / NUM_CLIFF_INFO
+	// are WorldBuilder array sizes, not loader limits.
+	{
+		const Int dataLeft = blendDataLeft(file);
+		const Int cliffBytes = (info->version >= K_BLEND_TILE_VERSION_5) ? 38 : 0;	// i32 + 8*f32 + 2*u8
+		long long blendNeed = 0, cliffNeed = 0;
+		const Bool bitmapOk = blendCountOk(m_numBitmapTiles, BLEND_BITMAP_TILE_CEILING, 0, dataLeft, nullptr);
+		const Bool blendOk = blendCountOk(m_numBlendedTiles, BLEND_BLENDED_TILE_CEILING, blendDescBytes(info->version), dataLeft, &blendNeed);
+		const Bool cliffOk = blendCountOk(m_numCliffInfo, BLEND_CLIFF_INFO_CEILING, cliffBytes, dataLeft, &cliffNeed);
+		DEBUG_ASSERTCRASH(bitmapOk && blendOk && cliffOk, ("Unlikely blend tile counts."));
+		if (!bitmapOk || !blendOk || !cliffOk || blendNeed + cliffNeed > (long long)dataLeft) {
+			char buf[384];
+			snprintf(buf, sizeof(buf),
+				"BlendTileData: counts out of range: numBitmapTiles %d, numBlendedTiles %d, numCliffInfo %d, dataLeft %d, blend records %lld bytes, cliff records %lld bytes",
+				m_numBitmapTiles, m_numBlendedTiles, m_numCliffInfo, dataLeft, blendNeed, cliffNeed);
+			DEBUG_LOG(("%s", buf));
+			fprintf(stderr, "%s\n", buf);
+			throw ERROR_CORRUPT_FILE_FORMAT;
+		}
 	}
 	// BFME: E1-25 clamp dangling tile indices (tile >> 2 >= numBitmapTiles; BFME1 "map mp rhun",
 	// "map sps good rhun": 711 cells each) to the last bitmap tile, keeping the quadrant bits.
@@ -1413,7 +1461,7 @@ Bool WorldHeightMap::ParseBlendTileData(DataChunkInput &file, DataChunkInfo *inf
 		m_numEdgeTiles	= file.readInt();
 		m_numEdgeTextureClasses	= file.readInt();
 		// BFME: E1-25 fixed array / table size checks.
-		if (m_numEdgeTiles < 0 || m_numEdgeTiles > NUM_SOURCE_TILES ||
+		if (m_numEdgeTiles < 0 || m_numEdgeTiles > BLEND_BITMAP_TILE_CEILING ||
 				m_numEdgeTextureClasses < 0 || m_numEdgeTextureClasses > NUM_TEXTURE_CLASSES) {
 			DEBUG_LOG(("BlendTileData: numEdgeTiles %d / numEdgeTextureClasses %d out of range", m_numEdgeTiles, m_numEdgeTextureClasses));
 			throw ERROR_CORRUPT_FILE_FORMAT;

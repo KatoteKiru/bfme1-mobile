@@ -34,6 +34,25 @@ int countOccurrences(const std::string& s, const std::string& what)
 	return n;
 }
 
+// DataChunkInput writes one stderr line per skipped chunk (or one summary for known names).
+// The release BlendTileData summary is the line these tests check.
+std::string dropChunkSkipLines(const std::string& s)
+{
+	std::string out;
+	size_t i = 0;
+	while (i < s.size()) {
+		const size_t nl = s.find('\n', i);
+		const size_t end = nl == std::string::npos ? s.size() : nl;
+		if (s.compare(i, 8, "[chunk] ") != 0) {
+			out.append(s, i, end - i);
+			if (nl != std::string::npos) out.push_back('\n');
+		}
+		if (nl == std::string::npos) break;
+		i = nl + 1;
+	}
+	return out;
+}
+
 uint32_t rd32(const std::vector<uint8_t>& b, size_t at)
 {
 	return uint32_t(b[at]) | uint32_t(b[at + 1]) << 8 | uint32_t(b[at + 2]) << 16 | uint32_t(b[at + 3]) << 24;
@@ -163,10 +182,9 @@ TEST(ctor_corrupt_map_frees_arrays)
 		requireThrowsCorruptWithoutLeak(f, false, "BlendTileData cell count");
 	}
 	{
-		BlendSpec s = good;   // counts out of range: cell arrays and the four masks allocated
-		s.numBlendedTiles = 65537;
-		s.descs.resize(65536);
-		requireThrowsCorruptWithoutLeak(writeBlendMap(s), false, "numBlendedTiles 65537");
+		BlendSpec s = good;   // blend count does not fit the chunk: cell arrays and the four masks allocated
+		s.numBlendedTiles = 1000000;
+		requireThrowsCorruptWithoutLeak(writeBlendMap(s), false, "numBlendedTiles 1000000 does not fit");
 	}
 	{
 		BlendSpec s = good;   // bad texture class header
@@ -258,24 +276,24 @@ TEST(ctor_release_log_one_summary_line)
 	REQUIRE_EQ(r.stats.danglingBlend, 19);
 	REQUIRE_EQ(r.stats.dangling3Way, 21);
 	REQUIRE_EQ(r.stats.danglingCliff, 22);
-	REQUIRE_EQ(err, std::string("WARNING: BlendTileData v15 20x10: dangling tiles 40 (clamped), flags outside &0x3 20 (masked), "
+	REQUIRE_EQ(dropChunkSkipLines(err), std::string("WARNING: BlendTileData v15 20x10: dangling tiles 40 (clamped), flags outside &0x3 20 (masked), "
 		"customBlendEdgeClass without edge classes 18 / out of range 18 (-> -1), direction bytes not 0/1 17, "
 		"dangling blend/3-way/cliff 19/21/22\n"));
 
 	// a single anomaly is enough for the line
 	BlendSpec one = makeBlendSpec("one", 15, 20, 10, 0x2002u, 60);
 	one.descs[3].horiz = 7;
-	err = captureStderr([&] { r = constructMap(writeBlendMap(one), false); });
+	err = dropChunkSkipLines(captureStderr([&] { r = constructMap(writeBlendMap(one), false); }));
 	REQUIRE(r.constructed);
 	REQUIRE_EQ(countOccurrences(err, "BlendTileData"), 1);
 	REQUIRE(err.find("direction bytes not 0/1 1, dangling blend/3-way/cliff 0/0/0\n") != std::string::npos);
 
-	// clean maps: nothing
-	err = captureStderr([&] { r = constructMap(writeBlendMap(makeBlendSpec("clean", 15, 20, 10, 0x2004u, 60)), false); });
+	// clean maps: no BlendTileData line (a skipped-chunk line is not one)
+	err = dropChunkSkipLines(captureStderr([&] { r = constructMap(writeBlendMap(makeBlendSpec("clean", 15, 20, 10, 0x2004u, 60)), false); }));
 	REQUIRE(r.constructed);
 	REQUIRE_EQ(err, std::string());
 	for (const BlendSpec& zh : zhSyntheticBlendMaps()) {
-		err = captureStderr([&] { r = constructMap(writeBlendMap(zh), false); });
+		err = dropChunkSkipLines(captureStderr([&] { r = constructMap(writeBlendMap(zh), false); }));
 		REQUIRE(r.constructed);
 		REQUIRE_EQ(err, std::string());
 	}
@@ -309,7 +327,7 @@ TEST(ctor_zh_repo_maps)
 		});
 		if (!r.constructed) throw bfmetest::Failure(e.path().string() + ": constructor failed");
 		REQUIRE_EQ(r.stats.version, 8);
-		REQUIRE_EQ(err, std::string());
+		REQUIRE_EQ(dropChunkSkipLines(err), std::string());
 		REQUIRE_EQ(after, before);
 		++maps;
 	}
