@@ -1,66 +1,59 @@
-name: Bug Report
-description: Report bugs or issues you've encountered while playing the game
-labels: [ "Bug", "⚠️ Triage" ]
+name: Bug report
+description: Something does not work as it should
+labels: [ "bug" ]
 
 body:
 - type: checkboxes
   attributes:
-    label: Prerequisites
-    description: Please make sure you've completed the following steps before submitting an issue
+    label: Before you report
     options:
-      - label: I have searched for similar issues and confirmed this is not a duplicate
+      - label: I searched the existing issues and this is not a duplicate
+        required: true
+      - label: I am not attaching game files (.big, maps, models, text) to this issue
         required: true
 
-- type: checkboxes
+- type: input
   attributes:
-    label: Game Version
-    description: Which version(s) of the game does this bug appear in?
-    options:
-      - label: "Command & Conquer Generals"
-        required: false
-      - label: "Command & Conquer Generals: Zero Hour"
-        required: false
-      - label: "Other (please specify below)"
-        required: false
+    label: App version or commit
+    description: Shown in the launcher, or the commit you built from
+  validations:
+    required: true
 
-- type: checkboxes
+- type: input
   attributes:
-    label: Operating System
-    description: Which operating system(s) does this bug appear on? (Select all that apply)
-    options:
-      - label: "macOS"
-        required: false
-      - label: "Linux"
-        required: false
-      - label: "Windows"
-        required: false
-      - label: "Other (please specify below)"
-        required: false
+    label: Device and Android version
+    placeholder: Pixel 8 Pro, Android 15
+  validations:
+    required: true
+
+- type: input
+  attributes:
+    label: Game data
+    description: Game version and patch you imported
+    placeholder: BFME1 1.03 + patch 2.22
+  validations:
+    required: false
 
 - type: textarea
   attributes:
-    label: Bug Description
-    description: |
-      What is the bug? What happened versus what you expected to happen?
-      Please provide a clear and detailed description.
+    label: What happened
+    description: What happened, and what you expected instead
   validations:
     required: true
 
 - type: textarea
   attributes:
-    label: Reproduction Steps
-    description: How can we reproduce this bug?
+    label: Steps to reproduce
     placeholder: |
-      1. Start a new game with [specific settings]
-      2. Build/Select [specific unit/building]
-      3. Perform [specific action]
-      4. Observe [the bug]
+      1. Start a skirmish on [map] as [faction]
+      2. Do [action]
+      3. See [bug]
   validations:
     required: true
 
 - type: textarea
   attributes:
-    label: Additional Context
-    description: Add any relevant screenshots, video recordings, or other files here
+    label: Logs and screenshots
+    description: Attach `generals-stderr.log` from the launcher's Diagnostics screen if you can
   validations:
     required: false

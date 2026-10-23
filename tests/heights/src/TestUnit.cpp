@@ -167,7 +167,7 @@ TEST(cliff_flags_threshold)
 	}
 }
 
-// The ZH community maps that are already committed (GeneralsOnlineRelease/.../Maps): all v<=4,
+// ZH community maps from BFME_ZH_MAPS_DIR (not in the repository): all v<=4,
 // every sample a multiple of 16 and <= 4080 after widening.
 TEST(zh_repo_maps_widened)
 {

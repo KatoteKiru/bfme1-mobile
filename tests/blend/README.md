@@ -32,7 +32,7 @@ BFME_DATACHECK_MAPS_JSON=tools/datacheck/out/maps.json \
 | `blend_limits_heap_tables` | unit | таблицы в куче по счётчикам чанка: ровно на лимитах (4 096 тайлов, 65 536 blend, 131 072 cliff) читается, на единицу больше отвергается. Ёмкость таблицы тайлов `firstTile + max(numTiles, width²)`; неверные классы текстур (отрицательные, `width > 64`, конец > 4 096, больше 256 классов) отвергаются |
 | `blend_index_widths_and_sign` | unit | v≤13: 16-битные индексы со знаком, как `Short` апстрима (0xFFFF = −1, конструктор сбрасывает); v14/v15: u32 |
 | `blend_use3way_reset` | unit | `m_use3WayTerrainBlends` выключен: индексы 3-way обнуляются после подсчёта висячих |
-| `blend_zh_repo_maps` | unit | 43 карты ZH из репозитория (`BFME_ZH_MAPS_DIR`) |
+| `blend_zh_repo_maps` | unit | карты ZH из `-DBFME_ZH_MAPS_DIR=…` (в репозитории их нет, без каталога тест пропускается) |
 | `zh_baseline_bit_identical` | unit | «до/после»: `src/BlendZhDump.cpp` против апстрима 8ef2349 и против этого дерева, синтетика v2–v8 и 43 карты ZH. Выгружаются таблицы и выход потребителей, требуется побайтное совпадение |
 | `gamedata_refpack_all_maps_vs_oracle` | gamedata | 115 карт `maps.big`: размер и sha256 распакованных данных равны оракулу |
 | `gamedata_blend_all_maps_vs_oracle_and_datacheck` | gamedata | 115 карт: sha256 полезной нагрузки чанка, счётчики, классы текстур, sha таблиц tiles/blends/3-way/cliff, ненулевые индексы и наличие масок равны оракулу OpenSAGE. Счётчики аномалий равны `tools/datacheck/out/maps.json`. Строк на случай не больше 16 каждого вида (Rhun: 711 тайлов → 16 строк) |

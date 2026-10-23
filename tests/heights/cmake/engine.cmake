@@ -29,8 +29,9 @@ set(BFME_HEIGHTS_BASELINE_REV "8ef2349af61c5e67fd8de82ebd5c34e8df794173" CACHE S
     "git revision with the upstream u8 height code")
 set(BFME_HEIGHTS_BASELINE_SOURCE_DIR "" CACHE PATH
     "checkout of BFME_HEIGHTS_BASELINE_REV (empty: extract it with git archive into the build dir)")
-set(BFME_ZH_MAPS_DIR "${BFME_REPO_ROOT}/GeneralsOnlineRelease/Users/AntiKeks/Documents/Command and Conquer Generals Zero Hour Data/Maps"
-    CACHE PATH "ZH .map files (already in the repository) for the unit and before/after tests")
+# ZH .map files are not in the repository (they are third-party maps); point this at a folder of
+# your own ZH maps to run the map tests, otherwise they are skipped.
+set(BFME_ZH_MAPS_DIR "" CACHE PATH "folder with ZH .map files for the unit and before/after tests")
 if(NOT IS_DIRECTORY "${BFME_ZH_MAPS_DIR}")
     set(BFME_ZH_MAPS_DIR "")
 endif()

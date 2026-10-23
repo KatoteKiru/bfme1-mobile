@@ -1,4 +1,25 @@
-# How to contribute as a developer
+# Contributing to BFME1 Mobile
+
+Thank you for helping. A few rules come first, because they protect the project:
+
+1. **No game assets, ever.** Do not add files from *The Battle for Middle-earth* or *Zero Hour*,
+   or anything extracted or converted from them: `.big`, `.w3d`, `.dds`/`.tga` textures, maps,
+   `.csf`/`.str` text, audio, video, or APKs that contain them. Test fixtures are made by hand or
+   generated synthetically. CI rejects such files (`tools/ci/check-forbidden-files.sh`).
+2. **No secrets.** Signing keys, keystore passwords, API keys and service configs such as
+   `google-services.json` stay out of git.
+3. **GPL v3.** Everything you contribute is licensed under GPL v3, like the rest of the code.
+   Keep existing copyright headers. Code copied from another project must have a compatible
+   license and say where it came from.
+4. **Work happens on the `bfme` branch** through pull requests. `main` mirrors upstream.
+5. **Tests.** A fix comes with a test that fails without it, where that is possible. Run the
+   relevant tests under `tests/` before opening the pull request.
+
+The upstream guidelines below (from TheSuperHackers) still apply to engine code.
+
+---
+
+# Upstream guidelines: how to contribute as a developer
 
 To contribute, fork this repository to create your own copy that you can clone locally and push back to. You can use your fork to create pull requests for your code to be merged into this repository.
 

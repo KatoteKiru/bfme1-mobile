@@ -1,5 +1,12 @@
 # Language packs
 
+> **BFME1 Mobile:** the packs themselves are not shipped in this repository. Every
+> `generals.str` here was the full game text of Zero Hour (Electronic Arts) or a
+> translation of it, and the game's text belongs to EA, not to the GPL source
+> release. Build a pack from your own copy of the game with
+> `scripts/language/csf2str.py` (see below) and put it on the device as described in
+> "Where it goes on a device". The format notes below are kept as upstream wrote them.
+
 A language pack is one plain-text file: `languages/<language>/generals.str`.
 
 That is the whole format. UTF-8, one entry per label, editable in any editor, and
@@ -94,7 +101,7 @@ on the loading screen, the translator's own `CREDITS:SSDevTeam1-3`) were brought
 the English, and good existing lines were kept as they were. 6447 labels now: the full
 English set plus 22 legacy labels from older game data (`GUI:GroupRoom15-22`,
 `GUI:BuddyAddReqMessage*`, the misspelled `GUI:CÀontrolBarBack`, ...), kept so the pack
-works with both. Work files: `tools/translation-work/`.
+works with both.
 
 Unit and faction names follow the original community translation, never player slang,
 with a few picks by the repository owner: ГЛА (not "МАО", and in Cyrillic like США), Хеликс, Крестоносец, Техничка,

@@ -1,6 +1,6 @@
 # CI BFME1 Mobile: self-hosted раннер на боксе (E1-03)
 
-GitHub-машины не используем: все наши workflow — `runs-on: [self-hosted, linux, bfme]`, `actions/checkout` с `fetch-depth: 1`.
+Сборки и тесты идут только на боксе: `runs-on: [self-hosted, linux, bfme]`, `actions/checkout` с `fetch-depth: 1`. Исключение — `repo-hygiene.yml` (`check-forbidden-files.sh`): он на `ubuntu-latest`, потому что не требует секретов и должен проверять PR из форков, которые на бокс не пускаем.
 
 ## Установка (один раз и после отката корневой ФС бокса)
 ```

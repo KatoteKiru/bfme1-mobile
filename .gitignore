@@ -4,7 +4,6 @@
 !.gitignore
 !.gitattributes
 !.github
-!.devin
 !.gitmodules
 
 *.user
@@ -143,6 +142,9 @@ android-staging/
 # Строки и локализация из игры
 *.csf
 *.CSF
+
+# Конфиги сервисов с ключами (Firebase и т. п.)
+google-services.json
 
 # Сборки APK — в артефакты CI, не в git (история апстрима и так весит ~15 ГБ из-за apk/)
 *.apk

@@ -1,0 +1,26 @@
+# BFME1 Mobile: no game assets, build outputs or secrets in the tree (tools/ci/check-forbidden-files.sh).
+# Runs on a GitHub-hosted runner, not the self-hosted box: it only reads the file list, needs no secrets,
+# and must also check pull requests from forks, which never reach the box.
+name: Repository hygiene
+
+on:
+  push:
+    branches: [bfme]
+  pull_request:
+    branches: [bfme]
+
+permissions:
+  contents: read
+
+jobs:
+  forbidden-files:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 (= v4.4.0)
+        with:
+          submodules: false
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+      - run: tools/ci/check-forbidden-files.sh

@@ -1,5 +1,18 @@
-# Security Policy
+# Security policy
 
-## Reporting a Vulnerability
+## Reporting a vulnerability
 
-If you have been informed of or discovered a security vulnerability, exploit or other flaw, please contact a developer of TheSuperHackers to report it privately. Public channels on Discord or the GitHub should be avoided, as the exploit may be taken from a public post and used before it can be patched. The best method is to contact xezon on discord. He can be reached in the [Community Outpost Discord](https://discord.gg/WzxQDZersE).
+Please do not report security problems in public issues. Use GitHub's private
+vulnerability reporting instead: open the **Security** tab of this repository and
+choose **Report a vulnerability**. You will get an answer as soon as possible.
+
+This covers the code in this repository: the engine, the Android app, the network
+code and the server. Problems that also exist in the upstream engine are worth
+reporting to [TheSuperHackers/GeneralsGameCode](https://github.com/TheSuperHackers/GeneralsGameCode)
+as well.
+
+## Secrets
+
+Signing keys, passwords and service credentials are never stored in this
+repository. If you find one in the code or its history, please report it
+privately as described above.

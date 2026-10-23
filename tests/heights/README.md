@@ -28,7 +28,7 @@ BFME_GAMEDATA=/path/to/bfme1 BFME_ORACLE_DIR=tools/oracle/out BFME_ORACLE_DUMP_D
 | `bfme_v5_u16_samples_exact` | unit | v5: u16 LE как есть, включая 0, 1, 15, 16, 4081, 0x7FFF, 0xFFFF; мировая высота `raw*0.0390625` |
 | `corrupt_height_chunk_rejected` | unit | `dataSize != w*h` и файл без `CkMp` отвергаются |
 | `cliff_flags_threshold` | unit | `setCellCliffFlagFromHeights`: ZH 15/16 единиц (9.375/10.0) как в апстриме; BFME 250/251 raw (9.766/9.805) |
-| `zh_repo_maps_widened` | unit | 43 карты ZH, уже лежащие в репозитории (`GeneralsOnlineRelease/…/Maps`, `BFME_ZH_MAPS_DIR`): v≤4, все raw кратны 16 и ≤ 4080 |
+| `zh_repo_maps_widened` | unit | карты ZH из `-DBFME_ZH_MAPS_DIR=…` (в репозитории их нет, без каталога тест пропускается): v≤4, все raw кратны 16 и ≤ 4080 |
 | `formula_*` | unit | см. ниже |
 | `zh_baseline_bit_identical` | unit | сверка «до/после», см. ниже |
 | `gamedata_bfme1_maps_minmax_vs_oracle` | gamedata | все 115 карт `maps.big`: версия 5, размер, бордер, min/max raw и мировые min/max равны `maps.big.maps.json` оракула OpenSAGE (full и size-only) |

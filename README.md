@@ -1,75 +1,90 @@
 # BFME1 Mobile
 
-Android-версия «Властелин колец: Битва за Средиземье» (BFME1, баланс патча 2.22) на движке
-Command & Conquer Generals / Zero Hour. Адаптация под телефон, сетевая игра и свой сервер.
+**An open-source Android port of *The Lord of the Rings: The Battle for Middle-earth* (2004), with touch controls and multiplayer, built on the GPL v3 source code of the SAGE engine (*Command & Conquer: Generals – Zero Hour*).**
 
-Неофициальный некоммерческий фанатский проект. Не связан с Electronic Arts, Westwood, New Line
-Cinema, Middle-earth Enterprises и другими правообладателями и не одобрен ими.
+[Русская версия](README.ru.md) · [License](LICENSE) · [Credits and legal notice](NOTICE.md) · [Contributing](CONTRIBUTING.md)
 
-## Основа и лицензия
+> [!IMPORTANT]
+> This repository contains **engine source code only**. It contains no game data from *The Battle for Middle-earth*: no `.big` archives, models, textures, maps, videos, music or text.
+> To play, you need your **own legally purchased copy** of BFME1 (v1.03 with the 2.22 community patch). The app copies the game files from your copy to the phone on first launch.
 
-- Код движка: исходники Generals/Zero Hour, которые EA опубликовала под **GPL v3**. Мы берём их
-  в Android-сборке сообщества [MYSOREZ/GeneralsZH-Android-Port](https://github.com/MYSOREZ/GeneralsZH-Android-Port).
-- Лицензия всего репозитория: **GNU GPL v3**. Полный текст лежит в [`LICENSE`](LICENSE), а
-  [`LICENSE.md`](LICENSE.md) содержит его же вместе с дополнительными условиями EA из исходного релиза.
-  Каждому, кому передаём APK, даём и исходники.
-- Описание апстрима сохранено без изменений в [`README-upstream.md`](README-upstream.md).
+> [!NOTE]
+> The project is a work in progress and is **not playable yet**. BFME1 maps load in the engine, but starting a match on the phone, combat, AI and the original menus are still being built. See [`docs/GAMEPLAY-GAP.md`](docs/GAMEPLAY-GAP.md) for the current state.
 
-### Цепочка апстрима
+## What it is
+
+BFME1 runs on SAGE, the same engine as *Command & Conquer: Generals – Zero Hour*. In 2025 Electronic Arts released the Generals/Zero Hour source code under GPL v3, and the community has since ported it to modern 64-bit platforms. This project takes the community Android port of Zero Hour and teaches the engine to read and play BFME1 data:
+
+- **Engine:** the BFME1 file formats (BIG, INI dialect, maps, W3D, strings) and gameplay systems on top of the Zero Hour engine.
+- **Mobile:** arm64 Android 10+, OpenGL ES 3.0 by default (Vulkan optional), a touch-first HUD.
+- **Multiplayer:** deterministic lockstep with a relay server, built to be replay- and CRC-testable.
+
+## Status
+
+| Area | State |
+|---|---|
+| BFME1 data loading (BIG/VFS, INI, maps) | works, covered by tests |
+| Touch controls (from the Zero Hour Android port) | works |
+| Starting a BFME1 map on device | in progress |
+| Units, combat, AI | in progress |
+| BFME1 menus and HUD | in progress |
+| Multiplayer | designed ([`docs/NET-DESIGN.md`](docs/NET-DESIGN.md)), not implemented |
+
+Primary test devices are Google Pixel phones (Tensor G1–G5).
+
+## Building
+
+All builds run in Docker and need no GPU.
+
+| Target | Command | Docs |
+|---|---|---|
+| Android APK (arm64-v8a) | `tools/build-apk.sh` | [`docs/bfme/ANDROID_BUILD.md`](docs/bfme/ANDROID_BUILD.md) |
+| Linux x86_64 (engine debugging, DXVK → Vulkan, SDL3) | `tools/build-linux.sh` | [`docs/bfme/LINUX_BUILD.md`](docs/bfme/LINUX_BUILD.md) |
+| Headless smoke test on Mesa lavapipe | `tools/build-linux.sh --smoke-only` | same |
+
+The repository is large. A shallow clone is enough to build:
+
+```sh
+git clone --depth 1 https://github.com/KatoteKiru/bfme-mobile.git
+cd bfme-mobile
+git submodule update --init --depth 1 references/fbraz3-dxvk
+```
+
+APKs are signed with a key that lives outside the repository (see the Android build doc). No signing keys or service credentials are ever committed.
+
+## Repository layout
+
+| Path | Contents |
+|---|---|
+| `engine/bfme/` | BFME1 gameplay layer on top of the engine |
+| `formats/` | BIG/VFS, BFME1 INI schema, MAP, W3D, STR/CSF, textures |
+| `net/`, `server/` | lockstep, transport, relay, lobby |
+| `ui/` | mobile HUD and menus |
+| `tests/` | unit, replay and per-frame CRC tests (synthetic fixtures only) |
+| `tools/` | build scripts and `tools/datacheck` (BFME1 data inventory, runs against your own copy) |
+| `android/` | Gradle/NDK app shell |
+| `docs/` | design notes, architecture decisions (`docs/adr/`), build docs |
+| `Core/`, `Generals/`, `GeneralsMD/`, … | engine code inherited from upstream |
+
+## Upstream
+
+This is a fork of community work, and none of it would exist without them:
 
 ```
-EA (GPL v3 source release)
+EA source release (GPL v3, 2025)
   → TheSuperHackers/GeneralsGameCode
     → Fighter19/CnC_Generals_Zero_Hour → fbraz3/GeneralsX
       → ammaarreshi/Generals-Mac-iOS-iPad
-        → MYSOREZ/GeneralsZH-Android-Port   ← наш апстрим
-          → KatoteKiru/bfme-mobile, ветка bfme
+        → MYSOREZ/GeneralsZH-Android-Port
+          → KatoteKiru/bfme-mobile (this repository, branch bfme)
 ```
 
-Ветки и теги апстрима перенесены сюда с полной историей. Ветка `main` повторяет апстрим, а вся наша
-работа идёт в `bfme`. Обновлять так:
+The upstream README is kept as [`README-upstream.md`](README-upstream.md). Full credits are in [`NOTICE.md`](NOTICE.md).
 
-```sh
-git remote add upstream https://github.com/MYSOREZ/GeneralsZH-Android-Port.git
-git fetch upstream
-git checkout main && git merge --ff-only upstream/main && git push origin main
-git checkout bfme && git merge main   # слияние делает Лид движка, через ревью
-```
+## License
 
-## Файлы игры EA в репозиторий не кладём никогда
+GNU General Public License v3.0, the same as the EA source release it derives from. See [`LICENSE`](LICENSE). [`LICENSE.md`](LICENSE.md) is the same text with the additional terms from the original EA release, which still apply.
 
-Ресурсы BFME1 (`*.big`, видео, модели, строки, карты из игры, патч 2.22) **никогда** не попадают
-в git, APK, на сервер и в открытый доступ. Каждый игрок кладёт на телефон свою законную копию игры.
-На боксе для анализа есть копия только для чтения в `/workspace/bfme-mobile/gamedata/`, она лежит вне репозитория.
-Часть правил `.gitignore` подстраховывает от случайного коммита (`*.big`, `*.w3d` вне `tests/`, `*.csf`, `*.bik`, `/gamedata/`, `/incoming/`).
-Тестовые фикстуры делаем сами или генерируем синтетически.
+## Legal
 
-## Структура (наши каталоги)
-
-| Каталог | Что внутри | Владелец |
-|---|---|---|
-| `engine/bfme/` | слой геймплея BFME1 поверх движка | Геймплей (архитектура и ревью: Лид движка) |
-| `formats/` | BIG/VFS, INI-схема BFME1, MAP, W3D, STR/CSF, текстуры | Форматы и данные |
-| `net/` | lockstep, транспорт (GNS + релей), журнал команд | Сеть и сервер |
-| `server/` | аккаунты, лобби, квикматч, релей | Сеть и сервер |
-| `ui/` | мобильный HUD и меню (вместо APT) | Мобильный UI |
-| `tests/` | реплей-тесты, CRC по кадрам, профилирование | QA |
-| `tools/` | инструменты апстрима и наш `tools/datacheck` | Форматы и данные |
-| `docs/adr/` | архитектурные решения (ADR) | Лид движка |
-| `android/`, `ci/` | Gradle/NDK, CI, Docker-образ | Android-платформа |
-
-Остальные каталоги (`Core/`, `Generals/`, `GeneralsMD/` и др.) взяты из апстрима как есть.
-Правки в чужой области вносятся только после ревью её владельца.
-
-## Сборка
-
-- APK (Android, arm64-v8a): `tools/build-apk.sh`, подробности в [`docs/bfme/ANDROID_BUILD.md`](docs/bfme/ANDROID_BUILD.md).
-- Десктоп Linux x86_64 (`linux64-deploy`, DXVK → Vulkan, SDL3) для отладки движка: `tools/build-linux.sh`, дым под Xvfb
-  на Mesa lavapipe: `tools/build-linux.sh --smoke-only`. Нужен только Docker, GPU не нужен.
-  Подробности и требования: [`docs/bfme/LINUX_BUILD.md`](docs/bfme/LINUX_BUILD.md).
-
-## Цели устройств
-
-arm64-v8a, Android 10 и новее, по умолчанию GLES 3.0 (Vulkan включается по желанию). Первый приоритет —
-Google Pixel (GPU Mali в Tensor G1–G4, PowerVR в Tensor G5). Эталонное устройство — Pixel 8 Pro.
-Окончательные решения записываются в `docs/adr/`.
+BFME1 Mobile is an unofficial, non-commercial fan project. It is not affiliated with, endorsed by, or sponsored by Electronic Arts Inc., Warner Bros. Entertainment, New Line Cinema, Middle-earth Enterprises or the Tolkien Estate. *The Lord of the Rings*, *The Battle for Middle-earth*, *Command & Conquer* and related names and logos are trademarks of their respective owners. No game assets are distributed by this project. See [`NOTICE.md`](NOTICE.md).
