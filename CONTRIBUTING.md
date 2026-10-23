@@ -11,7 +11,7 @@ Thank you for helping. A few rules come first, because they protect the project:
 3. **GPL v3.** Everything you contribute is licensed under GPL v3, like the rest of the code.
    Keep existing copyright headers. Code copied from another project must have a compatible
    license and say where it came from.
-4. **Work happens on the `bfme` branch** through pull requests. `main` mirrors upstream.
+4. **Work happens on the `bfme` branch** through pull requests.
 5. **Tests.** A fix comes with a test that fails without it, where that is possible. Run the
    relevant tests under `tests/` before opening the pull request.
 

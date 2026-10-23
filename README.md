@@ -42,10 +42,10 @@ All builds run in Docker and need no GPU.
 | Linux x86_64 (engine debugging, DXVK → Vulkan, SDL3) | `tools/build-linux.sh` | [`docs/bfme/LINUX_BUILD.md`](docs/bfme/LINUX_BUILD.md) |
 | Headless smoke test on Mesa lavapipe | `tools/build-linux.sh --smoke-only` | same |
 
-The repository is large. A shallow clone is enough to build:
+Clone and fetch the one submodule the build needs:
 
 ```sh
-git clone --depth 1 https://github.com/KatoteKiru/bfme-mobile.git
+git clone https://github.com/KatoteKiru/bfme1-mobile.git
 cd bfme-mobile
 git submodule update --init --depth 1 references/fbraz3-dxvk
 ```
@@ -76,7 +76,7 @@ EA source release (GPL v3, 2025)
     → Fighter19/CnC_Generals_Zero_Hour → fbraz3/GeneralsX
       → ammaarreshi/Generals-Mac-iOS-iPad
         → MYSOREZ/GeneralsZH-Android-Port
-          → KatoteKiru/bfme-mobile (this repository, branch bfme)
+          → KatoteKiru/bfme1-mobile (this repository, branch bfme)
 ```
 
 The upstream README is kept as [`README-upstream.md`](README-upstream.md). Full credits are in [`NOTICE.md`](NOTICE.md).

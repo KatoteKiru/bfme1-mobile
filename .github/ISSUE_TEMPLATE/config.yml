@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
 - name: Security problem
-  url: https://github.com/KatoteKiru/bfme-mobile/security/advisories/new
+  url: https://github.com/KatoteKiru/bfme1-mobile/security/advisories/new
   about: Report security problems privately, not in a public issue

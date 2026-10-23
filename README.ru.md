@@ -42,10 +42,10 @@ BFME1 работает на SAGE, том же движке, что и *Command &
 | Linux x86_64 (отладка движка, DXVK → Vulkan, SDL3) | `tools/build-linux.sh` | [`docs/bfme/LINUX_BUILD.md`](docs/bfme/LINUX_BUILD.md) |
 | Дым-тест без экрана на Mesa lavapipe | `tools/build-linux.sh --smoke-only` | там же |
 
-Репозиторий большой, для сборки хватит поверхностного клона:
+Клонируйте репозиторий и подтяните единственный нужный для сборки сабмодуль:
 
 ```sh
-git clone --depth 1 https://github.com/KatoteKiru/bfme-mobile.git
+git clone https://github.com/KatoteKiru/bfme1-mobile.git
 cd bfme-mobile
 git submodule update --init --depth 1 references/fbraz3-dxvk
 ```
@@ -76,7 +76,7 @@ EA, исходники под GPL v3 (2025)
     → Fighter19/CnC_Generals_Zero_Hour → fbraz3/GeneralsX
       → ammaarreshi/Generals-Mac-iOS-iPad
         → MYSOREZ/GeneralsZH-Android-Port
-          → KatoteKiru/bfme-mobile (этот репозиторий, ветка bfme)
+          → KatoteKiru/bfme1-mobile (этот репозиторий, ветка bfme)
 ```
 
 README апстрима сохранён в [`README-upstream.md`](README-upstream.md), полный список авторов в [`NOTICE.md`](NOTICE.md).
