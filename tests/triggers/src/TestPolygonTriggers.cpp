@@ -578,11 +578,12 @@ TEST(triggers_version_above_5_rejected)
 	REQUIRE_EQ(countTriggers(), 0);
 }
 
-// Release readAsciiString does not stop at the chunk. A short v5 payload must
-// fail on the remainder check, and must not keep polygons from the previous map.
+// A short v5 payload must be rejected and must not keep polygons from the previous map.
+// A string cut by the chunk end is refused by DataChunkInput itself (bfmeNeedChunkBytes);
+// complete water fields with nothing left for numPoints hit the v5 remainder check.
 TEST(triggers_v5_truncated_chunk_rejected)
 {
-	auto requireTruncated = [](const std::vector<uint8_t>& payload) {
+	auto requireTruncated = [](const std::vector<uint8_t>& payload, bool remainderCheck) {
 		PolygonTrigger* keep = newInstance(PolygonTrigger)(2);
 		keep->setTriggerName(AsciiString("keep"));
 		PolygonTrigger::addPolygonTrigger(keep);
@@ -592,13 +593,14 @@ TEST(triggers_v5_truncated_chunk_rejected)
 		REQUIRE(g_captured.threw);
 		REQUIRE(!g_captured.ok);
 		REQUIRE_EQ(g_captured.error, unsigned(ERROR_CORRUPT_FILE_FORMAT));
-		REQUIRE(bfmetrigger::capturedLog().find("v5 water fields do not fit the chunk") != std::string::npos);
-		REQUIRE(err.find("v5 water fields do not fit the chunk") != std::string::npos);
+		if (remainderCheck) {
+			REQUIRE(bfmetrigger::capturedLog().find("v5 water fields do not fit the chunk") != std::string::npos);
+			REQUIRE(err.find("v5 water fields do not fit the chunk") != std::string::npos);
+		}
 		REQUIRE_EQ(countTriggers(), 0);
 	};
 
-	// Length says 13 ("TWWater01.tga") but only "TW" is in the chunk. Release
-	// readAsciiString still consumes the claimed length.
+	// Length says 13 ("TWWater01.tga") but only "TW" is in the chunk.
 	ByteWriter cut;
 	cut.i32(1);
 	cut.ascii("river7");
@@ -609,7 +611,7 @@ TEST(triggers_v5_truncated_chunk_rejected)
 	cut.i32(0);
 	cut.u16(13);
 	cut.raw("TW", 2);
-	requireTruncated(cut.bytes);
+	requireTruncated(cut.bytes, false);
 
 	// Water fields are complete. The point count is missing, so nothing is left for numPoints.
 	ByteWriter full;
@@ -618,7 +620,7 @@ TEST(triggers_v5_truncated_chunk_rejected)
 	const size_t pointTail = 4u + (sampleV5().xyz.size() / 3) * 12u;
 	REQUIRE(full.bytes.size() > pointTail);
 	full.bytes.resize(full.bytes.size() - pointTail);
-	requireTruncated(full.bytes);
+	requireTruncated(full.bytes, true);
 }
 
 TEST(gamedata_fords_of_isen)

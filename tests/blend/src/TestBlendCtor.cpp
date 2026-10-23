@@ -34,6 +34,21 @@ int countOccurrences(const std::string& s, const std::string& what)
 	return n;
 }
 
+// DataChunkInput logs every chunk without a registered parser ("[chunk] skipped ...", #61).
+// These loaders register only the terrain parsers, so drop those lines before comparing.
+std::string withoutChunkLines(const std::string& s)
+{
+	std::string out;
+	size_t p = 0;
+	while (p < s.size()) {
+		size_t e = s.find('\n', p);
+		e = e == std::string::npos ? s.size() : e + 1;
+		if (s.compare(p, 8, "[chunk] ") != 0) out.append(s, p, e - p);
+		p = e;
+	}
+	return out;
+}
+
 uint32_t rd32(const std::vector<uint8_t>& b, size_t at)
 {
 	return uint32_t(b[at]) | uint32_t(b[at + 1]) << 8 | uint32_t(b[at + 2]) << 16 | uint32_t(b[at + 3]) << 24;
@@ -248,7 +263,7 @@ TEST(ctor_release_log_one_summary_line)
 {
 	const BlendSpec s = anomalySpec();
 	CtorResult r;
-	std::string err = captureStderr([&] { r = constructMap(writeBlendMap(s), false); });
+	std::string err = withoutChunkLines(captureStderr([&] { r = constructMap(writeBlendMap(s), false); }));
 	REQUIRE(r.constructed);
 	REQUIRE_EQ(r.stats.danglingTiles, 40);
 	REQUIRE_EQ(r.stats.flagsOutside0x3, 20);
@@ -265,17 +280,17 @@ TEST(ctor_release_log_one_summary_line)
 	// a single anomaly is enough for the line
 	BlendSpec one = makeBlendSpec("one", 15, 20, 10, 0x2002u, 60);
 	one.descs[3].horiz = 7;
-	err = captureStderr([&] { r = constructMap(writeBlendMap(one), false); });
+	err = withoutChunkLines(captureStderr([&] { r = constructMap(writeBlendMap(one), false); }));
 	REQUIRE(r.constructed);
 	REQUIRE_EQ(countOccurrences(err, "BlendTileData"), 1);
 	REQUIRE(err.find("direction bytes not 0/1 1, dangling blend/3-way/cliff 0/0/0\n") != std::string::npos);
 
 	// clean maps: nothing
-	err = captureStderr([&] { r = constructMap(writeBlendMap(makeBlendSpec("clean", 15, 20, 10, 0x2004u, 60)), false); });
+	err = withoutChunkLines(captureStderr([&] { r = constructMap(writeBlendMap(makeBlendSpec("clean", 15, 20, 10, 0x2004u, 60)), false); }));
 	REQUIRE(r.constructed);
 	REQUIRE_EQ(err, std::string());
 	for (const BlendSpec& zh : zhSyntheticBlendMaps()) {
-		err = captureStderr([&] { r = constructMap(writeBlendMap(zh), false); });
+		err = withoutChunkLines(captureStderr([&] { r = constructMap(writeBlendMap(zh), false); }));
 		REQUIRE(r.constructed);
 		REQUIRE_EQ(err, std::string());
 	}
@@ -302,11 +317,11 @@ TEST(ctor_zh_repo_maps)
 		}
 		CtorResult r;
 		long before = 0, after = 0;
-		const std::string err = captureStderr([&] {
+		const std::string err = withoutChunkLines(captureStderr([&] {
 			before = bfmealloc::liveBlocks();
 			r = constructMap(plain, false);
 			after = bfmealloc::liveBlocks();
-		});
+		}));
 		if (!r.constructed) throw bfmetest::Failure(e.path().string() + ": constructor failed");
 		REQUIRE_EQ(r.stats.version, 8);
 		REQUIRE_EQ(err, std::string());
