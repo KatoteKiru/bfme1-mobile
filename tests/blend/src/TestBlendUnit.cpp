@@ -24,6 +24,21 @@ int countOccurrences(const std::string& s, const std::string& what)
 	return n;
 }
 
+// DataChunkInput logs every chunk without a registered parser ("[chunk] skipped ...", #61).
+// These loaders register only the terrain parsers, so drop those lines before comparing.
+std::string withoutChunkLines(const std::string& s)
+{
+	std::string out;
+	size_t p = 0;
+	while (p < s.size()) {
+		size_t e = s.find('\n', p);
+		e = e == std::string::npos ? s.size() : e + 1;
+		if (s.compare(p, 8, "[chunk] ") != 0) out.append(s, p, e - p);
+		p = e;
+	}
+	return out;
+}
+
 LoadedBlend load(const BlendSpec& s, int use3Way = 1)
 {
 	LoadOptions opt;
@@ -254,7 +269,7 @@ TEST(blend_anomaly_log_first_16_of_each_kind)
 		"out of range 18 (-> -1), direction bytes not 0/1 17, dangling blend/3-way/cliff 19/21/22; per-case lines: first 16 of each kind") !=
 		std::string::npos);
 	// lines = 7 kinds * 16 + the summary
-	REQUIRE_EQ(countOccurrences(log, "\n"), 7 * 16 + 1);
+	REQUIRE_EQ(countOccurrences(withoutChunkLines(log), "\n"), 7 * 16 + 1);
 }
 
 // Tables on the heap sized by the counts; NUM_SOURCE_TILES / NUM_BLEND_TILES / NUM_CLIFF_INFO
