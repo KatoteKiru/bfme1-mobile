@@ -62,6 +62,8 @@ void ArmorTemplate::clear()
 	{
 		m_damageCoefficient[i] = 1.0f;
 	}
+	m_damageScalar = 1.0f;		// BFME: E2-03
+	m_flankedPenalty = 0.0f;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -73,6 +75,7 @@ Real ArmorTemplate::adjustDamage(DamageType t, Real damage) const
 		return damage;
 
 	damage *= m_damageCoefficient[t];
+	damage *= m_damageScalar;	// BFME: E2-03 (1.0 for every Zero Hour armor)
 
 	if (damage < 0.0f)
 		damage = 0.0f;
@@ -102,6 +105,20 @@ Real ArmorTemplate::adjustDamage(DamageType t, Real damage) const
 	if (dt < 0)
 		INILenient::rejectToken(damageName);
 	self->m_damageCoefficient[dt] = pct;
+}
+
+//-------------------------------------------------------------------------------------------------
+/*static*/ const FieldParse* ArmorTemplate::getFieldParse()
+{
+	static const FieldParse myFieldParse[] =
+	{
+		{ "Armor", ArmorTemplate::parseArmorCoefficients, nullptr, 0 },
+		// BFME: E2-03. BFME armor fields (OpenSAGE ArmorTemplate.cs).
+		{ "DamageScalar", INI::parsePercentToReal, nullptr, offsetof(ArmorTemplate, m_damageScalar) },
+		{ "FlankedPenalty", INI::parsePercentToReal, nullptr, offsetof(ArmorTemplate, m_flankedPenalty) },
+		{ nullptr, nullptr, nullptr, 0 }	// BFME: E1-23a: terminator; findFieldParse() walks until a null token
+	};
+	return myFieldParse;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -148,17 +165,11 @@ const ArmorTemplate* ArmorStore::findArmorTemplate(const char* name) const
 //-------------------------------------------------------------------------------------------------
 /*static */ void ArmorStore::parseArmorDefinition(INI *ini)
 {
-	static const FieldParse myFieldParse[] =
-	{
-		{ "Armor", ArmorTemplate::parseArmorCoefficients, nullptr, 0 },
-		{ nullptr, nullptr, nullptr, 0 }	// BFME: E1-23a: terminator; findFieldParse() walks until a null token
-	};
-
 	const char *c = ini->getNextToken();
 	NameKeyType key = TheNameKeyGenerator->nameToKey(c);
 	ArmorTemplate& armorTmpl = TheArmorStore->m_armorTemplates[key];
 	armorTmpl.clear();
-	ini->initFromINI(&armorTmpl, myFieldParse);
+	ini->initFromINI(&armorTmpl, ArmorTemplate::getFieldParse());
 }
 
 //-------------------------------------------------------------------------------------------------

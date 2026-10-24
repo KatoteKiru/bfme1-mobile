@@ -414,6 +414,8 @@ public:
 		return TEST_KINDOFMASK_ANY(m_kindof, anyKindOf);
 	}
 
+	const KindOfMaskType& getKindOfMask() const { return m_kindof; }	// BFME: E2-03 (BfmeObjectFilter)
+
 	/// set the display name
 	const UnicodeString& getDisplayName() const { return m_displayName; }  ///< return display name
 

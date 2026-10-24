@@ -43,7 +43,9 @@ CriticalSection *TheAsciiStringCriticalSection = nullptr;
 CriticalSection *TheUnicodeStringCriticalSection = nullptr;
 SubsystemInterfaceList *TheSubsystemList = nullptr;
 Anim2DCollection *TheAnim2DCollection = nullptr;
+#ifndef BFME_COMBAT_TESTS	// tests/combat links the real Armor.cpp and Damage.cpp
 ArmorStore *TheArmorStore = nullptr;
+#endif
 DamageFXStore *TheDamageFXStore = nullptr;
 FXListStore *TheFXListStore = nullptr;
 GameTextInterface *TheGameText = nullptr;
@@ -54,12 +56,16 @@ ScienceStore *TheScienceStore = nullptr;
 SpecialPowerStore *TheSpecialPowerStore = nullptr;
 ThingFactory *TheThingFactory = nullptr;
 UpgradeCenter *TheUpgradeCenter = nullptr;
+#ifndef BFME_COMBAT_WEAPON_TESTS	// tests/combat weapon binary links the real Weapon.cpp
 WeaponStore *TheWeaponStore = nullptr;
+#endif
 const char *const TheVeterancyNames[] = { nullptr };
+#ifndef BFME_COMBAT_TESTS
 DamageTypeFlags DAMAGE_TYPE_FLAGS_NONE;
 DamageTypeFlags DAMAGE_TYPE_FLAGS_ALL;
-DisabledMaskType DISABLEDMASK_NONE;
 template<> const char *const DamageTypeFlags::s_bitNameList[] = { nullptr };
+#endif
+DisabledMaskType DISABLEDMASK_NONE;
 
 void setFPMode() {}
 void parseReallyLowMHz(INI *) {}
@@ -72,12 +78,14 @@ void AudioEventRTS::setEventName(AsciiString) {}
 // E1-37: INIAudioEventInfo.cpp is linked for its real field table; its block parsers are never reached.
 void AudioManager::addTrackName(const AsciiString &) {}
 
-// Block parsers of INI.cpp's theTypeTable, except Terrain (TestIniMode.cpp) and WindowTransition
-// (TestWindowTransitions.cpp).
+// Block parsers of INI.cpp's theTypeTable, except Terrain (TestIniMode.cpp, tests/combat) and
+// WindowTransition (TestWindowTransitions.cpp).
 #define BFME_INI_BLOCK_STUB(name) void INI::name(INI *) {}
 BFME_INI_BLOCK_STUB(parseAIDataDefinition)
 BFME_INI_BLOCK_STUB(parseAnim2DDefinition)
+#ifndef BFME_COMBAT_TESTS
 BFME_INI_BLOCK_STUB(parseArmorDefinition)
+#endif
 BFME_INI_BLOCK_STUB(parseAudioSettingsDefinition)
 BFME_INI_BLOCK_STUB(parseBenchProfile)
 BFME_INI_BLOCK_STUB(parseCampaignDefinition)
@@ -126,7 +134,9 @@ BFME_INI_BLOCK_STUB(parseUpgradeDefinition)
 BFME_INI_BLOCK_STUB(parseVideoDefinition)
 BFME_INI_BLOCK_STUB(parseWaterSettingDefinition)
 BFME_INI_BLOCK_STUB(parseWaterTransparencyDefinition)
+#ifndef BFME_COMBAT_TESTS	// tests/combat parses Weapon blocks with the nugget tables
 BFME_INI_BLOCK_STUB(parseWeaponTemplateDefinition)
+#endif
 BFME_INI_BLOCK_STUB(parseWeatherDefinition)
 BFME_INI_BLOCK_STUB(parseWebpageURLDefinition)
 #undef BFME_INI_BLOCK_STUB
@@ -136,7 +146,9 @@ void ScriptEngine::parseScriptCondition(INI *) {}
 
 // Lookups behind INI::parse*Ref field parsers.
 Anim2DTemplate *Anim2DCollection::findTemplate(const AsciiString &) { return nullptr; }
+#ifndef BFME_COMBAT_TESTS
 const ArmorTemplate *ArmorStore::findArmorTemplate(const char *) const { return nullptr; }
+#endif
 const DamageFX *DamageFXStore::findDamageFX(const char *) const { return nullptr; }
 const FXList *FXListStore::findFXList(const char *) const { return nullptr; }
 const Image *ImageCollection::findImageByName(const char *) const { return nullptr; }
@@ -146,7 +158,9 @@ ScienceType ScienceStore::friend_lookupScience(const char *) const { return SCIE
 SpecialPowerTemplate *SpecialPowerStore::findSpecialPowerTemplatePrivate(AsciiString) { return nullptr; }
 ThingTemplate *ThingFactory::findTemplateInternal(const AsciiString &, Bool) { return nullptr; }
 const UpgradeTemplate *UpgradeCenter::findUpgrade(const char *) const { return nullptr; }
+#ifndef BFME_COMBAT_WEAPON_TESTS
 const WeaponTemplate *WeaponStore::findWeaponTemplate(const char *) const { return nullptr; }
+#endif
 const char *const GameClientRandomVariable::DistributionTypeNames[] = { nullptr };
 void GameClientRandomVariable::setRange(Real, Real, DistributionType) {}
 

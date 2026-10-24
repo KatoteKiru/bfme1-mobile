@@ -36,6 +36,7 @@
 
 // FORWARD REFERENCES /////////////////////////////////////////////////////////////////////////////
 class ArmorStore;
+struct FieldParse;	// BFME: E2-03
 
 //-------------------------------------------------------------------------------------------------
 /**
@@ -59,10 +60,17 @@ public:
 
 	static void parseArmorCoefficients( INI* ini, void *instance, void* /* store */, const void* userData );
 
+	// BFME: E2-03. Field table of an Armor block (also used by tests/combat).
+	static const FieldParse* getFieldParse();
+
+	Real getDamageScalar() const { return m_damageScalar; }	// BFME: E2-03
+
 protected:
 
 private:
 	Real						m_damageCoefficient[DAMAGE_NUM_TYPES];	///< modifiers to damage
+	Real						m_damageScalar;			///< BFME: E2-03. DamageScalar: multiplies every resistable damage (default 100%)
+	Real						m_flankedPenalty;		///< BFME: E2-03. FlankedPenalty (BFME2 data): parsed only
 };
 
 //-------------------------------------------------------------------------------------------------
