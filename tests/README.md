@@ -23,6 +23,7 @@
 - `ini.*` в общем дереве `tests` (`bfme_ini_mode_tests`, E1-23a/E1-26b): настоящий `INI.cpp` на синтетических файлах — в режиме ZH (по умолчанию) неизвестный блок, неверное значение списка индексов и отсутствующий `End` по-прежнему бросают исключение, неизвестное поле молча пропускается, как в upstream; в режиме BFME всё это логируется и пропускается.
 - `tests/vfs/` — VFS BIG4/BIGF и порядок монтирования (E1-21, владелец кода: Форматы и данные), см. ниже.
 - `tests/thread/` — id потока `ThreadClass::_Get_Current_Thread_ID` (E1-32): два потока, стабильный id главного. `Is_DX8_Thread`: до `DX8Wrapper::Init` (записанный id 0) — true, после Init с чужого потока — false. Сборка: `cmake -S tests/thread -B build/tests-thread && cmake --build build/tests-thread && ctest --test-dir build/tests-thread`.
+- `tests/texdecode/` — JPEG/PNG текстуры BFME (E1-44): настоящий `WW3D2/bfmeimagedecode.cpp` (stb_image v2.30) без D3D: сигнатуры, BGRA сверху вниз, альфа из `<имя>.png` к `<имя>.jpg`, несовпадение размеров. Картинки синтезируются в тесте (stb_image_write), данных игры нет. Сборка: `cmake -S tests/texdecode -B build/tests-texdecode && cmake --build build/tests-texdecode && ctest --test-dir build/tests-texdecode` (`-DBFME_TESTS_ASAN=ON` — с ASan/UBSan).
 - `tests/atlas/` — атлас тайлов террейна (E1-51): 4096×2048 и страницы 2048, синтетика без данных игры.
 
 ```bash

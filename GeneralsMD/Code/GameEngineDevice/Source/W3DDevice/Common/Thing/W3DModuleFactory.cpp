@@ -48,6 +48,7 @@
 #include "W3DDevice/GameClient/Module/W3DTracerDraw.h"
 #include "W3DDevice/GameClient/Module/W3DTreeDraw.h"
 #include "W3DDevice/GameClient/Module/W3DPropDraw.h"
+#include "Common/INILenient.h"	// BFME: E1-46
 
 //-------------------------------------------------------------------------------------------------
 /** Initialize method */
@@ -78,5 +79,23 @@ void W3DModuleFactory::init()
 	addModule( W3DTankTruckDraw );
 	addModule( W3DTreeDraw );
 	addModule( W3DPropDraw );
+
+	// BFME: E1-46. BFME1 2.22 draws nearly every object with W3DScriptedModelDraw (2483 uses),
+	// hordes with W3DHordeModelDraw and the mumakil with W3DQuadrupedDraw
+	// (docs/bfme-draw-modules.md). Unregistered, the lenient INI skipped those Draw blocks, so the
+	// objects had no draw module and no render object at all (Pixel: perf-draws models=0 skin=0).
+	// Until E1-34 gives them their own classes, they are W3DModelDraw: a static model from
+	// DefaultModelConditionState / ModelConditionState, no AnimationState yet.
+	// The lenient mode is on before TheModuleFactory is created (archive file system comes first).
+	if (INILenient::isEnabled())
+	{
+		static const char *const bfmeModelDrawAliases[] =
+		{
+			"W3DScriptedModelDraw", "W3DHordeModelDraw", "W3DQuadrupedDraw",
+		};
+		for (size_t i = 0; i < sizeof(bfmeModelDrawAliases) / sizeof(bfmeModelDrawAliases[0]); ++i)
+			addModuleInternal( W3DModelDraw::friend_newModuleInstance, W3DModelDraw::friend_newModuleData,
+				W3DModelDraw::getModuleType(), AsciiString( bfmeModelDrawAliases[i] ), W3DModelDraw::getInterfaceMask() );
+	}
 
 }

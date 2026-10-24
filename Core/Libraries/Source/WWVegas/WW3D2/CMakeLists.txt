@@ -213,6 +213,8 @@ set(WW3D2_SRC
     textureloader.h
     dx8_thread.h # BFME: E1-32 Is_DX8_Thread when the main tid is not recorded yet
     bfme_host_limits.h # BFME: K6 headless device gate and software-rasterizer texture edge
+    bfmeimagedecode.cpp # BFME: E1-44 JPEG/PNG textures (the one stb_image implementation TU)
+    bfmeimagedecode.h
     texturethumbnail.cpp
     texturethumbnail.h
     #vertmaterial.cpp
@@ -239,6 +241,9 @@ set(WW3D2_SRC
 add_library(corei_ww3d2 INTERFACE)
 
 target_sources(corei_ww3d2 INTERFACE ${WW3D2_SRC})
+
+# BFME: E1-44 stb_image v2.30 (MIT, LICENSES/stb-MIT.txt) for bfmeimagedecode.cpp.
+target_include_directories(corei_ww3d2 INTERFACE ${CMAKE_SOURCE_DIR}/Dependencies/stb)
 
 # GeneralsX @build fbraz 11/02/2026 BenderAI - Enable FreeType text rendering on Linux/macOS/iOS/Android
 target_compile_definitions(corei_ww3d2 INTERFACE
