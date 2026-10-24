@@ -42,6 +42,9 @@
 #include "Common/GlobalData.h"
 #include "WW3D2/bfme_host_limits.h"
 #include "GameLogic/PartitionManager.h"
+#include "Common/INILenient.h"	// BFME: E1-48
+#include "Common/Player.h"	// BFME: E1-48
+#include "Common/PlayerList.h"	// BFME: E1-48
 
 
 //-----------------------------------------------------------------------------
@@ -528,11 +531,77 @@ TextureClass *DummyTexture=nullptr;
 //DECLARE_PERF_TIMER(shroudCopy)
 
 //-----------------------------------------------------------------------------
+// BFME: E1-48. Pixel 8 Pro, fcd55cf, map mp rohan: the whole scene is dark and blue, with soft black
+// patches. Both fit the shroud pass (fogged = m_fogAlpha, shrouded = m_shroudAlpha, tinted by
+// m_shroudColor; fogged objects lit by m_fogAlpha/m_clearAlpha) as well as dark map lights. This
+// prints what the shroud texture holds and the lights in use, so the next device log tells which:
+// BFME mode only, at the 1st, 150th and 900th shroud render and when the time of day changes,
+// at most 8 lines per process.
+static void bfmeLogShroudAndLighting(W3DShroud *shroud, Int numCellsX, Int numCellsY)
+{
+	static Int s_renders = 0;
+	static Int s_lines = 0;
+	static Int s_lastTod = -1;
+	if (!INILenient::isEnabled() || TheGlobalData == nullptr || s_lines >= 8)
+		return;
+	++s_renders;
+	const Int tod = (Int)TheGlobalData->m_timeOfDay;
+	if (s_renders != 1 && s_renders != 150 && s_renders != 900 && tod == s_lastTod)
+		return;
+	s_lastTod = tod;
+	++s_lines;
+
+	// What the W3D shroud texture holds (6-bit green, read back as 0..255).
+	const Int shroudA = TheGlobalData->m_shroudAlpha, fogA = TheGlobalData->m_fogAlpha, clearA = TheGlobalData->m_clearAlpha;
+	Int black = 0, fog = 0, clear = 0, other = 0;
+	for (Int y = 0; y < numCellsY; y++) {
+		for (Int x = 0; x < numCellsX; x++) {
+			const Int l = shroud->getShroudLevel(x, y);
+			if (l <= shroudA + 4) black++;
+			else if (l >= clearA - 4) clear++;
+			else if (l >= fogA - 8 && l <= fogA + 8) fog++;
+			else other++;
+		}
+	}
+	// What the logic says for the local player.
+	Int pClear = 0, pFog = 0, pShroud = 0, playerIndex = -1;
+	Player *local = ThePlayerList ? ThePlayerList->getLocalPlayer() : nullptr;
+	if (local && ThePartitionManager) {
+		playerIndex = local->getPlayerIndex();
+		const Int cx = ThePartitionManager->getCellCountX(), cy = ThePartitionManager->getCellCountY();
+		for (Int y = 0; y < cy; y++) {
+			for (Int x = 0; x < cx; x++) {
+				switch (ThePartitionManager->getShroudStatusForPlayer(playerIndex, x, y)) {
+					case CELLSHROUD_CLEAR: pClear++; break;
+					case CELLSHROUD_FOGGED: pFog++; break;
+					default: pShroud++; break;
+				}
+			}
+		}
+	}
+	const RGBColor &amb = TheGlobalData->m_terrainAmbient[0];
+	const RGBColor &dif = TheGlobalData->m_terrainDiffuse[0];
+	const Coord3D &dir = TheGlobalData->m_terrainLightPos[0];
+	const Int todIdx = (tod >= 0 && tod < TIME_OF_DAY_COUNT) ? tod : 0;
+	const GlobalData::TerrainLighting &obj = TheGlobalData->m_terrainObjectsLighting[todIdx][0];
+	fprintf(stderr, "[bfmeshroud] render#%d tod=%d lights=%d | shroud tex %dx%d cells: black=%d fog=%d clear=%d other=%d"
+		" | alpha clear=%d fog=%d shroud=%d color=%.2f,%.2f,%.2f | local player %d cells: clear=%d fogged=%d shrouded=%d"
+		" | terrain amb=%.2f,%.2f,%.2f dif0=%.2f,%.2f,%.2f dir0=%.2f,%.2f,%.2f | object amb=%.2f,%.2f,%.2f dif0=%.2f,%.2f,%.2f\n",
+		s_renders, tod, TheGlobalData->m_numGlobalLights, numCellsX, numCellsY, black, fog, clear, other,
+		clearA, fogA, shroudA, TheGlobalData->m_shroudColor.red, TheGlobalData->m_shroudColor.green, TheGlobalData->m_shroudColor.blue,
+		playerIndex, pClear, pFog, pShroud,
+		amb.red, amb.green, amb.blue, dif.red, dif.green, dif.blue, dir.x, dir.y, dir.z,
+		obj.ambient.red, obj.ambient.green, obj.ambient.blue, obj.diffuse.red, obj.diffuse.green, obj.diffuse.blue);
+}
+
+//-----------------------------------------------------------------------------
 /** Updates video memory surface with currently visible shroud data */
 void W3DShroud::render(CameraClass *cam)
 {
 	if (!m_pSrcTexture)
 		return; //nothing to update from.  Must be in reset state.
+
+	bfmeLogShroudAndLighting(this, m_numCellsX, m_numCellsY);	// BFME: E1-48
 
 	if (DX8Wrapper::_Get_D3D_Device8() && (DX8Wrapper::_Get_D3D_Device8()->TestCooperativeLevel()) != D3D_OK)
 		return;	//device not ready to render anything

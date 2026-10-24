@@ -49,6 +49,15 @@
 #include "GameLogic/GameLogic.h"
 #include "GameLogic/Object.h"
 #include "GameLogic/TerrainLogic.h"
+#include "Common/INILenient.h"	// BFME: E1-48
+
+// BFME: E1-48. Pixel 8 Pro, fcd55cf: "sorted(particles)=0.0" draws per frame on map mp rohan. These
+// counters say whether no system was created, a template name was not found, or the particles were
+// refused by priority / count cap. Printed in BFME mode only (see ParticleSystemManager::update).
+static UnsignedInt s_bfmeSystemsCreated = 0;
+static UnsignedInt s_bfmeTemplateMisses = 0;
+static UnsignedInt s_bfmeRejectPriority = 0;
+static UnsignedInt s_bfmeRejectCap = 0;
 
 
 //------------------------------------------------------------------------------ Performance Timers
@@ -1772,7 +1781,10 @@ Particle *ParticleSystem::createParticle( const ParticleInfo *info,
 		if( priority < TheGameLODManager->getMinDynamicParticlePriority() ||
 				(priority < TheGameLODManager->getMinDynamicParticleSkipPriority() &&
 				 TheGameLODManager->isParticleSkipped()) )
+		{
+			++s_bfmeRejectPriority;	// BFME: E1-48
 			return nullptr;
+		}
 
 		if ( getParticleCount() > 0 && priority == AREA_EFFECT && m_isGroundAligned && TheParticleSystemManager->getFieldParticleCount() > (UnsignedInt)TheGlobalData->m_maxFieldParticleCount )
 			return nullptr;
@@ -1784,11 +1796,17 @@ Particle *ParticleSystem::createParticle( const ParticleInfo *info,
 			if ( numInExcess > 0)
 			{
 				if( TheParticleSystemManager->removeOldestParticles((UnsignedInt) numInExcess, priority) != numInExcess )
+				{
+					++s_bfmeRejectCap;	// BFME: E1-48
 					return nullptr;  // could not remove enough particles, don't create new stuff
+				}
 			}
 
 			if (TheGlobalData->m_maxParticleCount == 0)
+			{
+				++s_bfmeRejectCap;	// BFME: E1-48
 				return nullptr;
+			}
 		}
 
 	}
@@ -3051,6 +3069,23 @@ void ParticleSystemManager::update()
 		}
 	}
 
+	// BFME: E1-48 particle census at logic frames 30, 300 and 1800 (1 s, 10 s, 60 s).
+	if (INILenient::isEnabled() && TheGameLogic != nullptr)
+	{
+		const UnsignedInt frame = TheGameLogic->getFrame();
+		if (frame == 30 || frame == 300 || frame == 1800)
+		{
+			fprintf(stderr, "[bfmeparticles] frame %u: templates=%u systems alive=%u created=%u particles=%u onscreen=%d"
+				" | refused: priority=%u cap=%u | maxParticleCount=%d minDynPriority=%d skipPriority=%d skipping=%d | template misses=%u\n",
+				frame, (unsigned)m_templateMap.size(), m_particleSystemCount, s_bfmeSystemsCreated, m_particleCount,
+				m_onScreenParticleCount, s_bfmeRejectPriority, s_bfmeRejectCap, TheGlobalData->m_maxParticleCount,
+				TheGameLODManager ? (Int)TheGameLODManager->getMinDynamicParticlePriority() : -1,
+				TheGameLODManager ? (Int)TheGameLODManager->getMinDynamicParticleSkipPriority() : -1,
+				TheGameLODManager ? (Int)TheGameLODManager->isParticleSkipped() : -1,
+				s_bfmeTemplateMisses);
+		}
+	}
+
 	// GeneralsX @bugfix fbraz 04/05/2026 Skip smudge rendering path in headless replay simulation.
 	const Bool drawSmudge = !TheGlobalData->m_headless && TheSmudgeManager && TheSmudgeManager->getHardwareSupport() && TheGlobalData->m_useHeatEffects;
 
@@ -3115,6 +3150,7 @@ ParticleSystem *ParticleSystemManager::createParticleSystem( const ParticleSyste
 
 	m_uniqueSystemID = (ParticleSystemID)((UnsignedInt)m_uniqueSystemID + 1);
 	ParticleSystem *sys = newInstance(ParticleSystem)( sysTemplate, m_uniqueSystemID, createSlaves );
+	++s_bfmeSystemsCreated;	// BFME: E1-48
 	return sys;
 }
 
@@ -3169,6 +3205,13 @@ ParticleSystemTemplate *ParticleSystemManager::findTemplate( const AsciiString &
 	TemplateMap::const_iterator find(m_templateMap.find(name));
 	if (find != m_templateMap.end()) {
 		sysTemplate = (*find).second;
+	}
+	// BFME: E1-48 a name the INI did not define (first 16 logged).
+	if (sysTemplate == nullptr && name.isNotEmpty() && INILenient::isEnabled()) {
+		++s_bfmeTemplateMisses;
+		if (s_bfmeTemplateMisses <= 16)
+			fprintf(stderr, "[bfmeparticles] no ParticleSystem template '%s' (%u templates loaded)\n",
+				name.str(), (unsigned)m_templateMap.size());
 	}
 
 	return sysTemplate;
