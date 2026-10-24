@@ -163,11 +163,13 @@ add_executable(bfme_ini_mode_tests
     ${R}/Core/GameEngine/Source/Common/INI/INI.cpp
     ${R}/Core/GameEngine/Source/Common/INI/INILenientRules.cpp
     ${R}/Core/GameEngine/Source/Common/INI/INIAudioEventInfo.cpp
+    ${R}/Core/GameEngine/Source/GameClient/GUI/GameWindowTransitionsData.cpp
     vfs/TestMain.cpp
     vfs/GlobalDataStub.cpp
     ini/IniEngineStubs.cpp
     vfs/EngineFixture.cpp
     ini/TestIniMode.cpp
+    ini/TestWindowTransitions.cpp
 )
 target_link_libraries(bfme_ini_mode_tests PRIVATE bfme_formats_vfs_core liblzhl ${BFME_TEST_ZLIB})
 get_target_property(_vfs_defs bfme_vfs_tests COMPILE_DEFINITIONS)
@@ -184,6 +186,11 @@ set(BFME_INI_MODE_TESTS
     bfme_mode_closes_block_at_eof
     audio_field_table_has_end_marker bfme_mode_skips_unknown_audio_fields
     zh_mode_throws_on_missing_directory bfme_mode_skips_missing_directory
+    transitions_bfme_sub_block_parsed transitions_bfme_sub_block_parses_strict
+    transitions_zh_style_field_unchanged transitions_bfme_only_styles_parsed
+    transitions_unknown_style_skips_sub_block_lenient transitions_unknown_style_throws_strict
+    transitions_unknown_param_skipped_lenient transitions_resolve_style transitions_hold_frames
+    transitions_hold_finishes
 )
 foreach(t IN LISTS BFME_INI_MODE_TESTS)
     add_test(NAME ini.${t} COMMAND bfme_ini_mode_tests ${t})

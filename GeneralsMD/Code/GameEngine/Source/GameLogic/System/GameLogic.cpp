@@ -2427,6 +2427,9 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 		// BFME: E1-43 on the Pixel this loop never ended after a BFME skirmish load (the fade
 		// group never reported finished), so the game sat on the load screen forever. Give the
 		// fade a wall-clock budget and drop it when it runs out; a working fade takes ~1 s.
+		// The cause (the BFME Transition sub-block was skipped, so the fade ran as a FLASH on a
+		// window that does not exist) is fixed in GameWindowTransitionsData.cpp; the budget stays
+		// as a safety net and its WARNING means a new case.
 		const double fadeStartMs = MapLoadTrace::nowMs();
 		fprintf(stderr, "[mapload] FadeWholeScreen: current group '%s', pending '%s', update fps %.1f, speed x%.2f\n",
 			TheTransitionHandler->getCurrentGroupName().str(), TheTransitionHandler->getPendingGroupName().str(),

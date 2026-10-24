@@ -46,6 +46,7 @@
 #pragma once
 
 #include "Common/GameCommon.h"
+#include "GameClient/GameWindowTransitionsData.h"
 
 //-----------------------------------------------------------------------------
 // SYSTEM INCLUDES ////////////////////////////////////////////////////////////
@@ -65,47 +66,8 @@ class DisplayString;
 // TYPE DEFINES ///////////////////////////////////////////////////////////////
 //-----------------------------------------------------------------------------
 
-enum
-{
-TRANSITION_FLASH = 0,
-BUTTON_TRANSITION_FLASH,
-WIN_FADE_TRANSITION,
-WIN_SCALE_UP_TRANSITION,
-MAINMENU_SCALE_UP_TRANSITION,
-TEXT_TYPE_TRANSITION,
-SCREEN_FADE_TRANSITION,
-COUNT_UP_TRANSITION,
-FULL_FADE_TRANSITION,
-TEXT_ON_FRAME_TRANSITION,
-MAINMENU_MEDIUM_SCALE_UP_TRANSITION,
-MAINMENU_SMALL_SCALE_DOWN_TRANSITION,
-CONTROL_BAR_ARROW_TRANSITION,
-SCORE_SCALE_UP_TRANSITION,
-REVERSE_SOUND_TRANSITION,
-
-MAX_TRANSITION_WINDOW_STYLES
-};
-
-static const LookupListRec TransitionStyleNames[] =
-{
-	{ "FLASH",					TRANSITION_FLASH },
-	{ "BUTTONFLASH",		BUTTON_TRANSITION_FLASH },
-	{ "WINFADE",				WIN_FADE_TRANSITION },
-	{ "WINSCALEUP",			WIN_SCALE_UP_TRANSITION },
-	{ "MAINMENUSCALEUP",			MAINMENU_SCALE_UP_TRANSITION },
-	{ "TYPETEXT",			TEXT_TYPE_TRANSITION },
-	{ "SCREENFADE",			SCREEN_FADE_TRANSITION },
-	{ "COUNTUP",			COUNT_UP_TRANSITION },
-	{ "FULLFADE",			FULL_FADE_TRANSITION },
-	{ "TEXTONFRAME",			TEXT_ON_FRAME_TRANSITION },
-	{ "MAINMENUMEDIUMSCALEUP",			MAINMENU_MEDIUM_SCALE_UP_TRANSITION },
-	{ "MAINMENUSMALLSCALEDOWN",			MAINMENU_SMALL_SCALE_DOWN_TRANSITION },
-	{ "CONTROLBARARROW",			CONTROL_BAR_ARROW_TRANSITION },
-	{ "SCORESCALEUP",			SCORE_SCALE_UP_TRANSITION },
-	{ "REVERSESOUND",			REVERSE_SOUND_TRANSITION },
-	{ nullptr, 0	}
-};
-static_assert(ARRAY_SIZE(TransitionStyleNames) == MAX_TRANSITION_WINDOW_STYLES + 1, "Incorrect array size");
+// BFME: E1-43 the style enum, TransitionStyleNames and the Window block data moved to
+// GameWindowTransitionsData.h.
 
 // base class for the transitions
 // inherit off of this adding in all the values
@@ -595,7 +557,7 @@ protected:
 };
 
 //-----------------------------------------------------------------------------
-class TransitionWindow
+class TransitionWindow : public TransitionWindowData	// BFME: E1-43 INI vars in TransitionWindowData
 {
 public:
 	TransitionWindow();
@@ -610,11 +572,6 @@ public:
 	void draw();
 
 	void unlinkGameWindow( GameWindow* win );
-
-// INI parsed vars
-	AsciiString m_winName;
-	Int m_frameDelay;					// what frame number we start on
-	Int m_style;							// the style we'll be using
 
 // standard vars
 	NameKeyType	m_winID;
