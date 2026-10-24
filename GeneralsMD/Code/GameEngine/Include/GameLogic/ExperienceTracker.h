@@ -35,6 +35,7 @@
 #include "Common/Snapshot.h"
 
 class Object;
+struct BfmeLevelTable;	// BFME: E2-04
 
 class ExperienceTracker : public MemoryPoolObject, public Snapshot
 {
@@ -62,16 +63,29 @@ public:
 	Real getExperienceScalar() const { return m_experienceScalar; }
 	void setExperienceScalar( Real scalar ) { m_experienceScalar = scalar; }
 
+	// BFME: E2-04. BFME1 experience levels (experiencelevels.ini): a separate level counter 1..N per
+	// object template; VeterancyLevel follows it one way (GAMEPLAY-GAP §2.2 п.2).
+	Bool hasBfmeLevels() const { return getBfmeLevelTable() != nullptr; }
+	Int getBfmeLevel() const;																						///< 1..N, 0 without BFME levels
+	void setBfmeLevel( Int level, Bool provideFeedback = TRUE );				///< ExperienceLevelCreate: at least this level
+	void gainBfmeLevels( Int levels, Int levelCap = 0 );								///< LevelUpUpgrade (cap 0 = none)
+
 	// --------------- inherited from Snapshot interface --------------
 	virtual void crc( Xfer *xfer ) override;
 	virtual void xfer( Xfer *xfer ) override;
 	virtual void loadPostProcess() override;
 
 private:
+	const BfmeLevelTable* getBfmeLevelTable() const;	///< BFME: E2-04
+	void refreshBfmeLevel( Bool provideFeedback );		///< BFME: E2-04. Level from m_currentExperience; level-up effects
+
 	Object*						m_parent;														///< Object I am owned by
 	VeterancyLevel		m_currentLevel;											///< Level of experience
 	Int								m_currentExperience;								///< Number of experience points
 	ObjectID					m_experienceSink;										///< ID of object I have pledged my experience point gains to
 	Real							m_experienceScalar;									///< Scales any experience gained by this multiplier.
 	Bool							m_isTrainable;											///< Can I gain experience?
+	Int								m_bfmeLevel;												///< BFME: E2-04. Highest BFME level reached (its effects applied); 0 = none yet
+	mutable const BfmeLevelTable*	m_bfmeTable;										///< BFME: E2-04. Resolved on first use
+	mutable Bool			m_bfmeTableResolved;
 };

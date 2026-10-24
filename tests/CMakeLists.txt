@@ -200,7 +200,8 @@ add_test(NAME ini.registry_complete COMMAND ${CMAKE_COMMAND}
     -DBIN=$<TARGET_FILE:bfme_ini_mode_tests> "-DEXPECTED=${BFME_INI_MODE_TESTS}" -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_registry.cmake)
 
 # BFME: E2-03. BFME1 weapon nuggets, damage/death types and armor: the real INI.cpp, Damage.cpp,
-# KindOf.cpp, Armor.cpp and BfmeWeaponNuggets.cpp on synthetic INI text.
+# KindOf.cpp, Armor.cpp and BfmeWeaponNuggets.cpp on synthetic INI text. E2-04: experience levels
+# and attribute modifiers (BfmeAttributeModifiers.cpp).
 set(GMD ${R}/GeneralsMD/Code/GameEngine/Source)
 add_executable(bfme_combat_tests
     ${BFME_ENGINE_VFS_SOURCES}
@@ -213,6 +214,7 @@ add_executable(bfme_combat_tests
     ${GMD}/Common/NameKeyGenerator.cpp
     ${GMD}/GameLogic/Object/Armor.cpp
     ${GMD}/GameLogic/Object/BfmeWeaponNuggets.cpp
+    ${GMD}/GameLogic/Object/BfmeAttributeModifiers.cpp
     vfs/TestMain.cpp
     vfs/GlobalDataStub.cpp
     ini/IniEngineStubs.cpp
@@ -231,6 +233,10 @@ set(BFME_COMBAT_TESTS
     damage_nugget_radius_filter_and_scalar damage_nugget_arc_and_max_height
     meta_impact_push_taper_and_hero_resist fold_gives_zero_hour_fields
     bfme_armor_types_and_damage_scalar
+    modifier_amounts_percent_and_plain parse_modifier_lists parse_experience_levels_into_tables
+    level_from_experience_and_veterancy_mapping modifier_lists_refresh_stack_and_expire
+    attacker_damage_mult_add_and_spell_damage victim_armor_modifiers_capped
+    zh_mode_parses_modifier_and_level_blocks
 )
 foreach(t IN LISTS BFME_COMBAT_TESTS)
     add_test(NAME combat.${t} COMMAND bfme_combat_tests ${t})
@@ -253,6 +259,7 @@ add_executable(bfme_combat_weapon_tests
     ${GMD}/Common/NameKeyGenerator.cpp
     ${GMD}/GameLogic/Object/Armor.cpp
     ${GMD}/GameLogic/Object/BfmeWeaponNuggets.cpp
+    ${GMD}/GameLogic/Object/BfmeAttributeModifiers.cpp
     ${GMD}/GameLogic/Object/Weapon.cpp
     vfs/TestMain.cpp
     vfs/GlobalDataStub.cpp

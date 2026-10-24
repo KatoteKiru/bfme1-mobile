@@ -93,6 +93,7 @@
 #endif
 
 #include "GameLogic/Armor.h"
+#include "GameLogic/BfmeAttributeModifiers.h"	// BFME: E2-04
 #include "GameLogic/AI.h"
 #include "GameLogic/CaveSystem.h"
 #include "GameLogic/CrateSystem.h"
@@ -718,6 +719,12 @@ void GameEngine::init()
 		initSubsystem(TheSpecialPowerStore,"TheSpecialPowerStore", MSGNEW("GameEngineSubsystem") SpecialPowerStore(), &xferCRC, "Data\\INI\\Default\\SpecialPower", "Data\\INI\\SpecialPower");
 		initSubsystem(TheDamageFXStore,"TheDamageFXStore", MSGNEW("GameEngineSubsystem") DamageFXStore(), &xferCRC, nullptr, "Data\\INI\\DamageFX");
 		initSubsystem(TheArmorStore,"TheArmorStore", MSGNEW("GameEngineSubsystem") ArmorStore(), &xferCRC, nullptr, "Data\\INI\\Armor");
+		// BFME: E2-04. Attribute modifiers and experience levels; the files exist only in BFME1 data.
+		initSubsystem(TheBfmeAttributeStore,"TheBfmeAttributeStore", MSGNEW("GameEngineSubsystem") BfmeAttributeStore(), &xferCRC,
+			INILenient::isEnabled() ? "Data\\INI\\AttributeModifier" : nullptr, INILenient::isEnabled() ? "Data\\INI\\ExperienceLevels" : nullptr);
+		if (INILenient::isEnabled())
+			fprintf(stderr, "[levels] %d ModifierList, %d ExperienceLevel blocks (BFME: E2-04)\n",
+				TheBfmeAttributeStore->getModifierListCount(), TheBfmeAttributeStore->getExperienceLevelCount());
 		initSubsystem(TheBuildAssistant,"TheBuildAssistant", MSGNEW("GameEngineSubsystem") BuildAssistant, nullptr);
 
 

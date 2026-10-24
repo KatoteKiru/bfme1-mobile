@@ -404,6 +404,7 @@ static const BlockParse theTypeTable[] =
 	{ "DialogEvent",                    INI::parseDialogDefinition },
 	{ "DrawGroupInfo",                  INI::parseDrawGroupNumberDefinition },
 	{ "DynamicGameLOD",                 INI::parseDynamicGameLODDefinition },
+	{ "ExperienceLevel",                INI::parseExperienceLevelDefinition },	// BFME: E2-04
 	{ "EvaEvent",                       INI::parseEvaEvent },
 	{ "FXList",                         INI::parseFXListDefinition },
 	{ "GameData",                       INI::parseGameDataDefinition },
@@ -416,6 +417,7 @@ static const BlockParse theTypeTable[] =
 	{ "MapData",                        INI::parseMapDataDefinition },
 	{ "MappedImage",                    INI::parseMappedImageDefinition },
 	{ "MiscAudio",                      INI::parseMiscAudio },
+	{ "ModifierList",                   INI::parseModifierListDefinition },	// BFME: E2-04
 	{ "Mouse",                          INI::parseMouseDefinition },
 	{ "MouseCursor",                    INI::parseMouseCursorDefinition },
 	{ "MultiplayerColor",               INI::parseMultiplayerColorDefinition },

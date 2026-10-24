@@ -31,6 +31,7 @@
 
 #include "Common/Xfer.h"
 #include "Common/ThingTemplate.h"
+#include "GameLogic/BfmeAttributeModifiers.h"	// BFME: E2-04
 #include "GameLogic/ExperienceTracker.h"
 #include "GameLogic/GameLogic.h"
 #include "GameLogic/Object.h"
@@ -45,6 +46,9 @@ ExperienceTracker::ExperienceTracker(Object *parent) :
 	m_experienceScalar( 1.0f ),
 	m_currentExperience(0)
 {
+	m_bfmeLevel = 0;	// BFME: E2-04
+	m_bfmeTable = nullptr;
+	m_bfmeTableResolved = FALSE;
 	resetTrainable();
 }
 
@@ -60,7 +64,99 @@ Int ExperienceTracker::getExperienceValue( const Object* killer ) const
 	if( killer->getRelationship( m_parent ) == ALLIES )
 		return 0;
 
+	// BFME: E2-04. ExperienceAward of the level the victim is at.
+	if( const BfmeLevelTable *table = getBfmeLevelTable() )
+	{
+		const BfmeExperienceLevel *level = table->getLevel( getBfmeLevel() );
+		return level ? level->m_experienceAward : 0;
+	}
+
 	return m_parent->getTemplate()->getExperienceValue(m_currentLevel);
+}
+
+//-------------------------------------------------------------------------------------------------
+// BFME: E2-04. BFME1 experience levels.
+//-------------------------------------------------------------------------------------------------
+const BfmeLevelTable* ExperienceTracker::getBfmeLevelTable() const
+{
+	if( !m_bfmeTableResolved )
+	{
+		m_bfmeTableResolved = TRUE;
+		m_bfmeTable = TheBfmeAttributeStore ? TheBfmeAttributeStore->findLevelTable( m_parent->getTemplate()->getName() ) : nullptr;
+		if( m_bfmeTable && m_bfmeTable->getMaxLevel() == 0 )
+			m_bfmeTable = nullptr;
+	}
+	return m_bfmeTable;
+}
+
+//-------------------------------------------------------------------------------------------------
+Int ExperienceTracker::getBfmeLevel() const
+{
+	const BfmeLevelTable *table = getBfmeLevelTable();
+	if( table == nullptr )
+		return 0;
+	return max( m_bfmeLevel, table->levelForExperience( m_currentExperience ) );
+}
+
+//-------------------------------------------------------------------------------------------------
+/** Applies the effects of every level between the last one reached and the one m_currentExperience
+	gives: the level's AttributeModifiers (they stay, so the bonuses of successive levels stack) and
+	its Upgrades. Then VeterancyLevel follows, for the Zero Hour code that reads it. */
+void ExperienceTracker::refreshBfmeLevel( Bool provideFeedback )
+{
+	const BfmeLevelTable *table = getBfmeLevelTable();
+	if( table == nullptr )
+		return;
+
+	const Int newLevel = table->levelForExperience( m_currentExperience );
+	while( m_bfmeLevel < newLevel )
+	{
+		++m_bfmeLevel;
+		const BfmeExperienceLevel *level = table->getLevel( m_bfmeLevel );
+		if( level == nullptr )
+			continue;
+		for( size_t i = 0; i < level->m_attributeModifiers.size(); ++i )
+			m_parent->bfmeApplyModifierList( TheBfmeAttributeStore->findModifierList( level->m_attributeModifiers[i] ), 0 );
+		for( size_t i = 0; i < level->m_upgrades.size(); ++i )
+		{
+			const UpgradeTemplate *upgradeT = TheUpgradeCenter ? TheUpgradeCenter->findUpgrade( level->m_upgrades[i] ) : nullptr;
+			if( upgradeT && !m_parent->hasUpgrade( upgradeT ) )
+				m_parent->giveUpgrade( upgradeT );
+		}
+		if( m_bfmeLevel > 1 )
+			fprintf( stderr, "[levels] frame %u %s id %u reached level %d (xp %d, %s)\n", TheGameLogic->getFrame(),
+				m_parent->getTemplate()->getName().str(), (unsigned)m_parent->getID(), m_bfmeLevel, m_currentExperience, level->m_name.str() );
+	}
+
+	const VeterancyLevel oldVet = m_currentLevel;
+	const VeterancyLevel newVet = BfmeLevelTable::veterancyForLevel( max( m_bfmeLevel, newLevel ) );
+	if( newVet != oldVet )
+	{
+		m_currentLevel = newVet;
+		m_parent->onVeterancyLevelChanged( oldVet, newVet, provideFeedback );
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+void ExperienceTracker::setBfmeLevel( Int level, Bool provideFeedback )
+{
+	const BfmeLevelTable *table = getBfmeLevelTable();
+	if( table == nullptr || level <= getBfmeLevel() )
+		return;
+	m_currentExperience = max( m_currentExperience, table->experienceForLevel( level ) );
+	refreshBfmeLevel( provideFeedback );
+}
+
+//-------------------------------------------------------------------------------------------------
+void ExperienceTracker::gainBfmeLevels( Int levels, Int levelCap )
+{
+	const BfmeLevelTable *table = getBfmeLevelTable();
+	if( table == nullptr || levels <= 0 )
+		return;
+	Int target = getBfmeLevel() + levels;
+	if( levelCap > 0 )
+		target = min( target, levelCap );
+	setBfmeLevel( min( target, table->getMaxLevel() ), TRUE );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -176,6 +272,18 @@ void ExperienceTracker::addExperiencePoints( Int experienceGain, Bool canScaleFo
 	if( !isTrainable() )
 		return; //safety
 
+	// BFME: E2-04. BFME levels: EXPERIENCE modifiers (leadership) multiply the gain, the level comes from
+	// experiencelevels.ini instead of the template's ExperienceRequired.
+	if( getBfmeLevelTable() )
+	{
+		Real gain = (Real)experienceGain;
+		if( canScaleForBonus )
+			gain *= m_experienceScalar * m_parent->getBfmeAttributes().experienceMult( TheGameLogic->getFrame() );
+		m_currentExperience += (Int)gain;
+		refreshBfmeLevel( TRUE );
+		return;
+	}
+
 	VeterancyLevel oldLevel = m_currentLevel;
 
 	Int amountToGain = experienceGain;
@@ -221,6 +329,14 @@ void ExperienceTracker::setExperienceAndLevel( Int experienceIn, Bool provideFee
 	if( !isTrainable() )
 		return; //safety
 
+	// BFME: E2-04. Levels already reached are kept (their bonuses are not taken back).
+	if( getBfmeLevelTable() )
+	{
+		m_currentExperience = experienceIn;
+		refreshBfmeLevel( provideFeedback );
+		return;
+	}
+
 	VeterancyLevel oldLevel = m_currentLevel;
 
 	m_currentExperience = experienceIn;
@@ -251,6 +367,7 @@ void ExperienceTracker::crc( Xfer *xfer )
 	xfer->xferUser( &m_currentLevel, sizeof( VeterancyLevel ) );
 #if !RETAIL_COMPATIBLE_CRC
 	xfer->xferBool(&m_isTrainable);
+	xfer->xferInt(&m_bfmeLevel);	// BFME: E2-04
 #endif
 }
 
@@ -259,6 +376,7 @@ void ExperienceTracker::crc( Xfer *xfer )
 	* Version Info:
 	* 1: Initial version
 	* 2: TheSuperHackers @tweak Serialize m_isTrainable
+	* 3: BFME: E2-04. BFME level reached (m_bfmeLevel)
 	*/
 // ----------------------------------------------------------------------------
 void ExperienceTracker::xfer( Xfer *xfer )
@@ -268,7 +386,7 @@ void ExperienceTracker::xfer( Xfer *xfer )
 #if RETAIL_COMPATIBLE_XFER_SAVE
 	XferVersion currentVersion = 1;
 #else
-	XferVersion currentVersion = 2;
+	XferVersion currentVersion = 3;
 #endif
 	XferVersion version = currentVersion;
 	xfer->xferVersion( &version, currentVersion );
@@ -290,6 +408,9 @@ void ExperienceTracker::xfer( Xfer *xfer )
 
 	if (version >= 2)
 		xfer->xferBool(&m_isTrainable);
+
+	if (version >= 3)
+		xfer->xferInt(&m_bfmeLevel);
 }
 
 //-----------------------------------------------------------------------------

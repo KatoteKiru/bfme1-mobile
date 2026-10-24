@@ -37,6 +37,7 @@
 #include "texturefilter.h"
 
 #include "Common/GlobalData.h"
+#include "GameLogic/BfmeAttributeModifiers.h"	// BFME: E2-04
 
 #define DEFINE_TERRAIN_LOD_NAMES
 #define DEFINE_TIME_OF_DAY_NAMES
@@ -435,6 +436,7 @@ GlobalData* GlobalData::m_theOriginal = nullptr;
 	{ "HealthBonus_Veteran",				INI::parsePercentToReal, nullptr,	offsetof( GlobalData, m_healthBonus[LEVEL_VETERAN]) },
 	{ "HealthBonus_Elite",					INI::parsePercentToReal, nullptr,	offsetof( GlobalData, m_healthBonus[LEVEL_ELITE]) },
 	{ "HealthBonus_Heroic",					INI::parsePercentToReal, nullptr,	offsetof( GlobalData, m_healthBonus[LEVEL_HEROIC]) },
+	{ "AttributeModifierArmorMaxBonus",	bfmeParseAmount, nullptr,	offsetof( GlobalData, m_bfmeArmorMaxBonus ) },	// BFME: E2-04
 
 	{ "HumanSoloPlayerHealthBonus_Easy",					INI::parsePercentToReal,			nullptr,			offsetof( GlobalData, m_soloPlayerHealthBonusForDifficulty[PLAYER_HUMAN][DIFFICULTY_EASY] ) },
 	{ "HumanSoloPlayerHealthBonus_Normal",				INI::parsePercentToReal,			nullptr,			offsetof( GlobalData, m_soloPlayerHealthBonusForDifficulty[PLAYER_HUMAN][DIFFICULTY_NORMAL] ) },
@@ -1062,6 +1064,7 @@ GlobalData::GlobalData()
 
 	for (i = LEVEL_FIRST; i <= LEVEL_LAST; ++i)
 		m_healthBonus[i] = 1.0f;
+	m_bfmeArmorMaxBonus = 1.0f;	// BFME: E2-04 (no cap unless GameData sets one)
 
 	for (i = 0; i < PLAYERTYPE_COUNT; ++i)
 	{

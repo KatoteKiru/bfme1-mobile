@@ -41,6 +41,7 @@
 
 #include "GameClient/Color.h"
 
+#include "GameLogic/BfmeAttributeModifiers.h"	// BFME: E2-04
 #include "GameLogic/Damage.h" //for kill()
 #include "GameLogic/WeaponBonusConditionFlags.h"
 #include "GameLogic/WeaponSet.h"
@@ -74,6 +75,7 @@ class DieModule;
 class DieModuleInterface;
 class ExitInterface;
 class ExperienceTracker;
+struct BfmeModifierList;	// BFME: E2-04
 class FiringTracker;
 class Module;
 class PartitionData;
@@ -236,6 +238,17 @@ public:
 	void createVeterancyLevelFX(VeterancyLevel oldLevel, VeterancyLevel newLevel);
 	ExperienceTracker* getExperienceTracker() {return m_experienceTracker;}
 	const ExperienceTracker* getExperienceTracker() const {return m_experienceTracker;}
+
+	// BFME: E2-04. BFME ModifierLists active on this object (leadership, level bonuses, forge upgrades).
+	const BfmeAttributeSet& getBfmeAttributes() const { return m_bfmeAttributes; }
+	/// Applies a ModifierList for durationFrames (0 = until removed); a list already active is only
+	/// extended. On first application HEALTH raises max and current hit points and the list's
+	/// upgrades are granted. Returns TRUE on first application.
+	Bool bfmeApplyModifierList( const BfmeModifierList* list, UnsignedInt durationFrames );
+	void bfmeRemoveModifierList( const BfmeModifierList* list );
+	void bfmeExpireModifierLists();	///< drops ended lists (and their HEALTH)
+	/// Multiplier on damage of type dt that this object takes after its Armor.ini armor (ARMOR modifiers).
+	Real bfmeDamageTakenFactor( DamageType dt ) const;
 	VeterancyLevel getVeterancyLevel() const;
 
 	inline const AsciiString& getName() const { return m_name; }
@@ -758,6 +771,7 @@ private:
 	PartitionData*								m_partitionData;	///< our PartitionData
 	RadarObject*									m_radarData;				///< radar data
 	ExperienceTracker*						m_experienceTracker;	///< Manages experience, gaining levels, and value when killed
+	BfmeAttributeSet							m_bfmeAttributes;			///< BFME: E2-04
 
 	Object*												m_containedBy;					/**< an object can only be contained by at most one
 																	other object, this is that object (if present) */

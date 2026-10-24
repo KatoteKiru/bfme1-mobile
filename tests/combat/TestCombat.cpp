@@ -1,8 +1,9 @@
 // BFME1 Mobile — tests (E2-03): BFME1 weapon nuggets, damage/death types and armor.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The real INI.cpp, Damage.cpp, KindOf.cpp, Armor.cpp and BfmeWeaponNuggets.cpp load small
-// synthetic INI files (own text in the shape of BFME1 Weapon.ini / Armor.ini, no EA data).
+// The real INI.cpp, Damage.cpp, KindOf.cpp, Armor.cpp, BfmeWeaponNuggets.cpp and (E2-04)
+// BfmeAttributeModifiers.cpp load small synthetic INI files (own text in the shape of BFME1
+// Weapon.ini / Armor.ini / attributemodifier.ini / experiencelevels.ini, no EA data).
 // "Weapon" blocks are parsed with the nugget field parsers into a test struct: the full
 // WeaponTemplate needs the whole game (FX, OCL, audio), its glue is covered by the in-game check.
 #include "PreRTS.h"
@@ -14,6 +15,7 @@
 #include "Common/LocalFileSystem.h"
 #include "Common/NameKeyGenerator.h"
 #include "GameLogic/Armor.h"
+#include "GameLogic/BfmeAttributeModifiers.h"
 #include "GameLogic/BfmeWeaponNuggets.h"
 #include "GameLogic/Damage.h"
 #include "StdDevice/Common/StdLocalFileSystem.h"
@@ -71,6 +73,8 @@ void ensureEngine()
 	}
 	if (TheArmorStore == nullptr)
 		TheArmorStore = new ArmorStore;
+	if (TheBfmeAttributeStore == nullptr)
+		TheBfmeAttributeStore = new BfmeAttributeStore;
 }
 
 // TRUE if INI::load threw.
@@ -428,4 +432,237 @@ TEST(bfme_armor_types_and_damage_scalar)
 	REQUIRE(near(zh->getDamageScalar(), 1.0f));
 	REQUIRE(near(zh->adjustDamage(DAMAGE_SMALL_ARMS, 100.0f), 40.0f));
 	REQUIRE(near(zh->adjustDamage(DAMAGE_SLASH, 100.0f), 100.0f));
+}
+
+// ---- E2-04: experience levels and attribute modifiers -------------------------------------------
+
+const char *kModifiers =
+	"#define TEST_FARM_BONUS 1.2\n"
+	"ModifierList TestLeadership\n"
+	"  Category = LEADERSHIP\n"
+	"  Modifier = DAMAGE_MULT 160%\n"
+	"  Modifier = ARMOR 50%\n"
+	"  Modifier = EXPERIENCE 200%\n"
+	"  Duration = 3000\n"
+	"  FX = FX_SomeLeadership\n"
+	"  MultiLevelFX = Yes\n"
+	"End\n"
+	"ModifierList TestLevelUp\n"
+	"  Category = LEVEL\n"
+	"  Modifier = DAMAGE_MULT 125%\n"
+	"  Modifier = ARMOR 40%\n"
+	"  Modifier = HEALTH 100\n"
+	"  Modifier = RATE_OF_FIRE 150%\n"	/* BFME2 type: line dropped */
+	"End\n"
+	"ModifierList TestFarmLevel2\n"
+	"  Category = STRUCTURE\n"
+	"  Modifier = PRODUCTION TEST_FARM_BONUS %\n"
+	"  Modifier = DAMAGE_ADD 10\n"
+	"End\n"
+	"ModifierList TestSpell\n"
+	"  Category = SPELL\n"
+	"  Modifier = SPELL_DAMAGE 300%\n"
+	"  Modifier = DAMAGE_MULT 50%\n"
+	"  Upgrade = Upgrade_TestA Upgrade_TestB Delay:500\n"
+	"End\n";
+
+const char *kLevels =
+	"#define TEST_HERO_LVL2_EXP 200\n"
+	"ExperienceLevel TestHeroLevel3\n"
+	"  TargetNames = TestHero TestHeroSummoned\n"
+	"  RequiredExperience = 600\n"
+	"  ExperienceAward = 300\n"
+	"  Rank = 3\n"
+	"  AttributeModifiers = TestLevelUp\n"
+	"  LevelUpFx = FX:TestLevelUpFX\n"
+	"  SelectionDecal\n"
+	"    Texture = SomeDecal\n"
+	"    Style = SHADOW_ALPHA_DECAL\n"
+	"  End\n"
+	"End\n"
+	"ExperienceLevel TestHeroLevel1\n"
+	"  TargetNames = TestHero TestHeroSummoned\n"
+	"  RequiredExperience = 1\n"
+	"  ExperienceAward = 100\n"
+	"  Rank = 1\n"
+	"End\n"
+	"ExperienceLevel TestHeroLevel2\n"
+	"  TargetNames = TestHero\n"
+	"  TargetNames = TestHeroSummoned\n"
+	"  RequiredExperience = TEST_HERO_LVL2_EXP\n"
+	"  ExperienceAward = 200\n"
+	"  Rank = 2\n"
+	"  AttributeModifiers = TestLevelUp TestFarmLevel2\n"
+	"  Upgrades = Upgrade_TestHeroAbility\n"
+	"End\n"
+	"ExperienceLevel TestSoldierLevel2\n"
+	"  TargetNames = TestSoldier\n"
+	"  RequiredExperience = 50\n"
+	"  ExperienceAward = 20\n"
+	"  Rank = 2\n"
+	"End\n";
+
+TEST(modifier_amounts_percent_and_plain)
+{
+	REQUIRE(near(bfmeScanAmount("160%"), 1.6f));
+	REQUIRE(near(bfmeScanAmount("50%"), 0.5f));
+	REQUIRE(near(bfmeScanAmount("1.2"), 1.2f));		// plain number: as written (PRODUCTION 1.2 % = x1.2)
+	REQUIRE(near(bfmeScanAmount("100"), 100.0f));	// HEALTH 100 = +100 hit points
+}
+
+TEST(parse_modifier_lists)
+{
+	REQUIRE(!load("attributemodifier.ini", kModifiers, true));
+	const BfmeModifierList *lead = TheBfmeAttributeStore->findModifierList("TestLeadership");
+	REQUIRE(lead != nullptr);
+	REQUIRE(lead->m_category == BFME_MODCAT_LEADERSHIP);
+	REQUIRE(lead->m_modifiers.size() == 3);
+	REQUIRE(near(lead->product(BFME_MOD_DAMAGE_MULT), 1.6f));
+	REQUIRE(near(lead->sum(BFME_MOD_ARMOR), 0.5f));
+	REQUIRE(near(lead->product(BFME_MOD_EXPERIENCE), 2.0f));
+	REQUIRE(lead->m_durationFrames == 90);	// 3000 ms at 30 logic frames/s
+
+	const BfmeModifierList *lvl = TheBfmeAttributeStore->findModifierList("TestLevelUp");
+	REQUIRE(lvl != nullptr);
+	REQUIRE(lvl->m_category == BFME_MODCAT_LEVEL);
+	REQUIRE(lvl->m_modifiers.size() == 3);	// RATE_OF_FIRE dropped
+	REQUIRE(near(lvl->sum(BFME_MOD_HEALTH), 100.0f));
+	REQUIRE(lvl->m_durationFrames == 0);
+
+	const BfmeModifierList *farm = TheBfmeAttributeStore->findModifierList("TestFarmLevel2");
+	REQUIRE(farm != nullptr);
+	REQUIRE(near(farm->product(BFME_MOD_PRODUCTION), 1.2f));	// #define + separate "%": x1.2, not x0.012
+	REQUIRE(near(farm->sum(BFME_MOD_DAMAGE_ADD), 10.0f));
+
+	const BfmeModifierList *spell = TheBfmeAttributeStore->findModifierList("TestSpell");
+	REQUIRE(spell != nullptr);
+	REQUIRE(spell->m_upgrades.size() == 2);
+	REQUIRE(spell->m_upgrades[1] == AsciiString("Upgrade_TestB"));
+	REQUIRE(TheBfmeAttributeStore->findModifierList("NoSuchList") == nullptr);
+	REQUIRE(INILenient::counters().fields + INILenient::counters().values + INILenient::counters().blocks == 0);
+}
+
+TEST(parse_experience_levels_into_tables)
+{
+	REQUIRE(!load("experiencelevels.ini", kLevels, true));
+	const BfmeLevelTable *hero = TheBfmeAttributeStore->findLevelTable("TestHero");
+	REQUIRE(hero != nullptr);
+	REQUIRE(hero->getMaxLevel() == 3);
+	REQUIRE(hero->getLevel(1)->m_name == AsciiString("TestHeroLevel1"));	// sorted by RequiredExperience
+	REQUIRE(hero->getLevel(2)->m_requiredExperience == 200);				// #define resolved
+	REQUIRE(hero->getLevel(2)->m_attributeModifiers.size() == 2);
+	REQUIRE(hero->getLevel(2)->m_upgrades.size() == 1);
+	REQUIRE(hero->getLevel(3)->m_experienceAward == 300);
+	REQUIRE(hero->getLevel(4) == nullptr);
+
+	const BfmeLevelTable *summoned = TheBfmeAttributeStore->findLevelTable("TestHeroSummoned");	// two TargetNames lines
+	REQUIRE(summoned != nullptr);
+	REQUIRE(summoned->getMaxLevel() == 3);
+	REQUIRE(TheBfmeAttributeStore->findLevelTable("TestSoldier")->getMaxLevel() == 1);
+	REQUIRE(TheBfmeAttributeStore->findLevelTable("TestTower") == nullptr);
+}
+
+TEST(level_from_experience_and_veterancy_mapping)
+{
+	REQUIRE(!load("experiencelevels.ini", kLevels, true));
+	const BfmeLevelTable *hero = TheBfmeAttributeStore->findLevelTable("TestHero");
+	REQUIRE(hero->levelForExperience(0) == 1);	// below every requirement: the first level
+	REQUIRE(hero->levelForExperience(199) == 1);
+	REQUIRE(hero->levelForExperience(200) == 2);
+	REQUIRE(hero->levelForExperience(599) == 2);
+	REQUIRE(hero->levelForExperience(100000) == 3);
+	REQUIRE(hero->experienceForLevel(3) == 600);
+	REQUIRE(hero->experienceForLevel(9) == 600);	// clamped to the last level
+	REQUIRE(BfmeLevelTable::veterancyForLevel(1) == LEVEL_REGULAR);
+	REQUIRE(BfmeLevelTable::veterancyForLevel(2) == LEVEL_VETERAN);
+	REQUIRE(BfmeLevelTable::veterancyForLevel(3) == LEVEL_ELITE);
+	REQUIRE(BfmeLevelTable::veterancyForLevel(10) == LEVEL_HEROIC);
+}
+
+TEST(modifier_lists_refresh_stack_and_expire)
+{
+	REQUIRE(!load("attributemodifier.ini", kModifiers, true));
+	const BfmeModifierList *lead = TheBfmeAttributeStore->findModifierList("TestLeadership");
+	const BfmeModifierList *lvl = TheBfmeAttributeStore->findModifierList("TestLevelUp");
+	BfmeAttributeSet set;
+	REQUIRE(near(set.damageMult(DAMAGE_SLASH, 0), 1.0f));
+
+	REQUIRE(set.add(lead, 100, lead->m_durationFrames));		// first time: one-shot effects apply
+	REQUIRE(!set.add(lead, 150, lead->m_durationFrames));		// two heroes' auras: refreshed, not doubled
+	REQUIRE(set.getActive().size() == 1);
+	REQUIRE(near(set.damageMult(DAMAGE_SLASH, 200), 1.6f));
+	REQUIRE(set.add(lvl, 200, 0));													// a different list stacks
+	REQUIRE(near(set.damageMult(DAMAGE_SLASH, 200), 2.0f));	// 160% * 125%
+	REQUIRE(near(set.experienceMult(200), 2.0f));
+
+	REQUIRE(set.isActive(lead, 239));												// refreshed at 150: until 240
+	REQUIRE(!set.isActive(lead, 240));
+	REQUIRE(near(set.damageMult(DAMAGE_SLASH, 240), 1.25f));	// leadership left, the level bonus stays
+	std::vector<const BfmeModifierList*> ended;
+	set.expire(240, &ended);
+	REQUIRE(ended.size() == 1 && ended[0] == lead);
+	REQUIRE(set.getActive().size() == 1);
+	REQUIRE(set.add(lead, 300, lead->m_durationFrames));		// back in range: new again
+	REQUIRE(set.remove(lvl));
+	REQUIRE(!set.remove(lvl));
+}
+
+TEST(attacker_damage_mult_add_and_spell_damage)
+{
+	REQUIRE(!load("attributemodifier.ini", kModifiers, true));
+	BfmeAttributeSet set;
+	set.add(TheBfmeAttributeStore->findModifierList("TestLeadership"), 0, 0);
+	set.add(TheBfmeAttributeStore->findModifierList("TestSpell"), 0, 0);
+	set.add(TheBfmeAttributeStore->findModifierList("TestFarmLevel2"), 0, 0);
+	REQUIRE(near(set.damageMult(DAMAGE_SLASH, 1), 0.8f));		// DAMAGE_MULT 160% * 50%
+	REQUIRE(near(set.damageMult(DAMAGE_MAGIC, 1), 3.0f));		// SPELL_DAMAGE replaces DAMAGE_MULT for MAGIC
+	REQUIRE(near(set.damageAdd(1), 10.0f));
+
+	// (base + DAMAGE_ADD) * mult, DAMAGE_ADD only on nuggets with AcceptDamageAdd.
+	BfmeDamageNugget n;
+	n.m_damage = 40.0f;
+	const BfmeObjectFilter::Subject orc = subject({ KINDOF_INFANTRY });
+	REQUIRE(near(n.damageFor(orc, TRUE, 0.0f, 0.0f, 1.0f * 1.6f, 1.0f, 10.0f), 64.0f));
+	n.m_acceptDamageAdd = TRUE;
+	REQUIRE(near(n.damageFor(orc, TRUE, 0.0f, 0.0f, 1.0f * 1.6f, 1.0f, 10.0f), 80.0f));
+}
+
+TEST(victim_armor_modifiers_capped)
+{
+	REQUIRE(!load("attributemodifier.ini", kModifiers, true));
+	BfmeAttributeSet set;
+	REQUIRE(near(set.armorFactor(DAMAGE_SLASH, 0, 0.8f), 1.0f));
+	set.add(TheBfmeAttributeStore->findModifierList("TestLeadership"), 0, 0);	// ARMOR 50%
+	REQUIRE(near(set.armorFactor(DAMAGE_SLASH, 0, 1.0f), 0.5f));
+	set.add(TheBfmeAttributeStore->findModifierList("TestLevelUp"), 0, 0);		// + ARMOR 40%
+	REQUIRE(near(set.armorFactor(DAMAGE_SLASH, 0, 1.0f), 0.1f));
+	REQUIRE(near(set.armorFactor(DAMAGE_SLASH, 0, 0.8f), 0.2f));		// capped at AttributeModifierArmorMaxBonus
+	REQUIRE(near(set.armorFactor(DAMAGE_HEALING, 0, 0.8f), 1.0f));	// not weapon damage
+	REQUIRE(near(set.armorFactor(DAMAGE_UNRESISTABLE, 0, 0.8f), 1.0f));
+	REQUIRE(near(BfmeAttributeSet::armorFactorFor(-0.25f, 0.8f), 1.25f));	// a curse: more damage
+	REQUIRE(near(BfmeAttributeSet::armorFactorFor(2.0f, 1.5f), 0.0f));		// never below zero
+
+	// GameData spelling of the cap.
+	REQUIRE(near(bfmeScanAmount("80%"), 0.8f));
+}
+
+TEST(zh_mode_parses_modifier_and_level_blocks)
+{
+	// Without the lenient mode (no #define, no unknown fields) the blocks parse with the same tables.
+	const char *strict =
+		"ModifierList TestStrict\n"
+		"  Category = WEAPON\n"
+		"  Modifier = DAMAGE_MULT 125%\n"
+		"End\n"
+		"ExperienceLevel TestStrictLevel2\n"
+		"  TargetNames = TestStrictUnit\n"
+		"  RequiredExperience = 50\n"
+		"  Rank = 2\n"
+		"  AttributeModifiers = TestStrict\n"
+		"End\n";
+	REQUIRE(!load("strict.ini", strict, false));
+	const BfmeModifierList *list = TheBfmeAttributeStore->findModifierList("TestStrict");
+	REQUIRE(list != nullptr && list->m_category == BFME_MODCAT_WEAPON);
+	REQUIRE(near(list->product(BFME_MOD_DAMAGE_MULT), 1.25f));
+	REQUIRE(TheBfmeAttributeStore->findLevelTable("TestStrictUnit")->getLevel(1)->m_rank == 2);
 }

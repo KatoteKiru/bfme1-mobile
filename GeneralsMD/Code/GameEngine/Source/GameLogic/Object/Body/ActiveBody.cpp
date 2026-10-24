@@ -327,6 +327,7 @@ Real ActiveBody::estimateDamage( DamageInfoInput& damageInfo ) const
 	}
 
 	Real amount = m_curArmor.adjustDamage(damageInfo.m_damageType, damageInfo.m_amount);
+	amount *= getObject()->bfmeDamageTakenFactor(damageInfo.m_damageType);	// BFME: E2-04 (ARMOR modifiers)
 
 	return amount;
 }
@@ -388,6 +389,7 @@ void ActiveBody::attemptDamage( DamageInfo *damageInfo )
 	Bool alreadyHandled = FALSE;
 	Bool allowModifier = TRUE;
 	Real amount = m_curArmor.adjustDamage(damageInfo->in.m_damageType, damageInfo->in.m_amount);
+	amount *= obj->bfmeDamageTakenFactor(damageInfo->in.m_damageType);	// BFME: E2-04 (ARMOR modifiers: leadership, levels)
 
 	switch( damageInfo->in.m_damageType )
 	{

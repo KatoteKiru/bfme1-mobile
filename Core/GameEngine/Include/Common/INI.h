@@ -208,6 +208,8 @@ public:
 	static void parseWeatherDefinition( INI *ini );
 	static void parseMappedImageDefinition( INI *ini );
 	static void parseArmorDefinition( INI *ini );
+	static void parseModifierListDefinition( INI *ini );		///< BFME: E2-04 (attributemodifier.ini)
+	static void parseExperienceLevelDefinition( INI *ini );	///< BFME: E2-04 (experiencelevels.ini)
 	static void parseDamageFXDefinition( INI *ini );
 	static void parseDrawGroupNumberDefinition( INI *ini );
 	static void parseTerrainDefinition( INI *ini );

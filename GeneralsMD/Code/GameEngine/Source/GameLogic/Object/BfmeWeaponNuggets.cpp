@@ -232,7 +232,7 @@ BfmeDamageNugget::BfmeDamageNugget() :
 
 //-------------------------------------------------------------------------------------------------
 Real BfmeDamageNugget::damageFor( const BfmeObjectFilter::Subject& victim, Bool isPrimaryVictim, Real distSqr,
-	Real heightAboveImpact, Real bonusDamage, Real bonusRadius ) const
+	Real heightAboveImpact, Real bonusDamage, Real bonusRadius, Real damageAdd ) const
 {
 	if( !m_filter.matches( victim ) )
 		return -1.0f;
@@ -248,7 +248,8 @@ Real BfmeDamageNugget::damageFor( const BfmeObjectFilter::Subject& victim, Bool 
 	if( m_damageMaxHeight > 0.0f && heightAboveImpact > m_damageMaxHeight )
 		return -1.0f;
 
-	Real damage = m_damage * bonusDamage;
+	// BFME: E2-04. (base + DAMAGE_ADD) * mults, EA's order (OpenSAGE ModifierList.cs).
+	Real damage = ( m_damage + ( m_acceptDamageAdd ? damageAdd : 0.0f ) ) * bonusDamage;
 	if( m_damageScalar.m_filter.matches( victim ) )
 		damage *= m_damageScalar.m_scalar;
 	return damage;

@@ -192,3 +192,8 @@ void BehaviorModule::loadPostProcess() {}
 void UpdateModule::crc(Xfer *) {}
 void UpdateModule::xfer(Xfer *) {}
 void UpdateModule::loadPostProcess() {}
+
+#ifndef BFME_COMBAT_TESTS	// BFME: E2-04. tests/combat links the real BfmeAttributeModifiers.cpp
+void INI::parseModifierListDefinition(INI *) {}
+void INI::parseExperienceLevelDefinition(INI *) {}
+#endif

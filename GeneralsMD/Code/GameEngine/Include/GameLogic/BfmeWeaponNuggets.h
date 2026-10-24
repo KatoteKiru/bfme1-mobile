@@ -114,10 +114,12 @@ struct BfmeDamageNugget
 	static const FieldParse* getFieldParse();
 
 	/// Damage this nugget deals to a victim at `distSqr` from the impact point, before armor.
-	/// `bonusDamage`/`bonusRadius` are the WeaponBonus DAMAGE/RADIUS fields. Returns <0 when the
-	/// victim is not affected at all (outside radius, filtered out, above DamageMaxHeight).
+	/// `bonusDamage`/`bonusRadius` are the WeaponBonus DAMAGE/RADIUS fields (times the attacker's
+	/// DAMAGE_MULT, BFME: E2-04); `damageAdd` is the attacker's DAMAGE_ADD sum, used only with
+	/// AcceptDamageAdd. Returns <0 when the victim is not affected at all (outside radius, filtered
+	/// out, above DamageMaxHeight).
 	Real damageFor( const BfmeObjectFilter::Subject& victim, Bool isPrimaryVictim, Real distSqr,
-		Real heightAboveImpact, Real bonusDamage, Real bonusRadius ) const;
+		Real heightAboveImpact, Real bonusDamage, Real bonusRadius, Real damageAdd = 0.0f ) const;
 	/// FALSE when DamageArc excludes a victim at angle `cosToVictim` (cos of the angle between the
 	/// attacker's facing and the attacker→victim direction).
 	Bool arcAllows( Real cosToVictim ) const;

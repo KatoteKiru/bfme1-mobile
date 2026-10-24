@@ -375,6 +375,7 @@ public:
 	Int m_maxFieldParticleCount;			///< maximum number of field-type particles that can exist (roughly)
 	WeaponBonusSet* m_weaponBonusSet;
 	Real m_healthBonus[LEVEL_COUNT];			///< global bonuses to health for veterancy.
+	Real m_bfmeArmorMaxBonus;						///< BFME: E2-04. GameData AttributeModifierArmorMaxBonus: cap on the ARMOR modifier sum
 	Real m_defaultStructureRubbleHeight;	///< for rubbled structures, compress height to this if none specified
 
 	AsciiString m_shellMapName;				///< Holds the shell map name
