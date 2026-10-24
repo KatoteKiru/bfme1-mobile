@@ -56,7 +56,9 @@ ScienceStore *TheScienceStore = nullptr;
 SpecialPowerStore *TheSpecialPowerStore = nullptr;
 ThingFactory *TheThingFactory = nullptr;
 UpgradeCenter *TheUpgradeCenter = nullptr;
+#ifndef BFME_COMBAT_WEAPON_TESTS	// tests/combat weapon binary links the real Weapon.cpp
 WeaponStore *TheWeaponStore = nullptr;
+#endif
 const char *const TheVeterancyNames[] = { nullptr };
 #ifndef BFME_COMBAT_TESTS
 DamageTypeFlags DAMAGE_TYPE_FLAGS_NONE;
@@ -156,7 +158,9 @@ ScienceType ScienceStore::friend_lookupScience(const char *) const { return SCIE
 SpecialPowerTemplate *SpecialPowerStore::findSpecialPowerTemplatePrivate(AsciiString) { return nullptr; }
 ThingTemplate *ThingFactory::findTemplateInternal(const AsciiString &, Bool) { return nullptr; }
 const UpgradeTemplate *UpgradeCenter::findUpgrade(const char *) const { return nullptr; }
+#ifndef BFME_COMBAT_WEAPON_TESTS
 const WeaponTemplate *WeaponStore::findWeaponTemplate(const char *) const { return nullptr; }
+#endif
 const char *const GameClientRandomVariable::DistributionTypeNames[] = { nullptr };
 void GameClientRandomVariable::setRange(Real, Real, DistributionType) {}
 
