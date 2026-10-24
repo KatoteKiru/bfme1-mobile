@@ -4126,6 +4126,12 @@ void Object::crc( Xfer *xfer )
 		}
 	}
 
+#if !RETAIL_COMPATIBLE_CRC
+	// BFME: E2-04
+	if (!m_bfmeAttributes.isEmpty())
+		m_bfmeAttributes.crc( xfer );
+#endif
+
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -4140,13 +4146,18 @@ void Object::crc( Xfer *xfer )
 	* 7: save full mtx, not pos+orient.
 	* 8: Kris: Conversion of object status bits from UnsignedInt to BitFlags<>
 	* 9: Extra sighting for reveal to all with different range units
+	* 10: BFME: E2-04. Active BFME ModifierLists (not written with RETAIL_COMPATIBLE_XFER_SAVE)
 	*/
 //-------------------------------------------------------------------------------------------------
 void Object::xfer( Xfer *xfer )
 {
 
 	// version
+#if RETAIL_COMPATIBLE_XFER_SAVE
 	const XferVersion currentVersion = 9;
+#else
+	const XferVersion currentVersion = 10;	// BFME: E2-04
+#endif
 	XferVersion version = currentVersion;
 	xfer->xferVersion( &version, currentVersion );
 
@@ -4552,6 +4563,12 @@ void Object::xfer( Xfer *xfer )
 	else
 		m_isReceivingDifficultyBonus = FALSE;
 
+	// BFME: E2-04. Active BFME ModifierLists.
+	if (version >= 10)
+		m_bfmeAttributes.xfer( xfer );
+	else
+		m_bfmeAttributes.clear();
+
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -4623,6 +4640,64 @@ void Object::giveUpgrade( const UpgradeTemplate *upgradeT )
 		//
 		updateUpgradeModules();
 	}
+}
+
+//-------------------------------------------------------------------------------------------------
+// BFME: E2-04. BFME ModifierLists.
+//-------------------------------------------------------------------------------------------------
+Bool Object::bfmeApplyModifierList( const BfmeModifierList *list, UnsignedInt durationFrames )
+{
+	if( list == nullptr )
+		return FALSE;
+	bfmeExpireModifierLists();
+	if( !m_bfmeAttributes.add( list, TheGameLogic->getFrame(), durationFrames ) )
+		return FALSE;
+
+	const Real health = list->sum( BFME_MOD_HEALTH );
+	if( health != 0.0f && m_body )
+		m_body->setMaxHealth( max( 1.0f, m_body->getMaxHealth() + health ), ADD_CURRENT_HEALTH_TOO );
+
+	for( size_t i = 0; i < list->m_upgrades.size(); ++i )
+	{
+		const UpgradeTemplate *upgradeT = TheUpgradeCenter ? TheUpgradeCenter->findUpgrade( list->m_upgrades[i] ) : nullptr;
+		if( upgradeT && !hasUpgrade( upgradeT ) )
+			giveUpgrade( upgradeT );
+	}
+	return TRUE;
+}
+
+//-------------------------------------------------------------------------------------------------
+static void bfmeUndoModifierListHealth( BodyModuleInterface *body, const BfmeModifierList *list )
+{
+	const Real health = list->sum( BFME_MOD_HEALTH );
+	if( health != 0.0f && body )
+		body->setMaxHealth( max( 1.0f, body->getMaxHealth() - health ), SAME_CURRENTHEALTH );
+}
+
+//-------------------------------------------------------------------------------------------------
+void Object::bfmeRemoveModifierList( const BfmeModifierList *list )
+{
+	if( list && m_bfmeAttributes.remove( list ) )
+		bfmeUndoModifierListHealth( m_body, list );
+}
+
+//-------------------------------------------------------------------------------------------------
+void Object::bfmeExpireModifierLists()
+{
+	if( m_bfmeAttributes.isEmpty() )
+		return;
+	std::vector<const BfmeModifierList*> ended;
+	m_bfmeAttributes.expire( TheGameLogic->getFrame(), &ended );
+	for( size_t i = 0; i < ended.size(); ++i )
+		bfmeUndoModifierListHealth( m_body, ended[i] );
+}
+
+//-------------------------------------------------------------------------------------------------
+Real Object::bfmeDamageTakenFactor( DamageType dt ) const
+{
+	if( m_bfmeAttributes.isEmpty() )
+		return 1.0f;
+	return m_bfmeAttributes.armorFactor( dt, TheGameLogic->getFrame(), TheGlobalData->m_bfmeArmorMaxBonus );
 }
 
 //-------------------------------------------------------------------------------------------------

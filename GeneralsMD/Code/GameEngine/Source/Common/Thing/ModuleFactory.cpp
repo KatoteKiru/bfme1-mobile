@@ -212,6 +212,7 @@
 #include "GameLogic/Module/WeaponSetUpgrade.h"
 #include "GameLogic/Module/CostModifierUpgrade.h"
 #include "GameLogic/Module/ExperienceScalarUpgrade.h"
+#include "GameLogic/Module/BfmeAttributeModules.h"	// BFME: E2-04
 #include "GameLogic/Module/MaxHealthUpgrade.h"
 
 // create includes
@@ -497,6 +498,11 @@ void ModuleFactory::init()
 	addModule( WeaponSetUpgrade );
 	addModule( WeaponBonusUpgrade );
 	addModule( ExperienceScalarUpgrade );
+	// BFME: E2-04. BFME1 attribute modifiers and experience levels.
+	addModule( AttributeModifierAuraUpdate );
+	addModule( AttributeModifierUpgrade );
+	addModule( ExperienceLevelCreate );
+	addModule( LevelUpUpgrade );
 	addModule( MaxHealthUpgrade );
 
 	// create modules

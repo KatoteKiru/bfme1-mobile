@@ -243,6 +243,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/AITNGuard.h
     Include/GameLogic/Armor.h
     Include/GameLogic/BfmeWeaponNuggets.h
+    Include/GameLogic/BfmeAttributeModifiers.h
     Include/GameLogic/ArmorSet.h
 #    Include/GameLogic/CaveSystem.h
 #    Include/GameLogic/CrateSystem.h
@@ -265,6 +266,7 @@ set(GAMEENGINE_SRC
     Include/GameLogic/Module/AutoDepositUpdate.h
     Include/GameLogic/Module/AutoFindHealingUpdate.h
     Include/GameLogic/Module/AutoHealBehavior.h
+    Include/GameLogic/Module/BfmeAttributeModules.h
     Include/GameLogic/Module/BaikonurLaunchPower.h
     Include/GameLogic/Module/BaseRegenerateUpdate.h
     Include/GameLogic/Module/BattleBusSlowDeathBehavior.h
@@ -853,6 +855,8 @@ set(GAMEENGINE_SRC
     Source/GameLogic/Map/TerrainLogic.cpp
     Source/GameLogic/Object/Armor.cpp
     Source/GameLogic/Object/BfmeWeaponNuggets.cpp
+    Source/GameLogic/Object/BfmeAttributeModifiers.cpp
+    Source/GameLogic/Object/BfmeAttributeModules.cpp
     Source/GameLogic/Object/Behavior/AutoHealBehavior.cpp
     Source/GameLogic/Object/Behavior/BattleBusSlowDeathBehavior.cpp
     Source/GameLogic/Object/Behavior/BehaviorModule.cpp

@@ -1720,10 +1720,10 @@ static Real bfmeCosToVictim(const Object *source, const Object *victim)
 
 //-------------------------------------------------------------------------------------------------
 static void bfmeAttemptDamage(const WeaponTemplate *weapon, const BfmeDamageNugget& n, const DamageInfoInput& in, Object *victim,
-	const Object *source, Bool isPrimary, Real distSqr, const Coord3D *pos, Real bonusDamage, Real bonusRadius)
+	const Object *source, Bool isPrimary, Real distSqr, const Coord3D *pos, Real bonusDamage, Real bonusRadius, Real damageAdd)
 {
 	const Real amount = n.damageFor(bfmeSubject(victim, source), isPrimary, distSqr,
-		victim->getPosition()->z - pos->z, bonusDamage, bonusRadius);
+		victim->getPosition()->z - pos->z, bonusDamage, bonusRadius, damageAdd);
 	if (amount < 0.0f)
 		return;
 	DamageInfo damageInfo;
@@ -1810,10 +1810,22 @@ void WeaponTemplate::dealBfmeDamageNugget(const BfmeDamageNugget& n, Object *sou
 	if (source && source->getControllingPlayer())
 		in.m_sourcePlayerMask = source->getControllingPlayer()->getPlayerMask();
 
+	// BFME: E2-04. The attacker's ModifierLists (leadership, level-ups, forge): DAMAGE_MULT (SPELL_DAMAGE
+	// for MAGIC) and DAMAGE_ADD. A projectile's damage uses its launcher's, as it is credited to it.
+	Real damageMult = 1.0f;
+	Real damageAdd = 0.0f;
+	if (const Object *attacker = creditID != INVALID_ID ? TheGameLogic->findObjectByID(creditID) : nullptr)
+	{
+		const UnsignedInt now = TheGameLogic->getFrame();
+		damageMult = attacker->getBfmeAttributes().damageMult(n.m_damageType, now);
+		damageAdd = attacker->getBfmeAttributes().damageAdd(now);
+	}
+	const Real scaledBonusDamage = bonusDamage * damageMult;
+
 	// The direct target is always hit (Radius 0 hits only it), the rest of the radius by the
 	// Zero Hour RadiusDamageAffects rules, DamageArc and the nugget's filters.
 	if (primaryVictim)
-		bfmeAttemptDamage(this, n, in, primaryVictim, source, TRUE, 0.0f, pos, bonusDamage, bonusRadius);
+		bfmeAttemptDamage(this, n, in, primaryVictim, source, TRUE, 0.0f, pos, scaledBonusDamage, bonusRadius, damageAdd);
 
 	if (radius > 0.0f)
 	{
@@ -1826,7 +1838,7 @@ void WeaponTemplate::dealBfmeDamageNugget(const BfmeDamageNugget& n, Object *sou
 				continue;
 			if (!bfmeRadiusAffects(source, curVictim) || !n.arcAllows(bfmeCosToVictim(source, curVictim)))
 				continue;
-			bfmeAttemptDamage(this, n, in, curVictim, source, FALSE, curVictimDistSqr, pos, bonusDamage, bonusRadius);
+			bfmeAttemptDamage(this, n, in, curVictim, source, FALSE, curVictimDistSqr, pos, scaledBonusDamage, bonusRadius, damageAdd);
 		}
 	}
 }
