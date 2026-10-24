@@ -33,7 +33,14 @@
 #include "Common/Player.h"
 #include "Common/Science.h"
 
+#include <algorithm>
+#include <cstdio>
+#include <set>
+
 ScienceStore* TheScienceStore = nullptr;
+
+// BFME: cycles already written this load. init/reset start a new load.
+static void bfmeClearLoggedScienceCycles();
 
 
 //-----------------------------------------------------------------------------
@@ -41,6 +48,8 @@ void ScienceStore::init()
 {
 	DEBUG_ASSERTCRASH(m_sciences.empty(), ("Hmm"));
 	m_sciences.clear();
+	// BFME: the next load may repeat a prerequisite cycle. Log it again, once.
+	bfmeClearLoggedScienceCycles();
 }
 
 //-----------------------------------------------------------------------------
@@ -63,6 +72,9 @@ void ScienceStore::reset()
 {
 	// nope.
 	//m_sciences.clear();
+
+	// BFME: map.ini is parsed again after reset. A cycle there is logged once more.
+	bfmeClearLoggedScienceCycles();
 
 	// go through all sciences and delete any overrides
 	for (ScienceInfoVec::iterator it = m_sciences.begin(); it != m_sciences.end(); /*++it*/)
@@ -116,8 +128,69 @@ std::vector<AsciiString> ScienceStore::friend_getScienceNames() const
 }
 
 //-----------------------------------------------------------------------------
+// BFME: one canonical key per directed cycle, so A -> B -> A and B -> A -> B
+// are the same line. The printed line keeps the order the walk found.
+static std::set<ScienceVec>& bfmeLoggedScienceCycles()
+{
+	static std::set<ScienceVec> logged;
+	return logged;
+}
+
+static void bfmeClearLoggedScienceCycles()
+{
+	bfmeLoggedScienceCycles().clear();
+}
+
+static void bfmePrintScienceName(ScienceType science)
+{
+	const AsciiString name = TheScienceStore->getInternalNameForScience(science);
+	if (!name.isEmpty())
+		std::fprintf(stderr, " %s", name.str());
+	else
+		std::fprintf(stderr, " %d", static_cast<int>(science));
+}
+
+static void bfmeLogScienceCycle(const ScienceVec& path, ScienceVec::const_iterator again)
+{
+	ScienceVec cycle(again, path.end());
+	const ScienceVec::iterator least = std::min_element(cycle.begin(), cycle.end());
+	std::rotate(cycle.begin(), least, cycle.end());
+	cycle.push_back(cycle.front());
+	if (!bfmeLoggedScienceCycles().insert(cycle).second)
+		return;
+
+	std::fprintf(stderr, "Science prerequisite cycle:");
+	ScienceVec shown(again, path.end());
+	shown.push_back(*again);
+	for (ScienceVec::const_iterator it = shown.begin(); it != shown.end(); ++it)
+	{
+		bfmePrintScienceName(*it);
+		if (it + 1 != shown.end())
+			std::fprintf(stderr, " ->");
+	}
+	std::fprintf(stderr, "\n");
+	std::fflush(stderr);
+}
+
+//-----------------------------------------------------------------------------
 void ScienceInfo::addRootSciences(ScienceVec& v) const
 {
+	// BFME: one path for this call. It is popped when a science returns, so a
+	// shared ancestor (a diamond) is entered again from the other parent.
+	ScienceVec path;
+	addRootSciences(v, path);
+}
+
+void ScienceInfo::addRootSciences(ScienceVec& v, ScienceVec& path) const
+{
+	// BFME: a science already on this path is a prerequisite cycle.
+	const ScienceVec::const_iterator again = std::find(path.begin(), path.end(), m_science);
+	if (again != path.end())
+	{
+		bfmeLogScienceCycle(path, again);
+		return;
+	}
+
 	if (m_prereqSciences.empty())
 	{
 		// we're a root. add ourselves.
@@ -127,12 +200,14 @@ void ScienceInfo::addRootSciences(ScienceVec& v) const
 	else
 	{
 		// we're not a root. add the roots of all our prereqs.
+		path.push_back(m_science);
 		for (ScienceVec::const_iterator it = m_prereqSciences.begin(); it != m_prereqSciences.end(); ++it)
 		{
 			const ScienceInfo* si = TheScienceStore->findScienceInfo(*it);
 			if (si)
-				si->addRootSciences(v);
+				si->addRootSciences(v, path);
 		}
+		path.pop_back();
 	}
 }
 

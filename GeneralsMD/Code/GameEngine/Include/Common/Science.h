@@ -45,12 +45,16 @@ enum ScienceType CPP_11(: Int)
 //-------------------------------------------------------------------------------------------------
 typedef std::vector<ScienceType> ScienceVec;
 
+// BFME: the unit test builds a prerequisite graph and calls the private walk.
+class BfmeScienceWalkTest;
+
 //-------------------------------------------------------------------------------------------------
 class ScienceInfo : public Overridable
 {
 	MEMORY_POOL_GLUE_WITH_USERLOOKUP_CREATE( ScienceInfo, "ScienceInfo"  )
 
 	friend class ScienceStore;
+	friend class BfmeScienceWalkTest;
 
 private:
 	ScienceType						m_science;
@@ -69,6 +73,8 @@ private:
 	}
 
 	void addRootSciences(ScienceVec& v) const;
+	// BFME: `path` is the sciences already on this walk. A repeat is a cycle.
+	void addRootSciences(ScienceVec& v, ScienceVec& path) const;
 };
 EMPTY_DTOR(ScienceInfo);
 
@@ -76,6 +82,7 @@ EMPTY_DTOR(ScienceInfo);
 class ScienceStore : public SubsystemInterface
 {
 	friend class ScienceInfo;
+	friend class BfmeScienceWalkTest;
 
 public:
 	virtual ~ScienceStore() override;

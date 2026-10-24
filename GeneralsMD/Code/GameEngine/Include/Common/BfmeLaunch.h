@@ -14,3 +14,7 @@ AsciiString BfmeDefaultMapPath();
 // GAME_SKIRMISH): slot 0 is the local human with the first playable PlayerTemplate, all other
 // slots are open (no AI). Logs one [launch] line.
 void BfmeStartSkirmish(const AsciiString &mapPath);
+// BFME: E1-40c. Optional AI players: aiSides is a comma list of PlayerTemplate sides (e.g.
+// "Rohan,Mordor"), one medium AI per entry in slots 1..; observer makes slot 0 an observer
+// (AI vs AI). The engine call site reads them from BFME_AI / BFME_AI_OBSERVER.
+void BfmeStartSkirmish(const AsciiString &mapPath, const char *aiSides, Bool observer);

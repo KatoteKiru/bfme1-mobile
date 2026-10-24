@@ -15,6 +15,7 @@
 #include "Sha256.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -257,4 +258,57 @@ TEST(gamedata_blend_all_maps_vs_oracle_and_datacheck)
 	for (const auto& v : versions) std::printf(" v%d: %d", v.first, v.second);
 	std::printf(" )\n");
 	for (const auto& t : totals) std::printf("  %-28s %6d on %d maps\n", t.first.c_str(), t.second, mapsWith[t.first]);
+}
+
+// All .map entries of _patch222maps.big through the real HeightMapData + BlendTileData parsers.
+// Needs only BFME_GAMEDATA (no oracle): 0 refusals, and every map past the old hard limits
+// (NUM_SOURCE_TILES / NUM_BLEND_TILES / NUM_CLIFF_INFO = 4096 / 65536 / 131072) is printed.
+TEST(gamedata_blend_patch222_all_maps)
+{
+	const std::string gamedata = env("BFME_GAMEDATA");
+	if (gamedata.empty()) SKIP("BFME_GAMEDATA not set");
+	const std::string bigPath = gamedata + "/_patch222maps.big";
+	if (!std::filesystem::exists(bigPath)) SKIP("no _patch222maps.big in BFME_GAMEDATA");
+	std::vector<bfmeheights::BigEntry> entries;
+	std::string error;
+	if (!bfmeheights::readBigDirectory(bigPath, entries, error)) throw bfmetest::Failure(error);
+	const int kOldTiles = 4096, kOldBlends = 65536, kOldCliffs = 131072;
+	int maps = 0, refused = 0, above = 0;
+	int maxTiles = 0, maxBlends = 0, maxCliffs = 0;
+	std::string maxTilesMap, maxBlendsMap, maxCliffsMap;
+	std::map<int, int> versions;
+	for (const auto& e : entries) {
+		const std::string name = e.name;
+		if (name.size() < 4) continue;
+		std::string ext = name.substr(name.size() - 4);
+		std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+		if (ext != ".map") continue;
+		++maps;
+		std::vector<uint8_t> bytes;
+		if (!bfmeheights::readBigEntry(bigPath, e, bytes)) throw bfmetest::Failure("cannot read " + name);
+		LoadOptions opt;
+		capturedLog().clear();
+		const LoadedBlend b = loadBlend(bytes, opt);
+		if (!b.ok) {
+			++refused;
+			std::printf("  REFUSED %s: %s\n", name.c_str(), b.error.c_str());
+			continue;
+		}
+		++versions[b.blendVersion];
+		const bool past = b.numBitmapTiles > kOldTiles || b.numBlendedTiles > kOldBlends || b.numCliffInfo > kOldCliffs;
+		if (past) ++above;
+		if (past || name.find("The Trilogy (Updated) Singleplayer") != std::string::npos)
+			std::printf("  %s %s: v%d numBitmapTiles %d numBlendedTiles %d numCliffInfo %d\n", past ? "ABOVE" : "below",
+				name.c_str(), b.blendVersion, b.numBitmapTiles, b.numBlendedTiles, b.numCliffInfo);
+		if (b.numBitmapTiles > maxTiles) { maxTiles = b.numBitmapTiles; maxTilesMap = name; }
+		if (b.numBlendedTiles > maxBlends) { maxBlends = b.numBlendedTiles; maxBlendsMap = name; }
+		if (b.numCliffInfo > maxCliffs) { maxCliffs = b.numCliffInfo; maxCliffsMap = name; }
+	}
+	std::printf("gamedata_blend_patch222_all_maps: %d maps, %d refused, %d above 4096/65536/131072 (", maps, refused, above);
+	for (const auto& v : versions) std::printf(" v%d: %d", v.first, v.second);
+	std::printf(" )\n");
+	std::printf("  max numBitmapTiles %d (%s)\n  max numBlendedTiles %d (%s)\n  max numCliffInfo %d (%s)\n",
+		maxTiles, maxTilesMap.c_str(), maxBlends, maxBlendsMap.c_str(), maxCliffs, maxCliffsMap.c_str());
+	REQUIRE_EQ(maps, 291);
+	REQUIRE_EQ(refused, 0);
 }

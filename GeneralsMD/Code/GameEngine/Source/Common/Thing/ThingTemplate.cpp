@@ -423,6 +423,30 @@ Bool ModuleInfo::clearModuleDataWithTag(const AsciiString& tagToClear, AsciiStri
 
 
 //-------------------------------------------------------------------------------------------------
+// BFME: E1-40. A ChildObject keeps every module of its parent. A module block in the child replaces
+// the inherited module with the same tag; any other tag is added beside the inherited ones. An object
+// has one Body, so a child Body replaces the inherited Body whatever its tag.
+//-------------------------------------------------------------------------------------------------
+Bool ModuleInfo::clearCopiedFromParentEntries(Int interfaceMask, const AsciiString &moduleTag )
+{
+	Bool ret = false;
+	std::vector<Nugget>::iterator it = m_info.begin();
+	while( it != m_info.end() )
+	{
+		if( it->copiedFromDefault
+				&& ( it->m_moduleTag == moduleTag
+					|| ( (interfaceMask & MODULEINTERFACE_BODY) != 0 && (it->interfaceMask & MODULEINTERFACE_BODY) != 0 ) ) )
+		{
+			it = m_info.erase( it );
+			ret = true;
+		}
+		else
+			++it;
+	}
+	return ret;
+}
+
+//-------------------------------------------------------------------------------------------------
 Bool ModuleInfo::clearCopiedFromDefaultEntries(Int interfaceMask, const AsciiString &newName, const ThingTemplate *fullTemplate )
 {
   static KindOfMaskType ImmuneToGPSScramblerMask;
@@ -601,9 +625,18 @@ void ThingTemplate::parseModuleName(INI* ini, void *instance, void* store, const
 //    if (self->getName().compare("GLAVehicleQuadCannon"))
 //      DEBUG_CRASH( ("WE ARE CLEARING DEFAULT MODULES FROM A QUAD CANNON.") );
 
-		self->m_behaviorModuleInfo.clearCopiedFromDefaultEntries(interfaceMask, tokenStr, self );
-		self->m_drawModuleInfo.clearCopiedFromDefaultEntries(interfaceMask, tokenStr, self );
-		self->m_clientUpdateModuleInfo.clearCopiedFromDefaultEntries(interfaceMask, tokenStr, self );
+		if (s_parsingChildObject)
+		{
+			self->m_behaviorModuleInfo.clearCopiedFromParentEntries(interfaceMask, moduleTagStr );
+			self->m_drawModuleInfo.clearCopiedFromParentEntries(interfaceMask, moduleTagStr );
+			self->m_clientUpdateModuleInfo.clearCopiedFromParentEntries(interfaceMask, moduleTagStr );
+		}
+		else
+		{
+			self->m_behaviorModuleInfo.clearCopiedFromDefaultEntries(interfaceMask, tokenStr, self );
+			self->m_drawModuleInfo.clearCopiedFromDefaultEntries(interfaceMask, tokenStr, self );
+			self->m_clientUpdateModuleInfo.clearCopiedFromDefaultEntries(interfaceMask, tokenStr, self );
+		}
 	}
 
 	if (self->m_moduleParsingMode == MODULEPARSE_ADD_REMOVE_REPLACE
@@ -1012,6 +1045,8 @@ void ThingTemplate::parseMaxSimultaneous(INI *ini, void *instance, void *store, 
 
 
 //-------------------------------------------------------------------------------------------------
+Bool ThingTemplate::s_parsingChildObject = FALSE;	// BFME: E1-40
+
 //-------------------------------------------------------------------------------------------------
 ThingTemplate::ThingTemplate() :
 	m_geometryInfo(GEOMETRY_SPHERE, FALSE, 1, 1, 1)

@@ -246,6 +246,7 @@ static PoolSizeRec PoolSizes[] =
 	{ "SupplyTruckStateMachine", 256, 32 },
 	{ "SupplyTruckAIUpdate", 32, 32 },
 	{ "SupplyWarehouseCreate", 48, 16 },
+	{ "CastleBehavior", 16, 16 },	// BFME: E1-40b
 	{ "SupplyWarehouseDockUpdate", 48, 16 },
 	{ "EnemyNearUpdate", 1024, 32 },
 	{ "TechBuildingBehavior", 32, 32 },

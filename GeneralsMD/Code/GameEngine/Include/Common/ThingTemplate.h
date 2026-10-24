@@ -337,6 +337,8 @@ public:
 
 	Bool clearModuleDataWithTag(const AsciiString& tagToClear, AsciiString& clearedModuleNameOut);
 	Bool clearCopiedFromDefaultEntries(Int interfaceMask, const AsciiString &name, const ThingTemplate *fullTemplate );
+	// BFME: E1-40. ChildObject: drop only the inherited module with this tag (or the inherited Body).
+	Bool clearCopiedFromParentEntries(Int interfaceMask, const AsciiString &moduleTag );
 	Bool clearAiModuleInfo();
 };
 
@@ -366,6 +368,9 @@ public:
 
 	// copy the guts of that into this, but preserve this' name, id, and list-links.
 	void copyFrom(const ThingTemplate* that);
+
+	/// BFME: E1-40. TRUE while ThingFactory parses a "ChildObject" block: modules replace parent modules by tag.
+	static void setParsingChildObject(Bool v) { s_parsingChildObject = v; }
 
 	/// called by ThingFactory after all templates have been loaded.
 	void resolveNames();
@@ -773,6 +778,7 @@ private:
 	Byte					m_structureRubbleHeight;
 	Byte					m_shadowType;								///< settings which determine the type of shadow rendered
 	Byte					m_moduleParsingMode;
+	static Bool				s_parsingChildObject;	///< BFME: E1-40, see setParsingChildObject
 	UnsignedByte	m_crusherLevel;							///< crusher > crushable level to actually crush
 	UnsignedByte	m_crushableLevel;						///< Specifies the level of crushability (must be hit by a crusher greater than this to crush me).
 

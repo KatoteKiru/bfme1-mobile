@@ -31,6 +31,7 @@
 
 #include "Common/BitFlags.h"
 #include "Common/INI.h"
+#include "Common/INILenient.h"	// BFME: E1-40
 #include "Common/Xfer.h"
 
 //-------------------------------------------------------------------------------------------------
@@ -56,6 +57,20 @@ void BitFlags<NUMBITS>::buildDescription( AsciiString* str ) const
 */
 
 //-------------------------------------------------------------------------------------------------
+// BFME: E1-40. BFME data uses flag names Zero Hour does not have (KindOf BASE_FOUNDATION, CASTLE_KEEP,
+// HORDE, ...). scanIndexList throws on the first one and every later flag on the line was lost
+// (e.g. STRUCTURE after NEED_BASE_FOUNDATION). Lenient mode skips just the unknown name.
+inline Int bfmeScanBitIndex(INI* ini, const char* token, ConstCharPtrArray nameList)
+{
+	if (!INILenient::isEnabled())
+		return INI::scanIndexList(token, nameList);
+	for (Int i = 0; nameList[i] != nullptr; ++i)
+		if (stricmp(nameList[i], token) == 0)
+			return i;
+	INILenient::note("value", ini->getFilename().str(), ini->getLineNum(), "BitFlags", token, "unknown flag name, skipped");
+	return -1;
+}
+
 template <size_t NUMBITS>
 void BitFlags<NUMBITS>::parse(INI* ini, AsciiString* str)
 {
@@ -94,8 +109,9 @@ void BitFlags<NUMBITS>::parse(INI* ini, AsciiString* str)
 				DEBUG_CRASH(("you may not mix normal and +- ops in bitstring lists"));
 				throw INI_INVALID_NAME_LIST;
 			}
-			Int bitIndex = INI::scanIndexList(token+1, s_bitNameList);	// this throws if the token is not found
-			set(bitIndex, 1);
+			Int bitIndex = bfmeScanBitIndex(ini, token+1, s_bitNameList);	// this throws if the token is not found
+			if (bitIndex >= 0)
+				set(bitIndex, 1);
 			foundAddOrSub = true;
 		}
 		else if (token[0] == '-')
@@ -105,8 +121,9 @@ void BitFlags<NUMBITS>::parse(INI* ini, AsciiString* str)
 				DEBUG_CRASH(("you may not mix normal and +- ops in bitstring lists"));
 				throw INI_INVALID_NAME_LIST;
 			}
-			Int bitIndex = INI::scanIndexList(token+1, s_bitNameList);	// this throws if the token is not found
-			set(bitIndex, 0);
+			Int bitIndex = bfmeScanBitIndex(ini, token+1, s_bitNameList);	// this throws if the token is not found
+			if (bitIndex >= 0)
+				set(bitIndex, 0);
 			foundAddOrSub = true;
 		}
 		else
@@ -120,8 +137,9 @@ void BitFlags<NUMBITS>::parse(INI* ini, AsciiString* str)
 			if (!foundNormal)
 				clear();
 
-			Int bitIndex = INI::scanIndexList(token, s_bitNameList);	// this throws if the token is not found
-			set(bitIndex, 1);
+			Int bitIndex = bfmeScanBitIndex(ini, token, s_bitNameList);	// this throws if the token is not found
+			if (bitIndex >= 0)
+				set(bitIndex, 1);
 			foundNormal = true;
 		}
 	}

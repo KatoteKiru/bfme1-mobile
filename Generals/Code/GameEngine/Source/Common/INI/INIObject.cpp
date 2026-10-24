@@ -58,4 +58,15 @@ void INI::parseObjectReskinDefinition( INI* ini )
 	ThingFactory::parseObjectDefinition(ini, name, reskinFrom);
 }
 
+//-------------------------------------------------------------------------------------------------
+// BFME: E1-40. "ChildObject <name> <parent>" (BFME): inherit everything from the parent Object.
+//-------------------------------------------------------------------------------------------------
+void INI::parseChildObjectDefinition( INI* ini )
+{
+	AsciiString name = ini->getNextToken();
+	AsciiString parent = ini->getNextToken();
+	ThingFactory::parseObjectDefinition(ini, name, parent);
+}
+
+
 

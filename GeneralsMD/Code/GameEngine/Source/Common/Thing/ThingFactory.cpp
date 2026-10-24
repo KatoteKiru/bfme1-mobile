@@ -374,8 +374,17 @@ AsciiString TheThingTemplateBeingParsedName;
 //-------------------------------------------------------------------------------------------------
 /** Parse Object entry */
 //-------------------------------------------------------------------------------------------------
-/*static*/ void ThingFactory::parseObjectDefinition( INI* ini, const AsciiString& name, const AsciiString& reskinFrom )
+/*static*/ void ThingFactory::parseObjectDefinition( INI* ini, const AsciiString& name, const AsciiString& reskinFrom, Bool childObject )
 {
+	// BFME: E1-40. "ChildObject <name> <parent>": a full copy of the parent with every field
+	// (not just the reskin subset) and module redefinitions replacing the inherited ones. A
+	// missing parent rejects the block before an empty template is registered.
+	if (childObject && TheThingFactory->findTemplate(reskinFrom) == nullptr)
+	{
+		DEBUG_LOG(("ChildObject %s: parent %s not defined (yet)", name.str(), reskinFrom.str()));
+		throw INI_INVALID_DATA;	// lenient INI::load logs and skips the block
+	}
+
 #if defined(RTS_DEBUG) || defined(DEBUG_CRASHING)
 	TheThingTemplateBeingParsedName = name;
 #endif
@@ -414,8 +423,25 @@ AsciiString TheThingTemplateBeingParsedName;
 		{
 			thingTemplate->copyFrom(reskinTmpl);
 			thingTemplate->setCopiedFromDefault();
-			thingTemplate->setReskinnedFrom(reskinTmpl);
-			ini->initFromINI( thingTemplate, thingTemplate->getReskinFieldParse() );
+			if (childObject)	// BFME: E1-40. a ChildObject is its own type, not a reskin of the parent
+			{
+				ThingTemplate::setParsingChildObject(TRUE);
+				try
+				{
+					ini->initFromINI( thingTemplate, thingTemplate->getFieldParse() );
+				}
+				catch (...)
+				{
+					ThingTemplate::setParsingChildObject(FALSE);
+					throw;
+				}
+				ThingTemplate::setParsingChildObject(FALSE);
+			}
+			else
+			{
+				thingTemplate->setReskinnedFrom(reskinTmpl);
+				ini->initFromINI( thingTemplate, thingTemplate->getReskinFieldParse() );
+			}
 		}
 		else
 		{

@@ -54,12 +54,20 @@ Not ref counted.  Do not store pointers to this class.  */
 // BFME: E1-25 type of one raw height sample (upstream UnsignedByte; was typedef'd in BaseHeightMap.h).
 typedef UnsignedShort HeightSampleType;
 
-// BFME: E1-25 upper limits of the per-map tile / blend / cliff tables (upstream 1024 / 16192 / 32384
-// fixed member arrays). The tables now live on the heap and are sized from the counts in BlendTileData;
-// a map above these limits is rejected as corrupt. BFME1 maxima on 115 maps: 2036 / 34143 / 102443.
+// BFME: E1-25 the tile / blend / cliff tables are heap arrays sized from the BlendTileData counts
+// (upstream fixed members of 1024 / 16192 / 32384). These three stay at 4096 / 65536 / 131072
+// because WorldBuilder uses them as fixed arrays. The loader does not reject a map for exceeding
+// them: The Trilogy (Updated) does. The loader ceilings below are garbage protection only.
 #define NUM_SOURCE_TILES 4096
 #define NUM_BLEND_TILES 65536
 #define NUM_CLIFF_INFO 131072
+// BFME: loader garbage ceilings. Bitmap tiles are not a record array in the chunk (pixels come
+// from texture files), so only this ceiling applies. Blend records are 13/14/18 bytes by version
+// and cliff records are 38 bytes (v >= 5); index 0 of each is not stored. A count whose records
+// do not fit in the bytes still in the chunk is corrupt, even under the ceiling.
+#define BLEND_BITMAP_TILE_CEILING 262144
+#define BLEND_BLENDED_TILE_CEILING 1048576
+#define BLEND_CLIFF_INFO_CEILING 1048576
 #define FLAG_VAL 0x7ADA0000
 
 // For backwards compatiblity.

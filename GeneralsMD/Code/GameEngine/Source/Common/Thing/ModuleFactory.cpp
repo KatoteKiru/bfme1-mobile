@@ -49,6 +49,7 @@
 #include "GameLogic/Module/BridgeBehavior.h"
 #include "GameLogic/Module/BridgeScaffoldBehavior.h"
 #include "GameLogic/Module/BridgeTowerBehavior.h"
+#include "GameLogic/Module/CastleBehavior.h"	// BFME: E1-40b
 #include "GameLogic/Module/CountermeasuresBehavior.h"
 #include "GameLogic/Module/DumbProjectileBehavior.h"
 #include "GameLogic/Module/InstantDeathBehavior.h"
@@ -325,6 +326,7 @@ void ModuleFactory::init()
 	addModule( BridgeBehavior );
 	addModule( BridgeScaffoldBehavior );
 	addModule( BridgeTowerBehavior );
+	addModule( CastleBehavior );	// BFME: E1-40b
 	addModule( CountermeasuresBehavior );
 	addModule( DumbProjectileBehavior );
 	// BFME: E2-03. BFME1 projectiles (arrows, rocks) use BezierProjectileBehavior: the same Bezier arc

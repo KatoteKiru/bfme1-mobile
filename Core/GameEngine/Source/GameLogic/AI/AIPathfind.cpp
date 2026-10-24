@@ -4407,6 +4407,10 @@ void Pathfinder::classifyObjectFootprint( Object *obj, Bool insert )
 		return; // Don't add bounds that are up in the air.... unless a blast crater wants to do just that
 	}
 #endif
+	// BFME: E1-40. An object can change its footprint (e.g. born as rubble) while the map objects are
+	// created, before newMap() allocates m_map; newMap() classifies every object later anyway.
+	if (m_map == nullptr)
+		return;
 	internal_classifyObjectFootprint(obj, insert);
 }
 

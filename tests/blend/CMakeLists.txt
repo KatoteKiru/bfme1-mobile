@@ -50,6 +50,7 @@ set(BFME_BLEND_TESTS
     blend_anomalies_clamped_masked_counted blend_anomaly_log_first_16_of_each_kind blend_limits_heap_tables blend_index_widths_and_sign
     blend_use3way_reset blend_zh_repo_maps
     gamedata_refpack_all_maps_vs_oracle gamedata_blend_all_maps_vs_oracle_and_datacheck
+    gamedata_blend_patch222_all_maps
 )
 foreach(t IN LISTS BFME_BLEND_TESTS)
     add_test(NAME blend.${t} COMMAND bfme_blend_tests ${t})

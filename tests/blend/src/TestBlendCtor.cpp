@@ -178,10 +178,9 @@ TEST(ctor_corrupt_map_frees_arrays)
 		requireThrowsCorruptWithoutLeak(f, false, "BlendTileData cell count");
 	}
 	{
-		BlendSpec s = good;   // counts out of range: cell arrays and the four masks allocated
-		s.numBlendedTiles = 65537;
-		s.descs.resize(65536);
-		requireThrowsCorruptWithoutLeak(writeBlendMap(s), false, "numBlendedTiles 65537");
+		BlendSpec s = good;   // blend count does not fit the chunk: cell arrays and the four masks allocated
+		s.numBlendedTiles = 1000000;
+		requireThrowsCorruptWithoutLeak(writeBlendMap(s), false, "numBlendedTiles 1000000 does not fit");
 	}
 	{
 		BlendSpec s = good;   // bad texture class header
@@ -273,7 +272,7 @@ TEST(ctor_release_log_one_summary_line)
 	REQUIRE_EQ(r.stats.danglingBlend, 19);
 	REQUIRE_EQ(r.stats.dangling3Way, 21);
 	REQUIRE_EQ(r.stats.danglingCliff, 22);
-	REQUIRE_EQ(err, std::string("WARNING: BlendTileData v15 20x10: dangling tiles 40 (clamped), flags outside &0x3 20 (masked), "
+	REQUIRE_EQ(withoutChunkLines(err), std::string("WARNING: BlendTileData v15 20x10: dangling tiles 40 (clamped), flags outside &0x3 20 (masked), "
 		"customBlendEdgeClass without edge classes 18 / out of range 18 (-> -1), direction bytes not 0/1 17, "
 		"dangling blend/3-way/cliff 19/21/22\n"));
 
@@ -324,7 +323,7 @@ TEST(ctor_zh_repo_maps)
 		}));
 		if (!r.constructed) throw bfmetest::Failure(e.path().string() + ": constructor failed");
 		REQUIRE_EQ(r.stats.version, 8);
-		REQUIRE_EQ(err, std::string());
+		REQUIRE_EQ(withoutChunkLines(err), std::string());
 		REQUIRE_EQ(after, before);
 		++maps;
 	}

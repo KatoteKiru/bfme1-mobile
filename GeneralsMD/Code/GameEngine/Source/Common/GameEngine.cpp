@@ -984,7 +984,10 @@ void GameEngine::init()
 				// BFME: E1-39. Same path as the skirmish menu (TheSkirmishGameInfo + GAME_SKIRMISH).
 				if (INILenient::isEnabled())
 				{
-					BfmeStartSkirmish(TheGlobalData->m_initialFile);
+					// BFME: E1-40c. BFME_AI="Mordor,Isengard" adds AI players; BFME_AI_OBSERVER=1 makes slot 0 watch.
+					const char *aiSides = getenv("BFME_AI");
+					const char *obs = getenv("BFME_AI_OBSERVER");
+					BfmeStartSkirmish(TheGlobalData->m_initialFile, aiSides, obs != nullptr && atoi(obs) != 0);
 				}
 				else
 				{

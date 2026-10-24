@@ -144,6 +144,9 @@ struct QuitGameException {};
 DECLARE_PERF_TIMER(SleepyMaintenance)
 
 #include "Common/UnitTimings.h" //Contains the DO_UNIT_TIMINGS define jba.
+#include "Common/DataChunk.h"	// BFME: E1-40b
+#include "Common/ScoreKeeper.h"	// BFME: E1-40c
+#include "GameLogic/Module/CastleBehavior.h"	// BFME: E1-40b
 // If defined, the game times various units.
 #ifdef DO_UNIT_TIMINGS
 #pragma MESSAGE("*** WARNING *** DOING DO_UNIT_TIMINGS!!!!")
@@ -627,6 +630,140 @@ static Object * placeObjectAtPosition(Int slotNum, AsciiString objectTemplateNam
 	return obj;
 }
 
+// BFME: E1-40b. Skirmish start castle (BFME1 has no PlayerTemplate StartingBuilding: playertemplate.ini
+// ";StartingBuilding = ..."). A map's castle flags are owned by "<player>/Player_<N>_Inherit"; the
+// player at start position N unpacks the flag's CastleBehavior base for its side
+// (CastleToUnpackForFaction <side> <base> <cost>, civilianbuildings.ini CastleFlag) from
+// bases\<base>\<base>.bse, instantly and free. As OpenSAGE Scene3D.CreateSkirmishPlayerStartingBuilding
+// and CastleBehavior.Unpack: every CastleTemplates entry (TemplateName, Offset, Angle) is placed at
+// flag position + Offset rotated by the flag's map angle, angle = flag angle + Angle.
+static std::vector< std::pair<ObjectID, Int> > s_bfmeInheritFlags;
+
+struct BfmeCastleTemplate
+{
+	AsciiString m_templateName;
+	Coord3D m_offset;
+	Real m_angle;
+};
+
+static Bool bfmeParseCastleTemplatesChunk(DataChunkInput &file, DataChunkInfo *info, void *userData)
+{
+	std::vector<BfmeCastleTemplate> *out = static_cast<std::vector<BfmeCastleTemplate>*>(userData);
+	file.readInt();	// AssetPropertyKey (type byte + name index)
+	const Int count = file.readInt();
+	for (Int i = 0; i < count; ++i)
+	{
+		BfmeCastleTemplate t;
+		file.readAsciiString();	// Name
+		t.m_templateName = file.readAsciiString();
+		t.m_offset.x = file.readReal();
+		t.m_offset.y = file.readReal();
+		t.m_offset.z = file.readReal();
+		t.m_angle = file.readReal();
+		if (info->version >= 4)
+		{
+			file.readInt();	// Priority
+			file.readInt();	// Phase
+		}
+		out->push_back(t);
+	}
+	// version >= 2: CastlePerimeter follows; not needed for the start unpack (the chunk reader skips the rest)
+	return TRUE;
+}
+
+static Bool bfmeLoadCastleTemplates(const AsciiString &base, std::vector<BfmeCastleTemplate> &out)
+{
+	AsciiString path;
+	path.format("bases\\%s\\%s.bse", base.str(), base.str());
+	CachedFileInputStream stream;
+	if (!stream.open(path))
+	{
+		fprintf(stderr, "[castle] BFME: E1-40b cannot open %s\n", path.str());
+		return FALSE;
+	}
+	ChunkInputStream *pStrm = &stream;
+	DataChunkInput file( pStrm );
+	if (!file.isValidFileType())
+	{
+		fprintf(stderr, "[castle] BFME: E1-40b %s is not a chunk file\n", path.str());
+		return FALSE;
+	}
+	file.registerParser( "CastleTemplates", AsciiString::TheEmptyString, bfmeParseCastleTemplatesChunk, &out );
+	if (!file.parse(&out))
+	{
+		fprintf(stderr, "[castle] BFME: E1-40b parse error in %s\n", path.str());
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static Bool bfmeUnpackStartCastles(Int slotNum, Int startPos1, Player *pPlayer, const PlayerTemplate *pTemplate)
+{
+	Bool any = FALSE;
+	for (size_t f = 0; f < s_bfmeInheritFlags.size(); ++f)
+	{
+		if (s_bfmeInheritFlags[f].second != startPos1)
+			continue;
+		Object *flag = TheGameLogic->findObjectByID(s_bfmeInheritFlags[f].first);
+		if (flag == nullptr)
+			continue;
+		CastleBehavior *castle = nullptr;
+		static const NameKeyType key_CastleBehavior = NAMEKEY("CastleBehavior");
+		for (BehaviorModule** m = flag->getBehaviorModules(); *m; ++m)
+			if ((*m)->getModuleNameKey() == key_CastleBehavior)
+				castle = static_cast<CastleBehavior*>(*m);
+		if (castle == nullptr || castle->isUnpacked())
+			continue;
+		const CastleBehaviorModuleData::Castle *c = castle->getCastleData()->findCastle(pPlayer->getSide());
+		if (c == nullptr)
+		{
+			fprintf(stderr, "[castle] BFME: E1-40b %s: no castle for side '%s'\n", flag->getTemplate()->getName().str(), pPlayer->getSide().str());
+			continue;
+		}
+		std::vector<BfmeCastleTemplate> parts;
+		if (!bfmeLoadCastleTemplates(c->m_base, parts))
+			continue;
+		// The map sets the flag's angle; the base turns with it (OpenSAGE CastleBehavior.Unpack uses the flag's rotation).
+		const Real viewAngle = flag->getOrientation();
+		const Real cs = Cos(viewAngle), sn = Sin(viewAngle);
+		const Coord3D *fp = flag->getPosition();
+		UnsignedInt placed = 0;
+		for (size_t i = 0; i < parts.size(); ++i)
+		{
+			const BfmeCastleTemplate &t = parts[i];
+			if (t.m_templateName.isEmpty() || TheThingFactory->findTemplate(t.m_templateName) == nullptr)
+			{
+				fprintf(stderr, "[castle] BFME: E1-40b %s: skip part '%s' (no template)\n", c->m_base.str(), t.m_templateName.str());
+				continue;
+			}
+			Coord3D pos;
+			pos.x = fp->x + t.m_offset.x * cs - t.m_offset.y * sn;
+			pos.y = fp->y + t.m_offset.x * sn + t.m_offset.y * cs;
+			pos.z = TheTerrainLogic->getGroundHeight(pos.x, pos.y);
+			Object *o = placeObjectAtPosition(slotNum, t.m_templateName, pos, pPlayer, pTemplate);
+			if (o == nullptr)
+				continue;
+			TheAI->pathfinder()->removeObjectFromPathfindMap(o);	// re-add with the castle angle
+			o->setOrientation(viewAngle + t.m_angle);
+			TheAI->pathfinder()->addObjectToPathfindMap(o);
+			if (o->isKindOf(KINDOF_STRUCTURE))
+			{
+				pPlayer->onStructureCreated(nullptr, o);
+				pPlayer->onStructureConstructionComplete(nullptr, o, FALSE);
+			}
+			++placed;
+		}
+		castle->setUnpacked();
+		flag->setTeam(pPlayer->getDefaultTeam());
+		fprintf(stderr, "[castle] BFME: E1-40b %s id %u -> '%s' (side %s, start %d): %s, %u of %u parts\n",
+			flag->getTemplate()->getName().str(), (unsigned)flag->getID(),
+			TheNameKeyGenerator->keyToName(pPlayer->getPlayerNameKey()).str(), pPlayer->getSide().str(), startPos1,
+			c->m_base.str(), placed, (unsigned)parts.size());
+		any = TRUE;
+	}
+	return any;
+}
+
 static void placeNetworkBuildingsForPlayer(Int slotNum, const GameSlot *pSlot, Player *pPlayer, const PlayerTemplate *pTemplate)
 {
 	Int startPos = pSlot->getStartPos();
@@ -646,24 +783,36 @@ static void placeNetworkBuildingsForPlayer(Int slotNum, const GameSlot *pSlot, P
 	pos.z = TheTerrainLogic->getGroundHeight( pos.x, pos.y );
 
 	AsciiString buildingTemplateName = pTemplate->getStartingBuilding();
+	Real startRadius;	// starting units go around pos, between 0.7 and 1.3 of this
+	// BFME: E1-40b. BFME1 factions have no StartingBuilding; the start is the castle flag's base.
+	// The StartingUnit<N> entries below still apply, around the start (or rally) waypoint.
+	if (INILenient::isEnabled() && buildingTemplateName.isEmpty())
+	{
+		if (!bfmeUnpackStartCastles(slotNum, startPos + 1, pPlayer, pTemplate))
+			fprintf(stderr, "[castle] BFME: E1-40b no castle flag for start position %d\n", startPos + 1);
+		startRadius = 60.0f;
+	}
+	else
+	{
+		DEBUG_ASSERTCRASH(!buildingTemplateName.isEmpty(), ("no starting building type for player %d (playertemplate %ls)",
+			slotNum, pTemplate->getDisplayName().str()));
+		if (buildingTemplateName.isEmpty())
+			return;
 
-	DEBUG_ASSERTCRASH(!buildingTemplateName.isEmpty(), ("no starting building type for player %d (playertemplate %ls)",
-		slotNum, pTemplate->getDisplayName().str()));
-	if (buildingTemplateName.isEmpty())
-		return;
+		DEBUG_LOG(("Placing starting building at waypoint %s", waypointName.str()));
+		Object *conYard = placeObjectAtPosition(slotNum, buildingTemplateName, pos, pPlayer, pTemplate);
 
-	DEBUG_LOG(("Placing starting building at waypoint %s", waypointName.str()));
-	Object *conYard = placeObjectAtPosition(slotNum, buildingTemplateName, pos, pPlayer, pTemplate);
+		if (!conYard)
+			return;
 
-	if (!conYard)
-		return;
+		pPlayer->onStructureCreated(nullptr, conYard);
+		pPlayer->onStructureConstructionComplete(nullptr, conYard, FALSE);
 
-	pPlayer->onStructureCreated(nullptr, conYard);
-	pPlayer->onStructureConstructionComplete(nullptr, conYard, FALSE);
-
-	//pos.x -= conYard->getGeometryInfo().getBoundingSphereRadius()/2;
-	pos.y -= conYard->getGeometryInfo().getBoundingSphereRadius()/2;
-	pos.z = TheTerrainLogic->getGroundHeight( pos.x, pos.y );
+		startRadius = conYard->getGeometryInfo().getBoundingSphereRadius();
+		//pos.x -= startRadius/2;
+		pos.y -= startRadius/2;
+		pos.z = TheTerrainLogic->getGroundHeight( pos.x, pos.y );
+	}
 
 	if (rallyWaypoint)
 	{
@@ -678,8 +827,8 @@ static void placeNetworkBuildingsForPlayer(Int slotNum, const GameSlot *pSlot, P
 		{
 			Coord3D objPos = pos;
 			FindPositionOptions options;
-			options.minRadius = conYard->getGeometryInfo().getBoundingSphereRadius() * 0.7f;
-			options.maxRadius = conYard->getGeometryInfo().getBoundingSphereRadius() * 1.3f;
+			options.minRadius = startRadius * 0.7f;
+			options.maxRadius = startRadius * 1.3f;
 			DEBUG_LOG(("Placing starting object %d (%s)", i, objName.str()));
 			ThePartitionManager->update();
 			Bool foundPos = ThePartitionManager->findPositionAround(&pos, &options, &objPos);
@@ -1260,8 +1409,73 @@ void GameLogic::startNewGame( Bool loadingSaveGame )
 	}
 }
 
+// BFME: E1-40c. [ai] status every 900 logic frames (30 s): per playing player money, structures,
+// units, built/destroyed/lost (ScoreKeeper), income since the last line; and one line when a
+// player is defeated or a victory is reached.
+static void bfmeLogAi(UnsignedInt frame)
+{
+	static UnsignedInt s_lastEarned[MAX_PLAYER_COUNT];
+	static Bool s_defeated[MAX_PLAYER_COUNT];
+	static Bool s_over = FALSE;
+	if (frame <= 1)
+	{
+		for (Int i = 0; i < MAX_PLAYER_COUNT; ++i) { s_lastEarned[i] = 0; s_defeated[i] = FALSE; }
+		s_over = FALSE;
+	}
+	if (ThePlayerList == nullptr)
+		return;
+	const Bool status = frame % 900 == 0;
+	for (Int i = 0; i < ThePlayerList->getPlayerCount() && i < MAX_PLAYER_COUNT; ++i)
+	{
+		Player *p = ThePlayerList->getNthPlayer(i);
+		const PlayerTemplate *pt = p ? p->getPlayerTemplate() : nullptr;
+		if (pt == nullptr || !pt->isPlayableSide())
+			continue;
+		const char *name = TheNameKeyGenerator->keyToName(p->getPlayerNameKey()).str();
+		if (TheVictoryConditions && !s_defeated[i] && TheVictoryConditions->hasSinglePlayerBeenDefeated(p))
+		{
+			s_defeated[i] = TRUE;
+			fprintf(stderr, "[ai] BFME: E1-40c frame %u player %d '%s' (%s) DEFEATED\n", frame, i, name, p->getSide().str());
+		}
+		if (!status)
+			continue;
+		unsigned structures = 0, units = 0;
+		for (Object *o = TheGameLogic->getFirstObject(); o; o = o->getNextObject())
+		{
+			if (o->getControllingPlayer() != p || o->isEffectivelyDead())
+				continue;
+			if (o->isKindOf(KINDOF_STRUCTURE))
+				++structures;
+			else if (o->getAIUpdateInterface() != nullptr && !o->isKindOf(KINDOF_IMMOBILE))
+				++units;
+		}
+		ScoreKeeper *sk = p->getScoreKeeper();
+		const UnsignedInt earned = (UnsignedInt)sk->getTotalMoneyEarned();
+		fprintf(stderr, "[ai] BFME: E1-40c frame %u player %d '%s' (%s %s): money %u, structures %u, units %u, "
+			"built %d/%d (bld/unit), destroyed %d/%d, lost %d/%d, income %u (total %u), spent %d\n",
+			frame, i, name, p->getSide().str(), p->getPlayerType() == PLAYER_COMPUTER ? "AI" : "human",
+			p->getMoney() ? (unsigned)p->getMoney()->countMoney() : 0u, structures, units,
+			sk->getTotalBuildingsBuilt(), sk->getTotalUnitsBuilt(), sk->getTotalBuildingsDestroyed(), sk->getTotalUnitsDestroyed(),
+			sk->getTotalBuildingsLost(), sk->getTotalUnitsLost(), earned - s_lastEarned[i], earned, sk->getTotalMoneySpent());
+		s_lastEarned[i] = earned;
+	}
+	if (TheVictoryConditions && !s_over && TheVictoryConditions->getEndFrame() != 0)
+	{
+		s_over = TRUE;
+		fprintf(stderr, "[ai] BFME: E1-40c game over at frame %u (end frame %u)\n", frame, TheVictoryConditions->getEndFrame());
+		for (Int i = 0; i < ThePlayerList->getPlayerCount(); ++i)
+		{
+			Player *p = ThePlayerList->getNthPlayer(i);
+			if (p && p->getPlayerTemplate() && p->getPlayerTemplate()->isPlayableSide() && TheVictoryConditions->hasAchievedVictory(p))
+				fprintf(stderr, "[ai] BFME: E1-40c VICTORY player %d '%s' (%s)\n", i,
+					TheNameKeyGenerator->keyToName(p->getPlayerNameKey()).str(), p->getSide().str());
+		}
+	}
+}
+
 void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 {
+	s_bfmeInheritFlags.clear();	// BFME: E1-40b
 
 	#ifdef DUMP_PERF_STATS
 	__int64 startTime64;
@@ -2107,12 +2321,40 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 			// Get the team information
 			DEBUG_ASSERTCRASH(pMapObj->getProperties()->getType(TheKey_originalOwner) == Dict::DICT_ASCIISTRING, ("unit %s has no original owner specified (obsolete map file)",pMapObj->getName().str()));
 			AsciiString originalOwner = pMapObj->getProperties()->getAsciiString(TheKey_originalOwner);
-			Team *team = ThePlayerList->validateTeam(originalOwner);
+			// BFME: E1-40. BFME maps store the owner as "<player>/<team>" (e.g.
+			// "PlyrCivilian/teamPlyrCivilian"); Zero Hour stores just the team name, so every BFME map
+			// object fell back to the neutral team. Use the team part.
+			// A team the map does not define (the start-position teams "Player_<N>_Inherit" of castle
+			// flags) falls back to the player's default team.
+			Team *team = nullptr;
+			Int bfmeInheritPos = 0;	// BFME: E1-40b. N of "Player_N_Inherit" (castle flag start position)
+			if (INILenient::isEnabled())
+			{
+				const char *slash = strrchr(originalOwner.str(), '/');
+				if (slash != nullptr && slash[1] != '\0')
+				{
+					AsciiString ownerPlayer;
+					ownerPlayer.set(originalOwner.str(), (Int)(slash - originalOwner.str()));
+					originalOwner = AsciiString(slash + 1);
+					if (TheTeamFactory->findTeam(originalOwner) == nullptr)
+					{
+						if (sscanf(originalOwner.str(), "Player_%d_Inherit", &bfmeInheritPos) != 1)
+							bfmeInheritPos = 0;
+						Player *pl = ThePlayerList->findPlayerWithNameKey(TheNameKeyGenerator->nameToKey(ownerPlayer));
+						if (pl != nullptr)
+							team = pl->getDefaultTeam();
+					}
+				}
+			}
+			if (team == nullptr)
+				team = ThePlayerList->validateTeam(originalOwner);
 
 			// create new object in the world
 			Object *obj = TheThingFactory->newObject( thingTemplate, team ); //, OBJECT_STATUS_LOADING_FROM_MAP );
 			if( obj )
 			{
+				if (bfmeInheritPos > 0)	// BFME: E1-40b
+					s_bfmeInheritFlags.push_back(std::make_pair(obj->getID(), bfmeInheritPos));
 				if(pMapObj->getFlag(FLAG_DRAWS_IN_MIRROR) || obj->isKindOf(KINDOF_CAN_CAST_REFLECTIONS))
 				{
 					Drawable* draw = obj->getDrawable();
@@ -2598,6 +2840,29 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 			TheGlobalData->m_mapName.str(), (unsigned)m_frame,
 			ThePlayerList ? ThePlayerList->getPlayerCount() : 0, (unsigned)getObjectCount());
 	MapLoadTrace::endPhase();	// BFME: E1-43
+	// BFME: E1-40. Who owns what at the start: objects per player, plus every castle flag.
+	if (INILenient::isEnabled() && ThePlayerList)
+	{
+		for (Int i = 0; i < ThePlayerList->getPlayerCount(); ++i)
+		{
+			Player *p = ThePlayerList->getNthPlayer(i);
+			unsigned n = 0;
+			for (Object *o = getFirstObject(); o; o = o->getNextObject())
+				if (o->getControllingPlayer() == p)
+					++n;
+			fprintf(stderr, "[launch] BFME: E1-40 player %d '%s' side '%s': %u objects, money %u\n", i,
+				TheNameKeyGenerator->keyToName(p->getPlayerNameKey()).str(), p->getSide().str(), n,
+				p->getMoney() ? (unsigned)p->getMoney()->countMoney() : 0u);
+		}
+		for (Object *o = getFirstObject(); o; o = o->getNextObject())
+			if (o->getTemplate()->getName().startsWith("CastleFlag"))
+			{
+				const Player *p = o->getControllingPlayer();
+				fprintf(stderr, "[launch] BFME: E1-40 %s id %u team '%s' player '%s'\n", o->getTemplate()->getName().str(),
+					(unsigned)o->getID(), o->getTeam() ? o->getTeam()->getName().str() : "-",
+					p ? TheNameKeyGenerator->keyToName(p->getPlayerNameKey()).str() : "-");
+			}
+	}
 
 	// if we're in a gamespy game, mark us as playing
 	if (TheGameSpyBuddyMessageQueue && TheGameSpyGame && isInInternetGame())
@@ -4559,6 +4824,8 @@ void GameLogic::update()
 		// BFME: E1-39b. Heartbeat every 10 s of game time (300 frames at 30 Hz).
 		if (INILenient::isEnabled() && m_frame % 300 == 0)
 			fprintf(stderr, "[launch] BFME: E1-39b logic frame %u, objects %u\n", (unsigned)m_frame, (unsigned)getObjectCount());
+		if (INILenient::isEnabled())
+			bfmeLogAi(m_frame);	// BFME: E1-40c
 		m_hasUpdated = TRUE;
 #if defined(GENERALS_ONLINE_HIGH_FPS_SERVER)
 		if (m_frame % 2 == 0)
