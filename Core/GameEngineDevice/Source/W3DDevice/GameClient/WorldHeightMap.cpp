@@ -1155,17 +1155,56 @@ Bool WorldHeightMap::ParseBlendTileDataChunk(DataChunkInput &file, DataChunkInfo
 }
 
 /** Function to read in the tiles for a texture class. */
+// BFME: E1-48. A texture class that loads no bitmap leaves its atlas slots unwritten (black), and
+// every blend tile that uses it fades to black: the "black holes" next to cliffs on the Pixel 8 Pro
+// (fcd55cf, map mp rohan). readTexClass failed silently upstream. Each class that ends with missing
+// tiles is logged once, with the reason and the TGA header, up to a per-process cap. Logging only:
+// a ZH map whose textures all load prints nothing, and the load itself is unchanged.
+
+static const Int TEXCLASS_LOG_LIMIT = 64;
+
+static void bfmeLogTexClass(const TXTextureClass *texClass, TileData **tileData, const char *path,
+	const char *reason, const UnsignedByte *tgaHeader, Int tilesInFile)
+{
+	static Int s_logged = 0;
+	if (texClass == nullptr) return;
+	Int missing = 0;
+	for (Int t = 0; t < texClass->numTiles; t++) {
+		if (tileData == nullptr || tileData[texClass->firstTile + t] == nullptr) missing++;
+	}
+	if (missing == 0 && reason == nullptr) return;
+	if (s_logged >= TEXCLASS_LOG_LIMIT) return;
+	++s_logged;
+	char hdr[96] = "";
+	if (tgaHeader != nullptr) {
+		const Int w = tgaHeader[12] | (tgaHeader[13] << 8);
+		const Int h = tgaHeader[14] | (tgaHeader[15] << 8);
+		snprintf(hdr, sizeof(hdr), " tga idLen=%d cmap=%d type=%d %dx%d bpp=%d flags=0x%02X",
+			tgaHeader[0], tgaHeader[1], tgaHeader[2], w, h, tgaHeader[16], tgaHeader[17]);
+	}
+	fprintf(stderr, "[terraintex] class '%s' tiles %d..%d (%d, width %d): %d missing -> black in atlas; %s; path '%s'; tiles in file %d%s%s\n",
+		texClass->name.str(), texClass->firstTile, texClass->firstTile + texClass->numTiles - 1, texClass->numTiles,
+		texClass->width, missing, reason ? reason : "loaded", path ? path : "", tilesInFile, hdr,
+		s_logged == TEXCLASS_LOG_LIMIT ? " (log limit reached)" : "");
+}
+
 void WorldHeightMap::readTexClass(TXTextureClass *texClass, TileData **tileData)
 {
 	char path[_MAX_PATH];
 	path[0] = 0;
 	File *theFile = nullptr;
+	const char *reason = nullptr;	// BFME: E1-48 diagnostics only
+	UnsignedByte tgaHeader[18];
+	Bool haveHeader = false;
+	Int tilesInFile = -1;
 
 	// get the file from the description in TheTerrainTypes
 	TerrainType *terrain = TheTerrainTypes->findTerrain( texClass->name );
 	char texturePath[ _MAX_PATH ];
+	texturePath[0] = 0;
 	if (terrain==nullptr)
 	{
+		reason = "no Terrain.ini entry";
 #ifdef LOAD_TEST_ASSETS
 		theFile = TheFileSystem->openFile( texClass->name.str(), File::READ|File::BINARY);
 #endif
@@ -1174,12 +1213,16 @@ void WorldHeightMap::readTexClass(TXTextureClass *texClass, TileData **tileData)
 	{
 		snprintf( texturePath, ARRAY_SIZE(texturePath), "%s%s", TERRAIN_TGA_DIR_PATH, terrain->getTexture().str() );
 		theFile = TheFileSystem->openFile( texturePath, File::READ|File::BINARY);
+		if (theFile == nullptr) reason = "file not found";
 	}
 
 	if (theFile != nullptr) {
+		haveHeader = theFile->read(tgaHeader, sizeof(tgaHeader)) == (Int)sizeof(tgaHeader);
+		theFile->seek(0, File::START);
 		GDIFileStream theStream(theFile);
 		InputStream *pStr = &theStream;
 		Int numTiles = WorldHeightMap::countTiles(pStr);
+		tilesInFile = numTiles;
 		theFile->seek(0, File::START);
 		if (numTiles >= texClass->numTiles) {
 			numTiles = texClass->numTiles;
@@ -1190,10 +1233,15 @@ void WorldHeightMap::readTexClass(TXTextureClass *texClass, TileData **tileData)
 					break;
 				}
 			}
-			WorldHeightMap::readTiles(pStr, tileData+texClass->firstTile, width);
+			if (!WorldHeightMap::readTiles(pStr, tileData+texClass->firstTile, width))
+				reason = "readTiles rejected the TGA";
+		} else {
+			reason = numTiles == 0 ? "not a 24/32-bit RGB TGA of 64px tiles (countTiles 0)"
+				: "TGA has fewer tiles than the map class";
 		}
 		theFile->close();
 	}
+	bfmeLogTexClass(texClass, tileData, texturePath, reason, haveHeader ? tgaHeader : nullptr, tilesInFile);
 }
 
 // BFME: E1-25 one per-cell index array of BlendTileData (blend / 3-way / cliff) into Int: 16-bit and
