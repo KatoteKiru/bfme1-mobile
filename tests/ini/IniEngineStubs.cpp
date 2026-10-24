@@ -140,6 +140,9 @@ BFME_INI_BLOCK_STUB(parseWeaponTemplateDefinition)
 #endif
 BFME_INI_BLOCK_STUB(parseWeatherDefinition)
 BFME_INI_BLOCK_STUB(parseWebpageURLDefinition)
+#ifdef BFME_COMBAT_TESTS	// the ini tests link the real GameWindowTransitionsData.cpp, tests/combat does not
+BFME_INI_BLOCK_STUB(parseWindowTransitions)
+#endif
 #undef BFME_INI_BLOCK_STUB
 
 void ScriptEngine::parseScriptAction(INI *) {}
