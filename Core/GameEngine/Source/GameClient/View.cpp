@@ -33,6 +33,8 @@
 #include "GameClient/Drawable.h"
 #include "GameClient/GameClient.h"
 #include "GameClient/View.h"
+#include "Common/INILenient.h"	// BFME: E1-46
+#include <cstdio>
 
 UnsignedInt View::m_idNext = 1;
 
@@ -102,6 +104,17 @@ void View::init()
 
 	m_defaultAngle = DEG_TO_RADF(TheGlobalData->m_cameraYaw);
 	m_defaultPitch = DEG_TO_RADF(TheGlobalData->m_cameraPitch);
+	// BFME: E1-46. A pitch of 0 means GameData set none (W3DView then looks at the horizon); fall
+	// back to the Zero Hour default view pitch and say so.
+	if (INILenient::isEnabled())
+	{
+		const Bool fallback = TheGlobalData->m_cameraPitch < 1.0f;
+		if (fallback)
+			m_defaultPitch = ViewDefaultPitchRadians;
+		fprintf(stderr, "[bfmecam] view init: GameData pitch=%.1f yaw=%.1f minH=%.0f maxH=%.0f%s\n",
+			TheGlobalData->m_cameraPitch, TheGlobalData->m_cameraYaw, TheGlobalData->m_minCameraHeight,
+			TheGlobalData->m_maxCameraHeight, fallback ? " -> pitch 37.5 (fallback)" : "");
+	}
 	m_angle = m_defaultAngle;
 	m_pitch = m_defaultPitch;
 }

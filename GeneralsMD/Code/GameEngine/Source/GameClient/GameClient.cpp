@@ -716,6 +716,13 @@ void GameClient::update()
 			TheShell->showShellMap(TRUE);
 			TheShell->showShell();
 			TheWritableGlobalData->m_afterIntro = FALSE;
+			// BFME: E1-43 m_breakTheMovie (set above) stops W3DDisplay::draw from rendering
+			// anything. Normally MainMenuInit or the first ShellGameLoadScreen::init clears it;
+			// a direct map start (-file, BFME default map) has no main menu, and the BFME load
+			// screen skips that branch (E1-39), so nothing was ever presented: black screen
+			// with the game running.
+			if (TheGlobalData->m_initialFile.isNotEmpty())
+				TheWritableGlobalData->m_breakTheMovie = FALSE;
 			// Reveal the static main-menu layout MainMenuInit kept hidden through the intro
 			// (MainMenu.cpp), at the same point the map itself is finally let in.
 			if (TheShell->top())

@@ -49,6 +49,7 @@
 #include <stdlib.h>
 
 #include "W3DDevice/GameClient/TerrainTex.h"
+#include "W3DDevice/GameClient/TerrainLoadTrace.h" // BFME: E1-42
 #include "W3DDevice/GameClient/WorldHeightMap.h"
 #include "W3DDevice/GameClient/TileData.h"
 #include "Common/GlobalData.h"
@@ -136,7 +137,10 @@ int TerrainTextureClass::update(WorldHeightMap *htMap, int page)
 	}
 	surface_level->UnlockRect();
 	surface_level->Release();
-	DX8_ErrorCode(D3DXFilterTexture(Peek_D3D_Texture(), nullptr, 0, D3DX_FILTER_BOX));
+	{
+		TerrainLoadTrace::Step t("D3DXFilterTexture", (int)surface_desc.Width);	// BFME: E1-42
+		DX8_ErrorCode(D3DXFilterTexture(Peek_D3D_Texture(), nullptr, 0, D3DX_FILTER_BOX));
+	}
 	if (WW3D::Get_Texture_Reduction()) {
 		Peek_D3D_Texture()->SetLOD(WW3D::Get_Texture_Reduction());
 	}
@@ -366,7 +370,10 @@ Bool TerrainTextureClass::updateFlat(WorldHeightMap *htMap, Int xCell, Int yCell
 
 	surface_level->UnlockRect();
 	surface_level->Release();
-	DX8_ErrorCode(D3DXFilterTexture(Peek_D3D_Texture(), nullptr, 0, D3DX_FILTER_BOX));
+	{
+		TerrainLoadTrace::Step t("D3DXFilterTexture", (int)surface_desc.Width);	// BFME: E1-42
+		DX8_ErrorCode(D3DXFilterTexture(Peek_D3D_Texture(), nullptr, 0, D3DX_FILTER_BOX));
+	}
 	return(surface_desc.Height);
 }
 
@@ -728,10 +735,13 @@ int AlphaEdgeTextureClass::update(WorldHeightMap *htMap, int page)
 	if (surface_desc.Format == D3DFMT_A8R8G8B8) {
 #if 1
 #if 1
+		// BFME: E1-42 row-major with the locked pitch. Column-major over a 4096x2048x4
+		// page strided 16 KiB per write (32 MiB, cache/TLB hostile on phones).
 		Int cellX, cellY;
-		for (cellX = 0; (UnsignedInt)cellX < surface_desc.Width; cellX++) {
-			for (cellY = 0; cellY < surface_desc.Height; cellY++) {
-				UnsignedByte *pBGR = ((UnsignedByte *)locked_rect.pBits)+(cellY*surface_desc.Width+cellX)*4;
+		const Int fillPitch = locked_rect.Pitch > 0 ? locked_rect.Pitch : (Int)surface_desc.Width * 4;
+		for (cellY = 0; (UnsignedInt)cellY < surface_desc.Height; cellY++) {
+			for (cellX = 0; (UnsignedInt)cellX < surface_desc.Width; cellX++) {
+				UnsignedByte *pBGR = ((UnsignedByte *)locked_rect.pBits)+cellY*fillPitch+cellX*4;
 				pBGR[2] = 255-cellY/2;
 				pBGR[0] = cellX/2;
 				pBGR[3] = cellX/2;  // alpha.
@@ -753,7 +763,10 @@ int AlphaEdgeTextureClass::update(WorldHeightMap *htMap, int page)
 	}
 	surface_level->UnlockRect();
 	surface_level->Release();
-	DX8_ErrorCode(D3DXFilterTexture(Peek_D3D_Texture(), nullptr, 0, D3DX_FILTER_BOX));
+	{
+		TerrainLoadTrace::Step t("D3DXFilterTexture", (int)surface_desc.Width);	// BFME: E1-42
+		DX8_ErrorCode(D3DXFilterTexture(Peek_D3D_Texture(), nullptr, 0, D3DX_FILTER_BOX));
+	}
 	return(surface_desc.Height);
 }
 

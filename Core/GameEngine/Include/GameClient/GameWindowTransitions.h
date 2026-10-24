@@ -672,6 +672,9 @@ public:
 	void reverse( AsciiString groupName );// reverse the animations for the current group.
 	void remove( AsciiString groupName, Bool skipPending = FALSE );// remove the animation from the current or pending groups.
 	TransitionGroup *getNewGroup( AsciiString name );
+	// BFME: E1-43 for the load-screen fade timeout log.
+	AsciiString getCurrentGroupName() const { return m_currentGroup ? m_currentGroup->getName() : AsciiString("(none)"); }
+	AsciiString getPendingGroupName() const { return m_pendingGroup ? m_pendingGroup->getName() : AsciiString("(none)"); }
 private:
 	TransitionGroup *findGroup( AsciiString groupName );
 	typedef std::list<TransitionGroup *> TransitionGroupList;

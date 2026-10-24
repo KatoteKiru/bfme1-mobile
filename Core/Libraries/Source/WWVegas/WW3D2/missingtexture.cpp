@@ -21,6 +21,8 @@
 #include "texture.h"
 #include "dx8wrapper.h"
 #include <d3dx8core.h>
+#include <cstdio>
+#include <cstdlib>
 
 static unsigned missing_image_width=128;
 static unsigned missing_image_height=128;
@@ -147,6 +149,18 @@ void MissingTexture::_Init()
 			&rect,
 			0));
 
+	// BFME: E1-43 BFME ships a few Zero Hour era UI layouts (ShellGameLoadScreen.wnd) whose
+	// mapped images name textures that are not in the BFME archives at all, so the whole
+	// load screen came out magenta on the Pixel. In BFME mode a missing texture is fully
+	// transparent instead; BFME_MISSING_MAGENTA=1 brings the debug magenta back. The
+	// [gxmiss] log lines still name every substitution.
+	const char *bfmeData = getenv("BFME_GAMEDATA");
+	const char *wantMagenta = getenv("BFME_MISSING_MAGENTA");
+	const bool transparentMissing = bfmeData && *bfmeData && !(wantMagenta && *wantMagenta == '1');
+	const unsigned missingColor = transparentMissing ? 0x00000000u : 0x7FFF00FFu;
+	if (transparentMissing)
+		fprintf(stderr, "[gxmiss] BFME mode: missing textures are drawn transparent (BFME_MISSING_MAGENTA=1 for magenta)\n");
+
 	unsigned *buffer=(unsigned*)locked_rect.pBits;
 	unsigned char *pixels=(unsigned char *)missing_image_pixels;
 	for (unsigned y=0;y<missing_image_height;y++)
@@ -154,7 +168,7 @@ void MissingTexture::_Init()
 		for (unsigned x=0; x<missing_image_width; x++)
 		{
 			//*buffer++=missing_image_palette[*pixels++];
-			*buffer++=0x7FFF00FF;
+			*buffer++=missingColor;
 		}
 		buffer=(unsigned*)locked_rect.pBits;
 		buffer+=locked_rect.Pitch/sizeof(unsigned)*y;

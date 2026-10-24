@@ -452,7 +452,10 @@
      ```
      adb push <dir>/. /sdcard/Android/data/io.github.katotekiru.me1mobile/files/GameData/
      ```
-     где `<dir>` — ваша папка игры, например `adb push C:/BFME1/. /sdcard/Android/data/io.github.katotekiru.me1mobile/files/GameData/`. В конце adb пишет `… files pushed` без `error`.
+     где `<dir>` — ваша папка игры, например `adb push C:/BFME1/. /sdcard/Android/data/io.github.katotekiru.me1mobile/files/GameData/`. В конце adb пишет `… files pushed` без `error`. Затем дайте приложению права на чтение (файлы, залитые adb, принадлежат пользователю shell, и без этого приложение их не видит):
+     ```
+     adb shell chmod -R a+rwX /sdcard/Android/data/io.github.katotekiru.me1mobile/files/GameData
+     ```
    - **MTP** (без adb): кабель → «Передача файлов» (1.3) → в Проводнике «Pixel 8 Pro» → «Внутренний общий накопитель» → `Android` → `data` → `io.github.katotekiru.me1mobile` → `files` → создайте папку `GameData` (если её нет) → скопируйте в неё содержимое `C:\BFME1`. Если Проводник не показывает `io.github.katotekiru.me1mobile` или не даёт копировать — ⏭, запишите это в отчёт (полезно Платформе).
 3. Откройте ME1 Mobile → экран импорта → «**Проверить файлы в GameData**». Дождитесь конца проверки: это полный пересчёт SHA-256 (для полного набора — несколько минут, точное время TBD).
 4. «Запустить игру».

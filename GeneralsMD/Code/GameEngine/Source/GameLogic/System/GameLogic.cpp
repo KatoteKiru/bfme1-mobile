@@ -137,6 +137,7 @@ extern NGMPGame* TheNGMPGame;
 #include "GXTrace.h"
 #include "Common/GXReplayCheck.h"
 #include "Common/GXCrcStream.h"
+#include "Common/MapLoadTrace.h"	// BFME: E1-43
 
 struct QuitGameException {};
 
@@ -1188,8 +1189,18 @@ static void populateRandomStartPosition( GameInfo *game )
 void GameLogic::updateLoadProgress( Int progress )
 {
 
+	// BFME: E1-43 time each load screen redraw (it runs a full W3DDisplay::draw). The 101
+	// repeats of the network wait loop are not traced.
+	static Int s_lastTracedProgress = -1;
+	const Bool traceProgress = (progress != s_lastTracedProgress);
+	s_lastTracedProgress = progress;
 	if( m_loadScreen )
+	{
+		MapLoadTrace::Step trace("LoadScreen::update", progress, traceProgress);
 		m_loadScreen->update( progress );
+	}
+	else if (traceProgress)
+		MapLoadTrace::mark("loadProgress (no load screen)", progress);
 
 	if (TheGameEngine->getQuitting() || m_quitToDesktopAfterMatch)
 	{
@@ -1324,6 +1335,8 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 
 	m_rankLevelLimit = 1000;	// this is reset every game.
 
+	MapLoadTrace::phase("startNewGame setup");	// BFME: E1-43
+
 	//
 	// only reset the next object ID allocator counter when we're not loading a save game.
 	// for save games, we read this value out of the save game file and it is important
@@ -1445,6 +1458,7 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 	// Get the m_loadScreen for this kind of game
 	if(!m_loadScreen && !(TheRecorder && TheRecorder->getMode() == RECORDERMODETYPE_SIMULATION_PLAYBACK))
 	{
+		MapLoadTrace::phase("load screen init");	// BFME: E1-43
 		m_loadScreen = getLoadScreen( loadingSaveGame );
 		if(m_loadScreen)
 		{
@@ -1477,15 +1491,18 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 #endif
 
 	// before loading the map, load the map.ini file in the same directory.
+	MapLoadTrace::phase("loadMapINI");	// BFME: E1-43
 	loadMapINI( TheGlobalData->m_mapName );
 
 	// load a map
+	MapLoadTrace::phase("TerrainLogic::loadMap");	// BFME: E1-43
 	TheTerrainLogic->loadMap( TheGlobalData->m_mapName, false );
 	// anytime the world's size changes, must reset the partition mgr
 	//ThePartitionManager->init();
 
 	// update the loadscreen
 	updateLoadProgress(LOAD_PROGRESS_POST_LOAD_MAP);
+	MapLoadTrace::phase("players/sides setup");	// BFME: E1-43
 
 	#ifdef DUMP_PERF_STATS
 	GetPrecisionTimer(&endTime64);
@@ -1678,6 +1695,7 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 	updateLoadProgress(LOAD_PROGRESS_POST_SIDE_LIST_INIT);
 
 	// update the player list to match the new map.
+	MapLoadTrace::phase("PlayerList::newGame");	// BFME: E1-43
 	TheTeamFactory->reset();
 	ThePlayerList->newGame();
 
@@ -1685,10 +1703,12 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 	updateLoadProgress(LOAD_PROGRESS_POST_PLAYER_LIST_RESET);
 
 	// Tell the script engine that a newe set of scripts is loaded.
+	MapLoadTrace::phase("ScriptEngine::newMap");	// BFME: E1-43
 	TheScriptEngine->newMap();
 
 	// update the loadscreen
 	updateLoadProgress(LOAD_PROGRESS_POST_SCRIPT_ENGINE_NEW_MAP);
+	MapLoadTrace::phase("victory conditions/ghost objects");	// BFME: E1-43
 
 	if (TheGameEngine->isMultiplayerSession() || isSkirmishOrSkirmishReplay)
 	{
@@ -1881,10 +1901,12 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 	updateLoadProgress(LOAD_PROGRESS_POST_GHOST_OBJECT_MANAGER_RESET);
 
 	// update the terrain logic now that all is loaded
+	MapLoadTrace::phase("TerrainLogic::newMap");	// BFME: E1-43
 	TheTerrainLogic->newMap( loadingSaveGame );
 
 	// update the loadscreen
 	updateLoadProgress(LOAD_PROGRESS_POST_TERRAIN_LOGIC_NEW_MAP);
+	MapLoadTrace::phase("bridge objects");	// BFME: E1-43
 
 	#ifdef DUMP_PERF_STATS
 	GetPrecisionTimer(&endTime64);
@@ -1937,14 +1959,17 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 	updateLoadProgress(LOAD_PROGRESS_POST_BRIDGE_LOAD);
 
 	// refresh the radar to reflect loaded bridges
+	MapLoadTrace::phase("Radar::refreshTerrain");	// BFME: E1-43
 	TheRadar->refreshTerrain( TheTerrainLogic );
 
 	// tell the AI about it
 	// Note that it is important that the pathfinder be called before the map objects are loaded.
+	MapLoadTrace::phase("Pathfinder::newMap");	// BFME: E1-43
 	TheAI->pathfinder()->newMap();
 
 	// update the loadscreen
 	updateLoadProgress(LOAD_PROGRESS_POST_PATHFINDER_NEW_MAP);
+	MapLoadTrace::phase("map objects");	// BFME: E1-43
 
 	// reveal the map for the permanent observer
 	Player *observerPlayer = ThePlayerList->findPlayerWithNameKey(TheNameKeyGenerator->nameToKey("ReplayObserver"));
@@ -2211,6 +2236,7 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 	}
 	// update the loadscreen
 	updateLoadProgress(LOAD_PROGRESS_POST_INITIAL_NETWORK_BUILDINGS);
+	MapLoadTrace::phase("preloadAssets");	// BFME: E1-43
 
 	//
 	// tell the client to pre-load some assets that we will use such as faction things we
@@ -2235,6 +2261,7 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 
 	// update the loadscreen
 	updateLoadProgress(LOAD_PROGRESS_POST_PRELOAD_ASSETS);
+	MapLoadTrace::phase("starting camera");	// BFME: E1-43
 
 	// TheSuperHackers @info Initialize the camera height limits to default if the resolution was changed
 	TheTacticalView->setCameraHeightAboveGroundLimitsToDefault();
@@ -2292,6 +2319,7 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 
 	// update the loadscreen
 	updateLoadProgress(LOAD_PROGRESS_POST_STARTING_CAMERA_2);
+	MapLoadTrace::phase("partition/player finalize");	// BFME: E1-43
 
 	// update partition info - We need to do the initial update so that it can be queried
 	// during the first frame.  jba.
@@ -2383,6 +2411,7 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 		TheNetwork->liteupdate();
 	}
 
+	MapLoadTrace::phase("wait isProgressComplete");	// BFME: E1-43
 	while(!isProgressComplete())
 	{
 		updateLoadProgress(101); // keep greater then 100
@@ -2391,11 +2420,31 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 	}
 
 	// if we're in a load game, don't fade yet
+	MapLoadTrace::phase("FadeWholeScreen transition");	// BFME: E1-43
 	if(loadingSaveGame == FALSE && TheTransitionHandler != nullptr && m_loadScreen)
 	{
 		TheTransitionHandler->setGroup("FadeWholeScreen");
+		// BFME: E1-43 on the Pixel this loop never ended after a BFME skirmish load (the fade
+		// group never reported finished), so the game sat on the load screen forever. Give the
+		// fade a wall-clock budget and drop it when it runs out; a working fade takes ~1 s.
+		const double fadeStartMs = MapLoadTrace::nowMs();
+		fprintf(stderr, "[mapload] FadeWholeScreen: current group '%s', pending '%s', update fps %.1f, speed x%.2f\n",
+			TheTransitionHandler->getCurrentGroupName().str(), TheTransitionHandler->getPendingGroupName().str(),
+			TheFramePacer->getUpdateFps(), TheGlobalData->m_gameWindowTransitionSpeedMultiplier);
 		while(!TheTransitionHandler->isFinished())
 		{
+			if (MapLoadTrace::nowMs() - fadeStartMs > 5000.0)
+			{
+				fprintf(stderr, "[mapload] WARNING: FadeWholeScreen not finished after 5 s (current '%s', pending '%s'), skipping it\n",
+					TheTransitionHandler->getCurrentGroupName().str(), TheTransitionHandler->getPendingGroupName().str());
+				// remove() dereferences the current group when the name matches it, so only call it
+				// when the fade is actually current or pending; then drop whatever is still current.
+				if (TheTransitionHandler->getCurrentGroupName().compareNoCase("FadeWholeScreen") == 0
+					|| TheTransitionHandler->getPendingGroupName().compareNoCase("FadeWholeScreen") == 0)
+					TheTransitionHandler->remove("FadeWholeScreen", TRUE);
+				TheTransitionHandler->setGroup(AsciiString::TheEmptyString, TRUE);
+				break;
+			}
 			TheWindowManager->update();
 			if(!TheTransitionHandler->isFinished())
 			{
@@ -2407,6 +2456,7 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 		}
 	}
 
+	MapLoadTrace::phase("deleteLoadScreen");	// BFME: E1-43
 	if(m_loadScreen)
 	{
 		TheMouse->setVisibility(TRUE);
@@ -2429,6 +2479,7 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 	DEBUG_LOG(("%s", Buf));
 	#endif
 
+	MapLoadTrace::phase("startNewGame tail");	// BFME: E1-43
 	if(m_gameMode == GAME_SHELL)
 	{
 		if (!TheGlobalData->m_headless)
@@ -2543,6 +2594,7 @@ void GameLogic::tryStartNewGame( Bool loadingSaveGame )
 		fprintf(stderr, "[launch] BFME: E1-39b map started '%s': frame %u, players %d, objects %u\n",
 			TheGlobalData->m_mapName.str(), (unsigned)m_frame,
 			ThePlayerList ? ThePlayerList->getPlayerCount() : 0, (unsigned)getObjectCount());
+	MapLoadTrace::endPhase();	// BFME: E1-43
 
 	// if we're in a gamespy game, mark us as playing
 	if (TheGameSpyBuddyMessageQueue && TheGameSpyGame && isInInternetGame())
@@ -4500,6 +4552,7 @@ void GameLogic::update()
 	if (!m_startNewGame)
 	{
 		m_frame++;
+		MapLoadTrace::logicFrame(TheGlobalData->m_headless);	// BFME: E1-43
 		// BFME: E1-39b. Heartbeat every 10 s of game time (300 frames at 30 Hz).
 		if (INILenient::isEnabled() && m_frame % 300 == 0)
 			fprintf(stderr, "[launch] BFME: E1-39b logic frame %u, objects %u\n", (unsigned)m_frame, (unsigned)getObjectCount());

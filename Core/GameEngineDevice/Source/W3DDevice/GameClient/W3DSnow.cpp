@@ -27,6 +27,8 @@
 #include "WW3D2/rinfo.h"
 #include "WW3D2/camera.h"
 #include "WW3D2/assetmgr.h"
+#include <cstdio>
+#include <cstdlib>
 
 
 
@@ -328,7 +330,22 @@ flush_particles:
 
 void W3DSnowManager::render(RenderInfoClass &rinfo)
 {
-	if (!TheWeatherSetting->m_snowEnabled || !m_isVisible)
+	// BFME: E1-46. Log the snow settings once (Pixel: full-height light-blue streaks over the map).
+	{
+		static bool s_bfmeSnowLogged = false;
+		if (!s_bfmeSnowLogged && getenv("BFME_GAMEDATA"))
+		{
+			s_bfmeSnowLogged = true;
+			fprintf(stderr, "[bfmesnow] render: enabled=%d isSnowing=%d visible=%d pointSprites=%d(caps %d) texture=%s "
+				"quad=%.2f point=%.2f max=%.1f box=%.0f density=%.2f velocity=%.2f\n",
+				(int)TheWeatherSetting->m_snowEnabled, (int)TheWeatherSetting->m_bfmeIsSnowing, (int)m_isVisible,
+				(int)TheWeatherSetting->m_usePointSprites, (int)DX8Wrapper::Get_Current_Caps()->Support_PointSprites(),
+				TheWeatherSetting->m_snowTexture.str(), TheWeatherSetting->m_snowQuadSize, TheWeatherSetting->m_snowPointSize,
+				TheWeatherSetting->m_snowMaxPointSize, TheWeatherSetting->m_snowBoxDimensions,
+				TheWeatherSetting->m_snowBoxDensity, TheWeatherSetting->m_snowVelocity);
+		}
+	}
+	if (!TheWeatherSetting->m_snowEnabled || !TheWeatherSetting->m_bfmeIsSnowing || !m_isVisible)
 		return;
 
 	Int usePointSprites = DX8Wrapper::Get_Current_Caps()->Support_PointSprites() && TheWeatherSetting->m_usePointSprites;

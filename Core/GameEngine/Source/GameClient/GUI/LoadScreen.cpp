@@ -1268,6 +1268,12 @@ void ShellGameLoadScreen::init( GameInfo *game )
 			win->winHide(FALSE);
 		firstLoad = FALSE;
 	}
+	else if (INILenient::isEnabled())
+	{
+		// BFME: E1-43 the branch above is the only place a direct map start clears
+		// m_breakTheMovie; without this the load screen is never drawn (black).
+		TheWritableGlobalData->m_breakTheMovie = FALSE;
+	}
 	if (m_progressBar)
 		m_progressBar->winHide(FALSE);
 }

@@ -41,6 +41,18 @@ public final class GameDataVerifier {
         ImportStateStore.save(app, state);
 
         int total = manifest.importableFiles().size();
+        // BFME: E1-43 files put there with `adb push` belong to the shell user (drwxrws---), so
+        // the app cannot open the folder and every file looked "missing". Say what is wrong.
+        if (!gameData.canRead() || !gameData.canExecute()) {
+            state.status = ImportState.STATUS_FAILED;
+            state.lastError = "GameData is not readable by the app (copied with adb?). On the PC run: "
+                    + "adb shell chmod -R a+rwX " + gameData.getAbsolutePath();
+            ImportStateStore.save(app, state);
+            ImportProgress fail = new ImportProgress(0, total, 0, manifest.totalBytes(),
+                    "", state.lastError, true, false, false);
+            if (listener != null) listener.onProgress(fail);
+            return fail;
+        }
         int done = 0;
         long bytesDone = 0;
         long bytesTotal = manifest.totalBytes();

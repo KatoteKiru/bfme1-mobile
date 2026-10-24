@@ -32,6 +32,7 @@
 
 #include "Common/GameState.h"
 #include "Common/GlobalData.h"
+#include "Common/MapLoadTrace.h"	// BFME: E1-43
 #include "Common/PerfTimer.h"
 #include "Common/MapReaderWriterInfo.h"
 #include "Common/ThingTemplate.h"
@@ -535,6 +536,8 @@ Bool W3DTerrainVisual::load( AsciiString filename )
 	WW3DAssetManager::Get_Instance()->Free_Assets_With_Exclusion_List(exclusion_list);
 #endif
 
+	MapLoadTrace::Step traceLoad("W3DTerrainVisual::load");	// BFME: E1-43
+
 	// enhancing functionality specific for W3D terrain
 	if( TerrainVisual::load( filename ) == FALSE )
 		return FALSE;  // failed
@@ -557,7 +560,10 @@ Bool W3DTerrainVisual::load( AsciiString filename )
 
   // allocate new height map data to read from file
   REF_PTR_RELEASE( m_logicHeightMap );
-	m_logicHeightMap = NEW WorldHeightMap(pStrm);
+	{
+		MapLoadTrace::Step t("WorldHeightMap parse");	// BFME: E1-43
+		m_logicHeightMap = NEW WorldHeightMap(pStrm);
+	}
 
 #ifdef DO_SEISMIC_SIMULATIONS
 
@@ -603,6 +609,7 @@ Bool W3DTerrainVisual::load( AsciiString filename )
 	}
 
 
+	MapLoadTrace::Step traceInit("W3DTerrainVisual initHeightData + scene add");	// BFME: E1-43
 	RefRenderObjListIterator *it = W3DDisplay::m_3DScene ? W3DDisplay::m_3DScene->createLightsIterator() : nullptr;
 	// apply the heightmap to the terrain render object
 
@@ -642,6 +649,7 @@ Bool W3DTerrainVisual::load( AsciiString filename )
 #else
 	if (m_waterRenderObject)
 	{
+		MapLoadTrace::Step t("water add/updateMapOverrides");	// BFME: E1-43
 		W3DDisplay::m_3DScene->Add_Render_Object( m_waterRenderObject);
 		m_waterRenderObject->enableWaterGrid(false);
 		m_waterRenderObject->updateMapOverrides();
@@ -665,6 +673,7 @@ Bool W3DTerrainVisual::load( AsciiString filename )
 	// reset water render object if present
 	if( m_waterRenderObject )
 	{
+		MapLoadTrace::Step t("WaterRenderObjClass::load");	// BFME: E1-43
 		m_waterRenderObject->load();
 	}
 

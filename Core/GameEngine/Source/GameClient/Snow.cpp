@@ -118,6 +118,9 @@ const FieldParse WeatherSetting::m_weatherSettingFieldParseTable[] =
 	{ "SnowVelocity",							INI::parseReal,nullptr,			offsetof( WeatherSetting, m_snowVelocity ) },
 	{ "SnowPointSprites",						INI::parseBool,nullptr,			offsetof( WeatherSetting, m_usePointSprites ) },
 	{ "SnowEnabled",							INI::parseBool,nullptr,			offsetof( WeatherSetting, m_snowEnabled ) },
+	// BFME: E1-46. BFME1 Weather.ini keeps SnowEnabled = Yes with IsSnowing = No (maps turn snow on
+	// through WeatherData/scripts). Zero Hour data never has this field.
+	{ "IsSnowing",								INI::parseBool,nullptr,			offsetof( WeatherSetting, m_bfmeIsSnowing ) },
 	{ nullptr, nullptr, nullptr, 0 },
 };
 

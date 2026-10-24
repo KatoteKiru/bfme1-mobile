@@ -201,6 +201,10 @@ GlobalData* GlobalData::m_theOriginal = nullptr;
 	{ "ViewportHeightScale", INI::parseReal, nullptr, offsetof( GlobalData, m_viewportHeightScale ) },
 	{ "CameraPitch",								INI::parseReal,				nullptr,			offsetof( GlobalData, m_cameraPitch ) },
 	{ "CameraYaw",									INI::parseReal,				nullptr,			offsetof( GlobalData, m_cameraYaw ) },
+	// BFME: E1-46. BFME1 GameData.ini has no CameraPitch, only DefaultCameraPitchAngle (degrees, same
+	// meaning). Left at 0, W3DView pitched the camera 37.5 degrees up to the horizon (Pixel: black sky
+	// over a flat ground plane). Zero Hour data never has this field.
+	{ "DefaultCameraPitchAngle",		INI::parseReal,				nullptr,			offsetof( GlobalData, m_cameraPitch ) },
 #if PRESERVE_RETAIL_SCRIPTED_CAMERA
 	{ "CameraHeight",								INI::parseReal,				nullptr,			offsetof( GlobalData, m_cameraHeight ) },
 #endif

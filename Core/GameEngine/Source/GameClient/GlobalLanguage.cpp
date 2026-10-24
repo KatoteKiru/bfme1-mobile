@@ -58,6 +58,7 @@
 #include "Common/AddonCompat.h"
 #include "Common/INI.h"
 #include "Common/Registry.h"
+#include "Common/INILenient.h"	// BFME: E1-45
 #include "Common/FileSystem.h"
 #include "Common/OptionPreferences.h"
 
@@ -157,6 +158,11 @@ void GlobalLanguage::init()
 		AsciiString registryLanguage = GetRegistryLanguage();
 		AsciiString fname;
 		fname.format("Data\\%s\\Language", registryLanguage.str());
+		// BFME: E1-45 BFME's Language.ini lives in lang\<language>\ (lang/english.big).
+		AsciiString fnameIni;
+		fnameIni.format("%s.ini", fname.str());
+		if (INILenient::isEnabled() && TheFileSystem && !TheFileSystem->doesFileExist(fnameIni.str()))
+			fname.format("lang\\%s\\Language", registryLanguage.str());
 
 		GX_TRACE("[GX-ISSUE144] GlobalLanguage init registryLanguage=%s primaryIni=%s\n",
 			registryLanguage.str(),
